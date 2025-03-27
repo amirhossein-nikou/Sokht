@@ -9,5 +9,8 @@ export class CreateInventoryDto {
     @ApiProperty({ enum: FuelTypes })
     @IsEnum(FuelTypes)
     fuel_type: FuelTypes;
+    @ApiProperty()
+    @IsNumberString()
+    stationId: number
 }
 export class UpdateInventoryDto extends PartialType(CreateInventoryDto) { }

@@ -1,18 +1,17 @@
 import { ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
-import { InjectModel } from '@nestjs/sequelize';
-import { StationModel } from './../models/station.model';
-import { UserService } from '../../user/user.service';
-import { LocationService } from '../../location/location.service';
-import { LocationModel } from '../../location/models/location.model';
-import { AverageSaleModel } from '../models/sale.model';
-import { StationMessages } from '../enum/message.enum';
+import { InjectRepository } from '@nestjs/typeorm';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
+import { Repository } from 'typeorm';
+import { LocationService } from '../../location/location.service';
+import { UserService } from '../../user/user.service';
+import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
+import { StationEntity } from '../entity/station.entity';
+import { StationMessages } from '../enum/message.enum';
 
 @Injectable()
 export class StationService {
     constructor(
-        @InjectModel(StationModel) private stationModel: typeof StationModel,
+        @InjectRepository(StationEntity) private stationRepository: Repository<StationEntity>,
         private userService: UserService,
         private locationService: LocationService,
     ) { }
@@ -23,7 +22,8 @@ export class StationService {
         //check location
         await this.locationService.findOne(locationId)
         await this.checkExistsLocation(locationId)
-        await this.stationModel.create({ isActive, locationId, name, ownerId })
+        const station = this.stationRepository.create({ isActive, locationId, name, ownerId })
+        await this.stationRepository.save(station)
         return {
             status: HttpStatus.OK,
             data: { message: StationMessages.Created }
@@ -31,7 +31,7 @@ export class StationService {
     }
 
     async findAll() {
-        const stations = await this.stationModel.findAll();
+        const stations = await this.stationRepository.find();
         return {
             status: HttpStatus.OK,
             data: stations
@@ -39,19 +39,12 @@ export class StationService {
     }
 
     async findOne(id: number) {
-        const station = await this.stationModel.findOne({
+        const station = await this.stationRepository.findOne({
             where: { id },
-            include: [
-                {
-                    as: 'location',
-                    model: LocationModel
-                },
-                {
-                    as: "average_sales",
-                    model: AverageSaleModel,
-                    attributes: ['monthly_average_sale', 'fuel_type', 'createdAt']
-                }
-            ]
+            relations: {
+                location: true,
+                average_sales: true
+            }
         })
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return {
@@ -71,7 +64,7 @@ export class StationService {
             await this.locationService.findOne(locationId)
             await this.checkExistsLocation(locationId)
         }
-        await station.update(updateObj)
+        await this.stationRepository.update(id,updateObj)
         return {
             status: HttpStatus.CREATED,
             data: {
@@ -82,7 +75,7 @@ export class StationService {
 
     async remove(id: number) {
         const station = await this.findOneById(id)
-        await station.destroy()
+        await this.stationRepository.remove(station)
         return {
             status: HttpStatus.OK,
             data: {
@@ -92,19 +85,28 @@ export class StationService {
     }
     // utils
     async checkExistsLocation(locationId: number) {
-        const station = await this.stationModel.findOne({ where: { locationId } })
+        const station = await this.stationRepository.findOne({ where: { locationId } })
         if (station) throw new ConflictException(StationMessages.ExistsLocation)
         return false
     }
     async findOneById(id: number) {
-        const station = await this.stationModel.findOne({
+        const station = await this.stationRepository.findOne({
             where: { id },
-            include: {
-                as: 'location',
-                model: LocationModel
+            relations: {
+                location: true
             }
         })
         if (!station) throw new NotFoundException(StationMessages.NotFound)
+        return station
+    }
+    async findByUserStation(userId: number, id: number) {
+        const station = await this.stationRepository.findOne({ where: { ownerId: userId, id } })
+        if (!station) throw new NotFoundException(StationMessages.NotFound)
+        return station
+    }
+    async findByUserId(userId: number) {
+        const station = await this.stationRepository.find({ where: { ownerId: userId } })
+        if (!station || station.length == 0) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
 }

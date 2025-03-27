@@ -1,4 +1,4 @@
-import { UserModel } from "src/modules/user/models/user.model"
+import { UserModel } from "src/modules/user/entity/user.entity"
 import { UserDetails } from "../types/user.type"
 
 declare global {

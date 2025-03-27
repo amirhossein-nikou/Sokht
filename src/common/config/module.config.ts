@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { SequelizeModule } from '@nestjs/sequelize';
 import { SequelizeConfig } from './database.config';
 import { ConfigModule } from "@nestjs/config";
 import { join } from 'path';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
@@ -10,7 +10,7 @@ import { join } from 'path';
         envFilePath: join(process.cwd(),".env"),
         isGlobal: true
     }),
-    SequelizeModule.forRoot(SequelizeConfig())
+    TypeOrmModule.forRoot(SequelizeConfig())
 
   ],
   controllers: [],

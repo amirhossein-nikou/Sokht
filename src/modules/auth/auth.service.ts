@@ -1,24 +1,24 @@
 import { BadRequestException, ConflictException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { InjectModel } from "@nestjs/sequelize";
 import { InjectRepository } from "@nestjs/typeorm";
 import { randomInt } from "crypto";
-import { UserModel } from "../user/models/user.model";
 import { CheckOtpDto, SendOtpDto } from "./dto/auth.dto";
-import { OtpModel } from "./model/otp.model";
 import { payloadType } from "./types/payload";
+import { Repository } from "typeorm";
+import { UserEntity } from "../user/entity/user.entity";
+import { OtpEntity } from "./entity/otp.entity";
 
 @Injectable()
 export class AuthService {
     constructor(
-        @InjectModel(UserModel) private userModel: typeof UserModel,
-        @InjectRepository(OtpModel) private otpModel: typeof OtpModel,
+        @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
+        @InjectRepository(OtpEntity) private otpRepository: Repository<OtpEntity>,
         private jwtService: JwtService,
     ) { }
 
     async sendOtp(sendOtpDto: SendOtpDto) {
         const { mobile } = sendOtpDto;
-        let user = await this.userModel.findOne({ where: { mobile } })
+        let user = await this.userRepository.findOne({ where: { mobile } })
         if (!user) {
             throw new UnauthorizedException('something went wrong')
         }
@@ -33,10 +33,10 @@ export class AuthService {
 
     }
 
-    async createOtpForUser(user: UserModel) {
+    async createOtpForUser(user: UserEntity) {
         const expire_in: Date = new Date(new Date().getTime() + (1000 * 60 * 2));
         const code: string = randomInt(10000, 99999).toString();
-        let otp = await this.otpModel.findOne({ where: { userId: user.id } });
+        let otp = await this.otpRepository.findOne({ where: { userId: user.id } });
         if (otp) {
             if (otp.expires_in > new Date()) {
                 throw new BadRequestException("code not expired")
@@ -44,25 +44,24 @@ export class AuthService {
             otp.code = code;
             otp.expires_in = expire_in;
         } else {
-            otp = await this.otpModel.create({
+            otp = this.otpRepository.create({
                 code: code,
                 expires_in: expire_in,
                 userId: user.id
             })
         }
-        otp = await otp.save();
+        otp = await this.otpRepository.save(otp);
         user.otpId = otp.id;
-        await user.save();
+        await this.userRepository.save(user);
         return code
     }
 
     async checkOtp(checkOtpDto: CheckOtpDto) {
         const { mobile, code } = checkOtpDto;
-        const user = await this.userModel.findOne({
+        const user = await this.userRepository.findOne({
             where: { mobile },
-            include: {
-                as: 'otp',
-                model: OtpModel
+            relations: {
+                otp: true
             },
         })
         const now = new Date()
@@ -72,7 +71,7 @@ export class AuthService {
         if (otp?.code !== code) throw new UnauthorizedException("Code invalid")
         if (now > expire_in) throw new UnauthorizedException("Code expired")
         if (!user.verify_mobile) {
-            await this.userModel.update({ verify_mobile: true }, { where: { mobile } })
+            await this.userRepository.update({id: user.id},{ verify_mobile: true })
         }
         const { accessToken, refreshToken } = this.generateTokenForUser({ id: user.id, mobile })
         return {
@@ -107,7 +106,7 @@ export class AuthService {
                 secret: process.env.ACCESS_TOKEN_SECRET
             })
             if (typeof payload === "object" && payload?.id) {
-                const user = await this.userModel.findOne({ where: { id: payload.id } })
+                const user = await this.userRepository.findOne({ where: { id: payload.id } })
                 if (!user) throw new UnauthorizedException("please login to your account")
                 return {
                     mobile: user.mobile,
@@ -122,7 +121,7 @@ export class AuthService {
     }
 
     async checkMobile(mobile: string) {
-        const user = await this.userModel.findOne({ where: { mobile } })
+        const user = await this.userRepository.findOne({ where: { mobile } })
         if (user) throw new ConflictException("Mobile number is already exists")
     }
 }

@@ -2,14 +2,13 @@ import { Module } from "@nestjs/common";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { JwtService } from "@nestjs/jwt";
-import { UserModel } from "../user/models/user.model";
-import { OtpModel } from "./model/otp.model";
-import { SequelizeModule } from "@nestjs/sequelize";
-
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { UserEntity } from "../user/entity/user.entity";
+import { OtpEntity } from "./entity/otp.entity";
 @Module({
-    imports: [SequelizeModule.forFeature([UserModel, OtpModel])],
+    imports: [TypeOrmModule.forFeature([UserEntity, OtpEntity])],
     controllers: [AuthController],
     providers: [AuthService, JwtService],
-    exports: [JwtService, AuthService, SequelizeModule]
+    exports: [JwtService, AuthService, TypeOrmModule]
 })
 export class AuthModule { }

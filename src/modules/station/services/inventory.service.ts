@@ -1,16 +1,17 @@
 import { HttpStatus, Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
-import { InjectModel } from "@nestjs/sequelize";
 import { Request } from "express";
 import { RemoveNullProperty } from "src/common/utils/update.utils";
 import { UserService } from "src/modules/user/user.service";
 import { CreateInventoryDto, UpdateInventoryDto } from "../dto/inventory.dto";
 import { InventoryMessages } from "../enum/message.enum";
-import { InventoryModel } from "../models/inventory.model";
+import { Repository } from "typeorm";
+import { InventoryEntity } from "../entity/inventory.entity";
+import { InjectRepository } from "@nestjs/typeorm";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
-        @InjectModel(InventoryModel) private inventoryModel: typeof InventoryModel,
+        @InjectRepository(InventoryEntity) private inventoryRepository: Repository<InventoryEntity>,
         private userService: UserService,
         @Inject(REQUEST) private req: Request
     ) { }
@@ -18,9 +19,10 @@ export class InventoryService {
         const { fuel_type, value } = createInventoryDto
         const { id } = this.req.user
         const stationId = await this.userService.findUserStationId(id)
-        this.inventoryModel.create({
-            fuel_type,value ,stationId
+        const inventory = this.inventoryRepository.create({
+            fuel_type, value, stationId
         })
+        await this.inventoryRepository.save(inventory)
         return {
             status: HttpStatus.CREATED,
             data: { message: InventoryMessages.Created }
@@ -29,7 +31,7 @@ export class InventoryService {
     async findAll() {
         const { id } = this.req.user
         const stationId = await this.userService.findUserStationId(id)
-        const inventories = await this.inventoryModel.findAll({
+        const inventories = await this.inventoryRepository.find({
             where: {
                 stationId: stationId || null
             }
@@ -42,7 +44,7 @@ export class InventoryService {
     async findOne(id: number) {
         const { id: userId } = this.req.user
         const stationId = await this.userService.findUserStationId(id)
-        const inventory = await this.inventoryModel.findOne({
+        const inventory = await this.inventoryRepository.findOne({
             where: {
                 id,
                 stationId: stationId || null
@@ -60,7 +62,7 @@ export class InventoryService {
         const obj = RemoveNullProperty(updateInventoryDto)
         const stationId = await this.userService.findUserStationId(userId)
         const inventory = await this.findOneById(id, stationId);
-        await inventory.update(obj)
+        await this.inventoryRepository.update(id, obj)
         return {
             status: HttpStatus.OK,
             data: {
@@ -69,10 +71,10 @@ export class InventoryService {
         }
     }
     async remove(id: number) {
-        const { id:userId } = this.req.user
+        const { id: userId } = this.req.user
         const stationId = await this.userService.findUserStationId(userId)
         const inventory = await this.findOneById(id, stationId)
-        await inventory.destroy()
+        await this.inventoryRepository.remove(inventory)
         return {
             status: HttpStatus.OK,
             data: {
@@ -82,7 +84,7 @@ export class InventoryService {
     }
     // utils
     async findOneById(id: number, stationId: number) {
-        const inventory = await this.inventoryModel.findOne({
+        const inventory = await this.inventoryRepository.findOne({
             where: {
                 id, stationId
             }

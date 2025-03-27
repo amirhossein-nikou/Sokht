@@ -2,9 +2,11 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { SaleService } from '../services/sale.service';
 import { CreateSaleDto, UpdateSaleDto } from '../dto/sale.dto';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
+import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 
 
 @Controller('station/sale')
+@UserAuthGuard()
 export class SaleController {
   constructor(private readonly saleService: SaleService) {}
   @MyApiConsumes()
