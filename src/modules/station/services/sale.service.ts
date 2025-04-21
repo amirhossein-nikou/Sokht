@@ -1,4 +1,4 @@
-import { HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import { ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -16,81 +16,117 @@ export class SaleService {
 	constructor(
 		@InjectRepository(AverageSaleEntity) private averageSaleRepository: Repository<AverageSaleEntity>,
 		private stationService: StationService,
-		private userService: UserService,
 		@Inject(REQUEST) private req: Request
 	) { }
 	async create(createSaleDto: CreateSaleDto) {
-		const { fuel_type, monthly_average_sale, stationId } = createSaleDto
-		const { id } = this.req.user
-		await this.stationService.findByUserStation(id, stationId);
-		const sale = this.averageSaleRepository.create({ fuel_type, monthly_average_sale, stationId })
-		await this.averageSaleRepository.save(sale)
-		return {
-			statusCode: HttpStatus.CREATED,
-			data: { message: SaleMessages.Created }
+		try {
+			const { fuel_type, average_sale, stationId } = createSaleDto
+			const { id } = this.req.user
+			await this.checkExists(stationId)
+			await this.stationService.findByUserStation(id, stationId);
+			let sale = await this.averageSaleRepository.findOne({
+				where: {
+					stationId, fuel_type
+				}
+			})
+			if (!sale) {
+				sale = this.averageSaleRepository.create({
+					fuel_type, average_sale, stationId
+				})
+			} else {
+				sale.average_sale = average_sale
+			}
+			await this.averageSaleRepository.save(sale)
+			return {
+				statusCode: HttpStatus.CREATED,
+				data: { message: SaleMessages.Created }
+			}
+		} catch (error) {
+			throw error
 		}
 	}
 
 	async findAll() {
-		const { id } = this.req.user
-		const stations = await this.stationService.findByUserId(id)
-		// const idList: number[] = stations.map(station => {
-		// 	if (station.ownerId == id) {
-		// 		return station.id
-		// 	}
-		// })
-		const averageSales = await this.averageSaleRepository.find({
-			relations: { station: true }
-		});
-		return {
-			statusCode: HttpStatus.CREATED,
-			data: averageSales
+		try {
+			const { id } = this.req.user
+			const averageSales = await this.averageSaleRepository.find({
+				relations: { station: true },
+				where: {
+					station: {
+						ownerId: id
+					}
+				}
+			});
+			return {
+				statusCode: HttpStatus.CREATED,
+				data: averageSales
+			}
+		} catch (error) {
+			throw error
 		}
 	}
 
 	async findOne(id: number) {
-		const { id: userId } = this.req.user
-		const averageSale = await this.averageSaleRepository.findOne({
-			where: { id },
-			relations: {
-				station: true
+		try {
+			const { id: userId } = this.req.user
+			const averageSale = await this.averageSaleRepository.findOne({
+				where: { id, station: { ownerId: userId } },
+				relations: {
+					station: true
+				}
+			});
+			if (!averageSale) throw new NotFoundException(SaleMessages.NotFound)
+			return {
+				statusCode: HttpStatus.CREATED,
+				data: averageSale
 			}
-		});
-		if (!averageSale) throw new NotFoundException(SaleMessages.NotFound)
-		return {
-			statusCode: HttpStatus.CREATED,
-			data: averageSale
+		} catch (error) {
+			throw error
 		}
 	}
 
 	async update(id: number, updateSaleDto: UpdateSaleDto) {
-		const { id: userId } = this.req.user;
-		const stationId = await this.userService.findUserStationId(userId)
-		const averageSale = await this.getOneById(id, stationId)
-		const updateObj = RemoveNullProperty(updateSaleDto)
-		await this.averageSaleRepository.update(id,updateObj)
-		return {
-			statusCode: HttpStatus.CREATED,
-			data: { message: SaleMessages.Update }
+		try {
+			const { id: userId } = this.req.user;
+			if (updateSaleDto.stationId) await this.checkExists(updateSaleDto.stationId)
+			const updateObj = RemoveNullProperty(updateSaleDto)
+			await this.getOneById(id, userId)
+			await this.averageSaleRepository.update({ id, station: { ownerId: userId } }, updateObj)
+			return {
+				statusCode: HttpStatus.CREATED,
+				data: { message: SaleMessages.Update }
+			}
+		} catch (error) {
+			throw error
 		}
 	}
 
 	async remove(id: number) {
-		const { id: userId } = this.req.user;
-		const stationId = await this.userService.findUserStationId(userId)
-		const averageSale = await this.getOneById(id, stationId)
-		await this.averageSaleRepository.remove(averageSale)
-		return {
-			statusCode: HttpStatus.OK,
-			data: { message: SaleMessages.Remove }
+		try {
+			const { id: userId } = this.req.user;
+			const averageSale = await this.getOneById(id, userId)
+			await this.averageSaleRepository.remove(averageSale)
+			return {
+				statusCode: HttpStatus.OK,
+				data: { message: SaleMessages.Remove }
+			}
+		} catch (error) {
+			throw error
 		}
 	}
 	//utils
-	async getOneById(id: number, stationId: number) {
+	async getOneById(id: number, userId: number) {
 		const averageSale = await this.averageSaleRepository.findOne({
-			where: { id, stationId: stationId || null },
+			where: { id, station: { ownerId: userId } },
 		});
 		if (!averageSale) throw new NotFoundException(SaleMessages.NotFound)
 		return averageSale
+	}
+	async checkExists(stationId: number) {
+		const averageSale = await this.averageSaleRepository.findOne({
+			where: { stationId },
+		});
+		if (averageSale) throw new ConflictException(SaleMessages.AlreadyExists)
+		return false
 	}
 }

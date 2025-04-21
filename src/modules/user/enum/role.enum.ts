@@ -1,6 +1,7 @@
 export enum UserRole {
     StationUser = 'station',
     OilDepotUser = 'depot',
-    headUser = 'head',
-    Driver = 'driver'
+    HeadUser = 'head',
+    // HeadBoss = 'head-boss',
+    Driver = 'driver',
 }

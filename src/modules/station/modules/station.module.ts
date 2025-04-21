@@ -12,14 +12,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { StationEntity } from '../entity/station.entity';
 import { AverageSaleEntity } from '../entity/sale.entity';
 import { InventoryEntity } from '../entity/inventory.entity';
+import { CapacityEntity } from '../entity/capacity.entity';
+import { CapacityService } from '../services/capacity.service';
+import { CapacityController } from '../controller/capacity.controller';
 
 
 @Module({
-  imports: [TypeOrmModule.forFeature([StationEntity, AverageSaleEntity,InventoryEntity]), UserModule, LocationModule,AuthModule],
-  controllers: [StationController, SaleController,InventoryController],
-  providers: [StationService, SaleService,InventoryService],
+  imports: [TypeOrmModule.forFeature([StationEntity, AverageSaleEntity,InventoryEntity,CapacityEntity])
+  , UserModule, LocationModule,AuthModule],
+  controllers: [StationController, SaleController,InventoryController,CapacityController],
+  providers: [StationService, SaleService,InventoryService,CapacityService],
   exports: [StationService, TypeOrmModule]
 })
 export class StationModule { }
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibW9iaWxlIjoiMDkzNjk4NTc1OTIiLCJpYXQiOjE3NDI4MzUwNTcsImV4cCI6MTc0NTQyNzA1N30.8koQvAp9hwi75OMFdr5SeItPGwLVfZgSnWZA1NM101o
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibW9iaWxlIjoiMDkxNzU1MDA3NjciLCJpYXQiOjE3NDI4MzUyNDIsImV4cCI6MTc0NTQyNzI0Mn0.Vlui-VkCjNis4Ux4ZEdBXBhM8DWX0AUo-wgbACJclTk

@@ -7,7 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 @Module({
   imports: [
     ConfigModule.forRoot({
-        envFilePath: join(process.cwd(),".env"),
+        envFilePath: join(process.cwd(),`.env.${process.env.NODE_ENV}`),
         isGlobal: true
     }),
     TypeOrmModule.forRoot(SequelizeConfig())

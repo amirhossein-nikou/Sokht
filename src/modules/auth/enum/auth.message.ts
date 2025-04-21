@@ -1,3 +1,3 @@
 export enum AuthMessages {
-    AuthError = 'Authorization error'
+    AuthError = 'please login to your account first'
 }

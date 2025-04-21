@@ -1,4 +1,4 @@
-import { ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { Repository } from 'typeorm';
@@ -7,80 +7,153 @@ import { UserService } from '../../user/user.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { StationEntity } from '../entity/station.entity';
 import { StationMessages } from '../enum/message.enum';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class StationService {
     constructor(
         @InjectRepository(StationEntity) private stationRepository: Repository<StationEntity>,
         private userService: UserService,
         private locationService: LocationService,
+        @Inject(REQUEST) private req: Request
     ) { }
     async create(createStationDto: CreateStationDto) {
-        const { isActive, locationId, name, ownerId } = createStationDto
-        //check user exist
-        await this.userService.findOneById(ownerId)
-        //check location
-        await this.locationService.findOne(locationId)
-        await this.checkExistsLocation(locationId)
-        const station = this.stationRepository.create({ isActive, locationId, name, ownerId })
-        await this.stationRepository.save(station)
-        return {
-            status: HttpStatus.OK,
-            data: { message: StationMessages.Created }
+        try {
+            const { isActive, locationId, name, ownerId } = createStationDto
+            //check user exist
+            const user = await this.userService.findOneById(ownerId)
+            if (user.parentId) throw new BadRequestException(StationMessages.ParentExists)
+            //check location
+            await this.locationService.findOne(locationId)
+            await this.checkExistsLocation(locationId)
+            const station = this.stationRepository.create({ isActive, locationId, name, ownerId })
+            await this.stationRepository.save(station)
+            return {
+                status: HttpStatus.OK,
+                data: { message: StationMessages.Created }
+            }
+        } catch (error) {
+            throw error
         }
     }
 
     async findAll() {
-        const stations = await this.stationRepository.find();
-        return {
-            status: HttpStatus.OK,
-            data: stations
+        try {
+            const stations = await this.stationRepository.find();
+            return {
+                status: HttpStatus.OK,
+                data: stations
+            }
+        } catch (error) {
+            throw error
         }
     }
 
     async findOne(id: number) {
-        const station = await this.stationRepository.findOne({
-            where: { id },
-            relations: {
-                location: true,
-                average_sales: true
+        try {
+            const station = await this.stationRepository.findOne({
+                where: { id },
+                relations: {
+                    location: true,
+                    average_sale: true
+                }
+            })
+            if (!station) throw new NotFoundException(StationMessages.NotFound)
+            return {
+                status: HttpStatus.OK,
+                data: station
             }
-        })
-        if (!station) throw new NotFoundException(StationMessages.NotFound)
-        return {
-            status: HttpStatus.OK,
-            data: station
+        } catch (error) {
+            throw error
         }
     }
 
     async update(id: number, updateStationDto: UpdateStationDto) {
-        const { isActive, locationId, name, ownerId } = updateStationDto
-        const station = await this.findOneById(id)
-        const updateObj = RemoveNullProperty(updateStationDto)
-        //check user exist
-        if (ownerId) await this.userService.findOneById(ownerId)
-        //check location
-        if (locationId) {
-            await this.locationService.findOne(locationId)
-            await this.checkExistsLocation(locationId)
-        }
-        await this.stationRepository.update(id,updateObj)
-        return {
-            status: HttpStatus.CREATED,
-            data: {
-                message: StationMessages.Update
+        try {
+            const { isActive, locationId, name, ownerId } = updateStationDto
+            const station = await this.findOneById(id)
+            const updateObj = RemoveNullProperty(updateStationDto)
+            //check user exist
+            if (ownerId) await this.userService.findOneById(ownerId)
+            //check location
+            if (locationId) {
+                await this.locationService.findOne(locationId)
+                await this.checkExistsLocation(locationId)
             }
+            await this.stationRepository.update(id, updateObj)
+            return {
+                status: HttpStatus.CREATED,
+                data: {
+                    message: StationMessages.Update
+                }
+            }
+        } catch (error) {
+            throw error
         }
     }
 
     async remove(id: number) {
-        const station = await this.findOneById(id)
-        await this.stationRepository.remove(station)
-        return {
-            status: HttpStatus.OK,
-            data: {
-                message: StationMessages.Remove
+        try {
+            const station = await this.findOneById(id)
+            await this.stationRepository.remove(station)
+            return {
+                status: HttpStatus.OK,
+                data: {
+                    message: StationMessages.Remove
+                }
             }
+        } catch (error) {
+            throw error
+        }
+    }
+    async stationStatusToggle(id: number) {
+        try {
+            const station = await this.findOneById(id)
+            let message = ''
+            if (station.isActive) {
+                station.isActive = false
+                message = 'station status change to false'
+            } else {
+                station.isActive = true
+                message = 'station status change to true'
+            }
+            await this.stationRepository.save(station)
+            return {
+                statusCode: HttpStatus.OK,
+                data: { message }
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    async myStation() {
+        try {
+            const { id, parentId } = this.req.user
+            const station = await this.stationRepository.findOne({
+                where: { ownerId: parentId ?? id },
+                relations: {
+                    requests: {
+                        cargo: true
+                    },
+                    average_sale: true,
+                    max_capacity: true,
+                    location: true
+                },
+                order: {
+                    requests: {
+                        receive_at: 'ASC',
+                        priority: 'ASC'
+                    }
+                }
+            })
+            if (!station) throw new NotFoundException(StationMessages.NotFound)
+            return {
+                statusCode: HttpStatus.OK,
+                data: station
+            }
+        } catch (error) {
+            throw error
         }
     }
     // utils
@@ -104,9 +177,12 @@ export class StationService {
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
-    async findByUserId(userId: number) {
-        const station = await this.stationRepository.find({ where: { ownerId: userId } })
-        if (!station || station.length == 0) throw new NotFoundException(StationMessages.NotFound)
+    async findOneByIdWithRelations(id: number, relations: {}) {
+        const station = await this.stationRepository.findOne({
+            where: { id },
+            relations
+        })
+        if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
 }

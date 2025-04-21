@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsNumber, IsNumberString, IsString } from 'class-validator';
+import {  IsNumber, IsNumberString, IsString } from 'class-validator';
 export class CreateDepotDto {
     @ApiProperty()
     @IsString()

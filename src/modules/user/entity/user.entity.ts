@@ -4,6 +4,7 @@ import { UserRole } from "../enum/role.enum";
 import { OtpEntity } from "src/modules/auth/entity/otp.entity";
 import { StationEntity } from "src/modules/station/entity/station.entity";
 import { DepotEntity } from "src/modules/depot/entity/depot.entity";
+import { TankerEntity } from "src/modules/tanker/entities/tanker.entity";
 
 @Entity(EntityName.User)
 export class UserEntity {
@@ -33,9 +34,11 @@ export class UserEntity {
     child: UserEntity[]
     @OneToOne(() => OtpEntity, otp => otp.user)
     @JoinColumn({name: 'otpId'})
-    otp: OtpEntity
+    otp: OtpEntity;
     @OneToMany(() => StationEntity, station => station.owner)
     stations: StationEntity[];
     @OneToOne(() => DepotEntity, depot => depot.owner)
-    depot: DepotEntity
+    depot: DepotEntity;
+    @OneToOne(() => TankerEntity, tanker => tanker.driver)
+    tanker: TankerEntity;
 }

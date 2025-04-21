@@ -43,6 +43,7 @@ export class AddSubUserDto {
     @ApiProperty()
     @IsString()
     @Length(10, 10)
+    @IsIdentityCard('IR')
     national_code: string
     @ApiPropertyOptional()
     @IsNumberString()

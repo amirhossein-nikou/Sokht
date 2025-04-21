@@ -5,10 +5,11 @@ import { AuthModule } from '../auth/auth.module';
 import { StationModule } from '../station/modules/station.module';
 import { LocationModule } from '../location/location.module';
 import { DepotModule } from '../depot/depot.module';
+import { TankerModule } from '../tanker/tanker.module';
 
 
 @Module({
-  imports: [CustomModule, UserModule, AuthModule,StationModule,LocationModule,DepotModule],
+  imports: [CustomModule, UserModule, AuthModule,StationModule,LocationModule,DepotModule,TankerModule],
   controllers: [],
   providers: [],
 })

@@ -1,10 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
-import { LocationService } from './location.service';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
+import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
+import { CanAccess } from 'src/common/decorators/role.decorator';
+import { UserRole } from '../user/enum/role.enum';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
-import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
+import { LocationService } from './location.service';
 
 @Controller('location')
+@UserAuthGuard()
+@CanAccess(UserRole.HeadUser, UserRole.OilDepotUser)
 export class LocationController {
   constructor(private readonly locationService: LocationService) { }
 

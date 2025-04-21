@@ -4,6 +4,10 @@ export enum EntityName {
     Station = 'station',
     AvgSale = 'average-sale',
     Inventory = 'inventory',
+    Capacity = 'capacity',
     Location = 'location',
-    Depot = 'depot'
+    Depot = 'depot',
+    Tanker = 'tanker',
+    Request = 'request',
+    Cargo = 'cargo'
 }

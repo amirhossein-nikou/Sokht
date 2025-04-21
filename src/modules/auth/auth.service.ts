@@ -7,6 +7,7 @@ import { payloadType } from "./types/payload";
 import { Repository } from "typeorm";
 import { UserEntity } from "../user/entity/user.entity";
 import { OtpEntity } from "./entity/otp.entity";
+import { ModifyMobileNumber } from "src/common/utils/mobile.utils";
 
 @Injectable()
 export class AuthService {
@@ -17,20 +18,23 @@ export class AuthService {
     ) { }
 
     async sendOtp(sendOtpDto: SendOtpDto) {
-        const { mobile } = sendOtpDto;
-        let user = await this.userRepository.findOne({ where: { mobile } })
-        if (!user) {
-            throw new UnauthorizedException('something went wrong')
-        }
-        const code = await this.createOtpForUser(user)
-        return {
-            statusCode: HttpStatus.OK,
-            data: {
-                message: "code send Successfully",
-                code
+        try {
+            const { mobile } = sendOtpDto;
+            let user = await this.userRepository.findOne({ where: { mobile: ModifyMobileNumber(mobile) } })
+            if (!user) {
+                throw new UnauthorizedException('something went wrong')
             }
+            const code = await this.createOtpForUser(user)
+            return {
+                statusCode: HttpStatus.OK,
+                data: {
+                    message: "code send Successfully",
+                    code
+                }
+            }
+        } catch (error) {
+            throw error
         }
-
     }
 
     async createOtpForUser(user: UserEntity) {
@@ -57,32 +61,35 @@ export class AuthService {
     }
 
     async checkOtp(checkOtpDto: CheckOtpDto) {
-        const { mobile, code } = checkOtpDto;
-        const user = await this.userRepository.findOne({
-            where: { mobile },
-            relations: {
-                otp: true
-            },
-        })
-        const now = new Date()
-        if (!user || !user?.otp) throw new UnauthorizedException("create user or otp first");
-        const otp = user?.otp;
-        const expire_in = otp?.expires_in;
-        if (otp?.code !== code) throw new UnauthorizedException("Code invalid")
-        if (now > expire_in) throw new UnauthorizedException("Code expired")
-        if (!user.verify_mobile) {
-            await this.userRepository.update({id: user.id},{ verify_mobile: true })
-        }
-        const { accessToken, refreshToken } = this.generateTokenForUser({ id: user.id, mobile })
-        return {
-            statusCode: HttpStatus.OK,
-            data: {
-                accessToken,
-                refreshToken,
-                message: "logged in successfully"
+        try {
+            const { mobile, code } = checkOtpDto;
+            const user = await this.userRepository.findOne({
+                where: { mobile: ModifyMobileNumber(mobile) },
+                relations: {
+                    otp: true
+                },
+            })
+            const now = new Date()
+            if (!user || !user?.otp) throw new UnauthorizedException("create user or otp first");
+            const otp = user?.otp;
+            const expire_in = otp?.expires_in;
+            if (otp?.code !== code) throw new UnauthorizedException("Code invalid")
+            if (now > expire_in) throw new UnauthorizedException("Code expired")
+            if (!user.verify_mobile) {
+                await this.userRepository.update({ id: user.id }, { verify_mobile: true })
             }
+            const { accessToken, refreshToken } = this.generateTokenForUser({ id: user.id, mobile: ModifyMobileNumber(mobile) })
+            return {
+                statusCode: HttpStatus.OK,
+                data: {
+                    accessToken,
+                    refreshToken,
+                    message: "logged in successfully"
+                }
+            }
+        } catch (error) {
+            throw error
         }
-
     }
 
     generateTokenForUser(payload: payloadType) {
@@ -110,7 +117,9 @@ export class AuthService {
                 if (!user) throw new UnauthorizedException("please login to your account")
                 return {
                     mobile: user.mobile,
-                    id: user.id
+                    id: user.id,
+                    role: user.role,
+                    parentId: user.parentId
                 }
             }
             throw new UnauthorizedException("please login to your account")

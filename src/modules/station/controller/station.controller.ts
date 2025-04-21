@@ -5,15 +5,21 @@ import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { ResponseUtils } from 'src/common/utils/response.utils';
 import { ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { StationMessages } from '../enum/message.enum';
+import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
+import { CanAccess } from 'src/common/decorators/role.decorator';
+import { UserRole } from 'src/modules/user/enum/role.enum';
 
 @Controller('station')
+@UserAuthGuard()
 export class StationController {
   constructor(private readonly stationService: StationService) { }
 
+  //depot - r - head -> crud
   @Post('/create')
   @MyApiConsumes()
   @ApiOperation({ summary: StationMessages.CreatedDesc })
   @ApiResponse(ResponseUtils(HttpStatus.CREATED, StationMessages.Created, StationMessages.CreatedDesc))
+  @CanAccess(UserRole.HeadUser)
   create(@Body() createStationDto: CreateStationDto) {
     return this.stationService.create(createStationDto);
   }
@@ -35,49 +41,36 @@ export class StationController {
       ]
     }
   })
+  @CanAccess(UserRole.HeadUser,UserRole.OilDepotUser)
   findAll() {
     return this.stationService.findAll();
   }
 
   @Get('/get-one/:id')
-  @ApiOkResponse({
-    example: {
-      "status": HttpStatus.OK,
-      "data": {
-        "id": 0,
-        "name": "string",
-        "isActive": 'boolean',
-        "ownerId": 1,
-        "locationId": 2,
-        "createdAt": "2025-03-18T09:26:50.877Z",
-        "location": null,
-        "average_sales": [
-          {
-            "monthly_average_sale": 300,
-            "fuel_type": "petrol",
-            "createdAt": "2025-03-24T10:52:11.234Z"
-          }
-        ]
-      }
-    }
-  })
-  @ApiOperation({ summary: StationMessages.GetOne })
+  @CanAccess(UserRole.HeadUser,UserRole.OilDepotUser)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.stationService.findOne(id);
   }
-
+  @Get('/my')
+  @CanAccess(UserRole.StationUser)
+  myStation() {
+    return this.stationService.myStation();
+  }
   @Patch('/update/:id')
   @MyApiConsumes()
-  @ApiOperation({ summary: StationMessages.UpdateDesc })
-  @ApiResponse(ResponseUtils(HttpStatus.CREATED, StationMessages.Update, StationMessages.UpdateDesc))
+  @CanAccess(UserRole.HeadUser)
   update(@Param('id', ParseIntPipe) id: number, @Body() updateStationDto: UpdateStationDto) {
     return this.stationService.update(id, updateStationDto);
   }
 
   @Delete('/remove/:id')
-  @ApiOperation({ summary: StationMessages.RemoveDesc })
-  @ApiResponse(ResponseUtils(HttpStatus.OK, StationMessages.Remove, StationMessages.RemoveDesc))
+  @CanAccess(UserRole.HeadUser)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.stationService.remove(id);
+  }
+  @Get('/status-toggle/:id')
+  @CanAccess(UserRole.HeadUser)
+  statusToggle(@Param('id', ParseIntPipe) id: number) {
+    return this.stationService.stationStatusToggle(id);
   }
 }
