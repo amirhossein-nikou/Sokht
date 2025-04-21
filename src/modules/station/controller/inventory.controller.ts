@@ -35,7 +35,11 @@ export class InventoryController {
     update(@Param('id', ParseIntPipe) id: number, @Body() updateInventoryDto: UpdateInventoryDto) {
         return this.inventoryService.update(id, updateInventoryDto);
     }
-
+    @Get('/status-toggle/:id')
+    @CanAccess(UserRole.HeadUser)
+    statusToggle(@Param('id', ParseIntPipe) id: number) {
+        return this.inventoryService.statusToggle(id);
+    }
     @Delete('/remove/:id')
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.inventoryService.remove(id);

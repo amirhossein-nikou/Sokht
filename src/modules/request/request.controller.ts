@@ -31,10 +31,10 @@ export class RequestController {
         return this.requestService.findOne(id);
     }
     @Get('/by-date')
-    //@CanAccess(UserRole.HeadUser, UserRole.StationUser)
+    @CanAccess(UserRole.HeadUser, UserRole.StationUser)
     findByDate(@Query('end') end: Date, @Query('start') start?: Date) {
         const search: SearchDto = {
-            start: start ? new Date(start): new Date(),
+            start: start ? new Date(start) : new Date(),
             end: new Date(end)
         }
         return this.requestService.findByDate(search);
@@ -54,6 +54,11 @@ export class RequestController {
     @CanAccess(UserRole.OilDepotUser)
     license(@Param('id', ParseIntPipe) id: number) {
         return this.requestService.licenseRequest(id);
+    }
+    @Patch('/received/:id')
+    @CanAccess(UserRole.StationUser)
+    received(@Param('id', ParseIntPipe) id: number) {
+        return this.requestService.receivedRequest(id);
     }
     @Delete('/remove/:id')
     @CanAccess(UserRole.StationUser)

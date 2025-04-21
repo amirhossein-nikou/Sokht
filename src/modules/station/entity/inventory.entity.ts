@@ -9,8 +9,12 @@ export class InventoryEntity {
     id: number;
     @Column({type: 'bigint'})
     value: number;
+    @Column({type: 'bigint'})
+    max: number;
     @Column({enum: FuelTypes})
     fuel_type: FuelTypes;
+    @Column({ default: true})
+    status: boolean
     @Column()
     stationId: number
     @ManyToOne(() => StationEntity, station => station.inventory,{onDelete: "CASCADE"})

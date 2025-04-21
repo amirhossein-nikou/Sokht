@@ -12,16 +12,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { StationEntity } from '../entity/station.entity';
 import { AverageSaleEntity } from '../entity/sale.entity';
 import { InventoryEntity } from '../entity/inventory.entity';
-import { CapacityEntity } from '../entity/capacity.entity';
-import { CapacityService } from '../services/capacity.service';
-import { CapacityController } from '../controller/capacity.controller';
 
 
 @Module({
-  imports: [TypeOrmModule.forFeature([StationEntity, AverageSaleEntity,InventoryEntity,CapacityEntity])
+  imports: [TypeOrmModule.forFeature([StationEntity, AverageSaleEntity,InventoryEntity])
   , UserModule, LocationModule,AuthModule],
-  controllers: [StationController, SaleController,InventoryController,CapacityController],
-  providers: [StationService, SaleService,InventoryService,CapacityService],
+  controllers: [StationController, SaleController,InventoryController],
+  providers: [StationService, SaleService,InventoryService],
   exports: [StationService, TypeOrmModule]
 })
 export class StationModule { }

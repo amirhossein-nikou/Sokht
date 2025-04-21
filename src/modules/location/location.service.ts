@@ -19,7 +19,7 @@ export class LocationService {
 			await this.locationRepository.save(location)
 			return {
 				statusCode: HttpStatus.CREATED,
-				data: { message: LocationMessages.Create }
+				message: LocationMessages.Create 
 			}
 		} catch (error) {
 			throw error
@@ -58,7 +58,7 @@ export class LocationService {
 			await this.locationRepository.update(id, updateObj)
 			return {
 				status: HttpStatus.CREATED,
-				data: { message: LocationMessages.Update }
+				message: LocationMessages.Update
 			}
 		} catch (error) {
 			throw error
@@ -71,7 +71,7 @@ export class LocationService {
 			await this.locationRepository.remove(location)
 			return {
 				status: HttpStatus.OK,
-				data: { message: LocationMessages.Remove }
+				message: LocationMessages.Remove
 			}
 		} catch (error) {
 			throw error

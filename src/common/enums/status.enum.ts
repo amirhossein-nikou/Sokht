@@ -1,5 +1,6 @@
 export enum StatusEnum {
-    Posted = 'posted',
-    Approved = 'approved',
-    Licensing = 'licensing',
+    Posted = "در انتظار تایید",
+    Approved = "تایید شده",
+    Licensing = 'صدور پروانه و ارسال نفت کش',
+    received = "دریافت شده",
 }

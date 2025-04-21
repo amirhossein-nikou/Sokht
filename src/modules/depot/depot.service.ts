@@ -1,14 +1,14 @@
 import { ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
-import { CreateDepotDto, UpdateDepotDto } from './dto/depot.dto';
-import { UserService } from '../user/user.service';
-import { LocationService } from '../location/location.service';
-import { DepotMessages } from './enum/message.enum';
-import { DepotEntity } from './entity/depot.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { REQUEST } from '@nestjs/core';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
+import { Repository } from 'typeorm';
+import { LocationService } from '../location/location.service';
+import { UserService } from '../user/user.service';
+import { CreateDepotDto, UpdateDepotDto } from './dto/depot.dto';
+import { DepotEntity } from './entity/depot.entity';
+import { DepotMessages } from './enum/message.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class DepotService {
@@ -30,9 +30,9 @@ export class DepotService {
 			await this.depotRepository.save(depot)
 			return {
 				statusCode: HttpStatus.CREATED,
-				data: {
-					message: DepotMessages.Create
-				}
+
+				message: DepotMessages.Create
+
 			}
 		} catch (error) {
 			throw error
@@ -80,9 +80,8 @@ export class DepotService {
 			await this.depotRepository.update(id, updateObject)
 			return {
 				statusCode: HttpStatus.OK,
-				data: {
-					message: DepotMessages.Update
-				}
+				message: DepotMessages.Update
+
 			}
 		} catch (error) {
 			throw error
@@ -96,9 +95,8 @@ export class DepotService {
 			await this.depotRepository.remove(depot)
 			return {
 				statusCode: HttpStatus.OK,
-				data: {
-					message: DepotMessages.Remove
-				}
+				message: DepotMessages.Remove
+
 			}
 		} catch (error) {
 			throw error

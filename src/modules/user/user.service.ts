@@ -30,7 +30,7 @@ export class UserService {
 			await this.userRepository.save(user)
 			return {
 				statusCode: HttpStatus.CREATED,
-				data: { message: UserMessages.Created }
+				message: UserMessages.Created 
 			}
 		} catch (error) {
 			throw error
@@ -54,7 +54,7 @@ export class UserService {
 			await this.userRepository.save(subUser)
 			return {
 				statusCode: HttpStatus.CREATED,
-				data: { message: UserMessages.Created }
+				message: UserMessages.Created
 			}
 		} catch (error) {
 			throw error

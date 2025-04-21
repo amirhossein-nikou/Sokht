@@ -1,15 +1,15 @@
 import { HttpStatus, Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
+import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
 import { RemoveNullProperty } from "src/common/utils/update.utils";
-import { UserService } from "src/modules/user/user.service";
-import { CreateInventoryDto, UpdateInventoryDto } from "../dto/inventory.dto";
-import { InventoryMessages } from "../enum/message.enum";
-import { Repository } from "typeorm";
-import { InventoryEntity } from "../entity/inventory.entity";
-import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/modules/user/enum/role.enum";
+import { Repository } from "typeorm";
+import { CreateInventoryDto, UpdateInventoryDto } from "../dto/inventory.dto";
+import { InventoryEntity } from "../entity/inventory.entity";
+import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
+import { FuelTypes } from "src/common/enums/fuelType.enum";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
@@ -19,26 +19,16 @@ export class InventoryService {
     ) { }
     async create(createInventoryDto: CreateInventoryDto) {
         try {
-            // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibW9iaWxlIjoiMDkxNzU1MDA3NjciLCJpYXQiOjE3NDQ5MDMwMDIsImV4cCI6MTc0NzQ5NTAwMn0.bd2c8hChc4--hHuq11EWaNpY4rXBELjjTstEqoLEhaw
-            const { fuel_type, value, stationId } = createInventoryDto
+            const { fuel_type, value, stationId, max } = createInventoryDto
             const { id } = this.req.user
             await this.stationService.findByUserStation(id, stationId)
-            let inventory = await this.inventoryRepository.findOne({
-                where: {
-                    stationId, fuel_type,
-                }
+            let inventory = this.inventoryRepository.create({
+                fuel_type, value, stationId, max
             })
-            if (!inventory) {
-                inventory = this.inventoryRepository.create({
-                    fuel_type, value, stationId
-                })
-            } else {
-                inventory.value = value
-            }
             await this.inventoryRepository.save(inventory)
             return {
                 status: HttpStatus.CREATED,
-                data: { message: InventoryMessages.Created }
+                message: InventoryMessages.Created
             }
         } catch (error) {
             throw error
@@ -88,7 +78,7 @@ export class InventoryService {
     }
     async update(id: number, updateInventoryDto: UpdateInventoryDto) {
         try {
-            const { fuel_type, value, stationId } = updateInventoryDto;
+            const { fuel_type, value, stationId, max } = updateInventoryDto;
             const { id: userId } = this.req.user;
             if (stationId) await this.stationService.findByUserStation(id, stationId)
             const obj = RemoveNullProperty(updateInventoryDto)
@@ -96,9 +86,9 @@ export class InventoryService {
             await this.inventoryRepository.update({ id: inventory.id }, obj)
             return {
                 status: HttpStatus.OK,
-                data: {
-                    message: InventoryMessages.Update
-                }
+
+                message: InventoryMessages.Update
+
             }
         } catch (error) {
             throw error
@@ -111,9 +101,28 @@ export class InventoryService {
             await this.inventoryRepository.remove(inventory)
             return {
                 status: HttpStatus.OK,
-                data: {
-                    message: InventoryMessages.Remove
-                }
+                message: InventoryMessages.Remove
+
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    async statusToggle(id: number) {
+        try {
+            const inventory = await this.findById(id)
+            let message = ''
+            if (inventory.status) {
+                inventory.status = false
+                message = 'capacity status change to false'
+            } else {
+                inventory.status = true
+                message = 'capacity status change to true'
+            }
+            await this.inventoryRepository.save(inventory)
+            return {
+                statusCode: HttpStatus.OK,
+                message
             }
         } catch (error) {
             throw error
@@ -124,6 +133,25 @@ export class InventoryService {
         const inventory = await this.inventoryRepository.findOne({
             where: {
                 id, station: { ownerId }
+            }
+        });
+        if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
+        return inventory
+    }
+    async findById(id: number) {
+        const inventory = await this.inventoryRepository.findOne({
+            where: {
+                id,
+            }
+        });
+        if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
+        return inventory
+    }
+    async findByStationIdAndFuel(stationId: number, fuelType: FuelTypes) {
+        const inventory = await this.inventoryRepository.find({
+            where: {
+                stationId,
+                fuel_type: fuelType
             }
         });
         if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)

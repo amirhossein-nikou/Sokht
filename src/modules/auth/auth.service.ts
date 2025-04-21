@@ -2,12 +2,12 @@ import { BadRequestException, ConflictException, HttpStatus, Injectable, Unautho
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import { randomInt } from "crypto";
-import { CheckOtpDto, SendOtpDto } from "./dto/auth.dto";
-import { payloadType } from "./types/payload";
+import { ModifyMobileNumber } from "src/common/utils/mobile.utils";
 import { Repository } from "typeorm";
 import { UserEntity } from "../user/entity/user.entity";
+import { CheckOtpDto, SendOtpDto } from "./dto/auth.dto";
 import { OtpEntity } from "./entity/otp.entity";
-import { ModifyMobileNumber } from "src/common/utils/mobile.utils";
+import { payloadType } from "./types/payload";
 
 @Injectable()
 export class AuthService {
@@ -27,10 +27,7 @@ export class AuthService {
             const code = await this.createOtpForUser(user)
             return {
                 statusCode: HttpStatus.OK,
-                data: {
-                    message: "code send Successfully",
-                    code
-                }
+                message: "code send Successfully",
             }
         } catch (error) {
             throw error
@@ -84,8 +81,8 @@ export class AuthService {
                 data: {
                     accessToken,
                     refreshToken,
-                    message: "logged in successfully"
-                }
+                },
+                message: "logged in successfully"
             }
         } catch (error) {
             throw error

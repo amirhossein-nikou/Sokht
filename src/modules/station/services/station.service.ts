@@ -1,5 +1,7 @@
 import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Request } from 'express';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { Repository } from 'typeorm';
 import { LocationService } from '../../location/location.service';
@@ -7,8 +9,6 @@ import { UserService } from '../../user/user.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { StationEntity } from '../entity/station.entity';
 import { StationMessages } from '../enum/message.enum';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable({ scope: Scope.REQUEST })
 export class StationService {
@@ -31,7 +31,7 @@ export class StationService {
             await this.stationRepository.save(station)
             return {
                 status: HttpStatus.OK,
-                data: { message: StationMessages.Created }
+                message: StationMessages.Created
             }
         } catch (error) {
             throw error
@@ -84,9 +84,9 @@ export class StationService {
             await this.stationRepository.update(id, updateObj)
             return {
                 status: HttpStatus.CREATED,
-                data: {
-                    message: StationMessages.Update
-                }
+
+                message: StationMessages.Update
+
             }
         } catch (error) {
             throw error
@@ -99,9 +99,8 @@ export class StationService {
             await this.stationRepository.remove(station)
             return {
                 status: HttpStatus.OK,
-                data: {
-                    message: StationMessages.Remove
-                }
+                message: StationMessages.Remove
+
             }
         } catch (error) {
             throw error
@@ -121,7 +120,7 @@ export class StationService {
             await this.stationRepository.save(station)
             return {
                 statusCode: HttpStatus.OK,
-                data: { message }
+                message
             }
         } catch (error) {
             throw error
@@ -137,7 +136,7 @@ export class StationService {
                         cargo: true
                     },
                     average_sale: true,
-                    max_capacity: true,
+                    inventory: true,
                     location: true
                 },
                 order: {

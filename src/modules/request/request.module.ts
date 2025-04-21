@@ -6,11 +6,13 @@ import { RequestEntity } from './entities/request.entity';
 import { AuthModule } from '../auth/auth.module';
 import { StationModule } from '../station/modules/station.module';
 import { DepotModule } from '../depot/depot.module';
+import { InventoryService } from '../station/services/inventory.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([RequestEntity]), AuthModule, StationModule,DepotModule],
   controllers: [RequestController],
-  providers: [RequestService],
+  providers: [RequestService,InventoryService],
   exports: [RequestService,TypeOrmModule]
 })
+
 export class RequestModule { }

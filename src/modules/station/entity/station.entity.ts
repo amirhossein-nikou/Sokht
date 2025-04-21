@@ -4,7 +4,6 @@ import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, One
 import { InventoryEntity } from "./inventory.entity";
 import { AverageSaleEntity } from "./sale.entity";
 import { LocationEntity } from "src/modules/location/entity/location.entity";
-import { CapacityEntity } from "./capacity.entity";
 import { RequestEntity } from "src/modules/request/entities/request.entity";
 
 @Entity(EntityName.Station)
@@ -31,8 +30,6 @@ export class StationEntity {
     average_sale: AverageSaleEntity[]
     @OneToMany(() => InventoryEntity, inventory => inventory.station)
     inventory: InventoryEntity[]
-    @OneToMany(() => CapacityEntity, capacity => capacity.station)
-    max_capacity: CapacityEntity[]
     @OneToMany(() => RequestEntity, request => request.station)
     requests: RequestEntity[]
 }

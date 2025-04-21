@@ -18,6 +18,7 @@ import { REQUEST } from '@nestjs/core';
 import { FuelTypes } from 'src/common/enums/fuelType.enum';
 import { UserRole } from '../user/enum/role.enum';
 import { SearchDto } from './dto/search.dto';
+import { InventoryService } from '../station/services/inventory.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -25,11 +26,12 @@ export class RequestService {
         @InjectRepository(RequestEntity) private requestRepository: Repository<RequestEntity>,
         private stationService: StationService,
         private depotService: DepotService,
+        private inventoryService: InventoryService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createRequestDto: CreateRequestDto) {
         try {
-            const { fuel_type, stationId, value, depotId, receive_at } = createRequestDto
+            const { fuel_type, stationId, value, depotId, receive_at, inventoryId } = createRequestDto
             // check exists station
             const now = FormatDateTime(new Date());
             if (now > ReceiveTimeEnum.FOUR_PM || now < ReceiveTimeEnum.SEVEN_AM) throw new BadRequestException(`requests can be created from 07:00 until 16:00`)
@@ -39,13 +41,14 @@ export class RequestService {
                 average_sale: true,
                 requests: true
             })
+            const inventory = await this.inventoryService.findById(inventoryId)
+            if ((inventory.value + value) > inventory.max) throw new BadRequestException('you cant receive more than your max capacity')
             // limit send requests just 4 time in day
             this.limitSendRequests(station)
             //---
             const priority = this.detectPriority(station, fuel_type)
             // check exists depot
             await this.depotService.findOneById(depotId)
-            // create priority for request
             const request = this.requestRepository.create({
                 fuel_type,
                 stationId,
@@ -57,13 +60,13 @@ export class RequestService {
             await this.requestRepository.save(request);
             return {
                 statusCode: HttpStatus.CREATED,
-                data: {
-                    message: RequestMessages.Create,
-                    // priorityDates: {
-                    //     average_sale_date: station.average_sale.updated_at,
-                    //     inventory_date: station.inventory.updated_at
-                    // }
-                }
+
+                message: RequestMessages.Create,
+                // priorityDates: {
+                //     average_sale_date: station.average_sale.updated_at,
+                //     inventory_date: station.inventory.updated_at
+                // }
+
             }
         } catch (error) {
             throw error
@@ -166,21 +169,27 @@ export class RequestService {
 
     async update(id: number, updateRequestDto: UpdateRequestDto) {
         try {
-            const { fuel_type, stationId, value } = updateRequestDto
-            await this.getOneById(id)
-            if (stationId) await this.stationService.findOneById(stationId)
-            const updateObject = RemoveNullProperty({ fuel_type, stationId, value, })
+            const { value, receive_at } = updateRequestDto
+            const request = await this.getOneById(id)
+            const updateObject = RemoveNullProperty({ receive_at, value, })
             //calculate priority => 
+            const station = await this.stationService.findOneByIdWithRelations(request.stationId, {
+                inventory: true,
+                average_sale: true,
+                requests: true
+            })
+            const priority = this.detectPriority(station, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
-                status: StatusEnum.Posted
+                status: StatusEnum.Posted,
+                priority
                 , ...updateObject
             })
             if (!updatedRequest || updatedRequest.affected == 0) throw new BadRequestException(RequestMessages.UpdateFailed)
             return {
                 statusCode: HttpStatus.OK,
-                data: {
-                    message: RequestMessages.Update
-                }
+
+                message: RequestMessages.Update
+
             }
         } catch (error) {
             throw error
@@ -193,9 +202,9 @@ export class RequestService {
             await this.requestRepository.remove(request)
             return {
                 statusCode: HttpStatus.OK,
-                data: {
-                    message: RequestMessages.Remove
-                }
+
+                message: RequestMessages.Remove
+
             }
         } catch (error) {
             throw error
@@ -212,15 +221,14 @@ export class RequestService {
             await this.requestRepository.save(request)
             return {
                 statusCode: HttpStatus.OK,
-                data: {
-                    message: RequestMessages.ApprovedSuccess
-                }
+
+                message: RequestMessages.ApprovedSuccess
+
             }
         } catch (error) {
             throw error
         }
     }
-
     async licenseRequest(id: number) {
         try {
             const request = await this.getOneById(id)
@@ -230,30 +238,44 @@ export class RequestService {
             await this.requestRepository.save(request)
             return {
                 statusCode: HttpStatus.OK,
-                data: {
-                    message: RequestMessages.LicenseSuccess
-                }
+                message: RequestMessages.LicenseSuccess
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    async receivedRequest(id: number) {
+        try {
+            const request = await this.getOneById(id)
+            if (request.status == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
+            if (request.status == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
+            if (request.status == StatusEnum.received) throw new BadRequestException(RequestMessages.AlreadyReceived)
+            request.status = StatusEnum.received
+            await this.requestRepository.save(request)
+            return {
+                statusCode: HttpStatus.OK,
+                message: RequestMessages.Received
             }
         } catch (error) {
             throw error
         }
     }
 
+    // utils
     detectPriority(station: StationEntity, fuel_type: FuelTypes): PriorityEnum {
-        const inventory = station.inventory.find(inventory => inventory.fuel_type = fuel_type)
+        const inventories = station.inventory.filter(inventory => inventory.fuel_type == fuel_type)
         const average_sale = station.average_sale.find(sale => sale.fuel_type = fuel_type)
-        if (!inventory || !inventory.value)
+        if (!inventories || inventories.length == 0)
             throw new BadRequestException('station inventory is invalid')
         if (!average_sale || !average_sale.average_sale)
             throw new BadRequestException('station average_sale is invalid')
-        if (average_sale.fuel_type !== inventory.fuel_type) throw new BadRequestException()
-        const priorityNumber: number = (inventory.value / average_sale.average_sale) * 100
+        const inventory = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
+        const priorityNumber: number = (inventory / average_sale.average_sale) * 100
         if (priorityNumber >= 100) return PriorityEnum.Normal
         else if (priorityNumber < 100 && priorityNumber >= 30) return PriorityEnum.High
         else if (priorityNumber < 30) return PriorityEnum.Critical
         return
     }
-    // utils
     async getOneById(id: number) {
         const request = await this.requestRepository.findOneBy({ id })
         if (!request) throw new NotFoundException(RequestMessages.Notfound)
@@ -268,4 +290,5 @@ export class RequestService {
         })
         if (counter >= 4) throw new BadRequestException('cant send more than 4')
     }
+
 }

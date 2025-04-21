@@ -3,7 +3,6 @@ import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { UserService } from 'src/modules/user/user.service';
 import { Repository } from 'typeorm';
 import { CreateSaleDto, UpdateSaleDto } from '../dto/sale.dto';
 import { AverageSaleEntity } from '../entity/sale.entity';
@@ -39,7 +38,7 @@ export class SaleService {
 			await this.averageSaleRepository.save(sale)
 			return {
 				statusCode: HttpStatus.CREATED,
-				data: { message: SaleMessages.Created }
+				message: SaleMessages.Created
 			}
 		} catch (error) {
 			throw error
@@ -94,7 +93,7 @@ export class SaleService {
 			await this.averageSaleRepository.update({ id, station: { ownerId: userId } }, updateObj)
 			return {
 				statusCode: HttpStatus.CREATED,
-				data: { message: SaleMessages.Update }
+				message: SaleMessages.Update
 			}
 		} catch (error) {
 			throw error
@@ -108,7 +107,7 @@ export class SaleService {
 			await this.averageSaleRepository.remove(averageSale)
 			return {
 				statusCode: HttpStatus.OK,
-				data: { message: SaleMessages.Remove }
+				message: SaleMessages.Remove
 			}
 		} catch (error) {
 			throw error

@@ -7,6 +7,9 @@ export class CreateRequestDto {
     @ApiProperty()
     @IsNumberString()
     stationId: number;
+    @ApiProperty()
+    @IsNumberString()
+    inventoryId: number;
     @ApiProperty({ enum: FuelTypes })
     @IsString()
     @IsEnum(FuelTypes)

@@ -32,9 +32,8 @@ export class TankerService {
             await this.tankerRepository.save(tanker)
             return {
                 statusCode: HttpStatus.CREATED,
-                data: {
-                    message: TankerMessages.Create
-                }
+                message: TankerMessages.Create
+
             }
         } catch (error) {
             throw error
@@ -102,9 +101,8 @@ export class TankerService {
             this.tankerRepository.update(id, updateObject)
             return {
                 statusCode: HttpStatus.OK,
-                data: {
-                    message: TankerMessages.Update
-                }
+                message: TankerMessages.Update
+
             }
         } catch (error) {
             throw error
@@ -117,9 +115,8 @@ export class TankerService {
             await this.tankerRepository.remove(tanker)
             return {
                 statusCode: HttpStatus.OK,
-                data: {
-                    message: TankerMessages.Remove
-                }
+                message: TankerMessages.Remove
+
             }
         } catch (error) {
             throw error

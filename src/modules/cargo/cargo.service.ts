@@ -28,9 +28,7 @@ export class CargoService {
             await this.cargoRepository.save(cargo)
             return {
                 statusCode: HttpStatus.CREATED,
-                data: {
-                    message: CargoMessages.Create
-                }
+                message: CargoMessages.Create
             }
         } catch (error) {
             throw error
@@ -76,15 +74,15 @@ export class CargoService {
                 await this.checkExistsRequestId(requestId)
             }
             let updateObject = RemoveNullProperty(updateCargoDto)
-            if(Object.keys(updateObject).length == 0) {
+            if (Object.keys(updateObject).length == 0) {
                 throw new BadRequestException('update failed')
             }
             await this.cargoRepository.update(id, updateObject)
             return {
                 statusCode: HttpStatus.OK,
-                data: {
-                    message: CargoMessages.Update
-                }
+
+                message: CargoMessages.Update
+
             }
         } catch (error) {
             throw error
@@ -97,9 +95,8 @@ export class CargoService {
             await this.cargoRepository.remove(cargo)
             return {
                 statusCode: HttpStatus.OK,
-                data: {
-                    message: CargoMessages.Remove
-                }
+                message: CargoMessages.Remove
+
             }
         } catch (error) {
             throw error

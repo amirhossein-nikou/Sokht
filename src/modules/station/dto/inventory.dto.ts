@@ -6,6 +6,9 @@ export class CreateInventoryDto {
     @ApiProperty()
     @IsNumberString({no_symbols: true})
     value: number;
+    @ApiProperty()
+    @IsNumberString({no_symbols: true})
+    max: number;
     @ApiProperty({ enum: FuelTypes })
     @IsEnum(FuelTypes)
     fuel_type: FuelTypes;
