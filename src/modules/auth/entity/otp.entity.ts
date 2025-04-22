@@ -6,7 +6,7 @@ import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "ty
 export class OtpEntity{
     @PrimaryGeneratedColumn()
     id: number;
-    @Column({type:'date'})
+    @Column()
     expires_in: Date;
     @Column()
     code: string;

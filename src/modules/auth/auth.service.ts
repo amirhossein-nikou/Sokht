@@ -35,9 +35,10 @@ export class AuthService {
     }
 
     async createOtpForUser(user: UserEntity) {
-        const expire_in: Date = new Date(new Date().getTime() + (1000 * 60 * 2));
+        const expire_in: Date = new Date(Date.now() + (1000 * 60 * 2));
         const code: string = randomInt(10000, 99999).toString();
         let otp = await this.otpRepository.findOne({ where: { userId: user.id } });
+        console.log(otp.expires_in );
         if (otp) {
             if (otp.expires_in > new Date()) {
                 throw new BadRequestException("code not expired")
