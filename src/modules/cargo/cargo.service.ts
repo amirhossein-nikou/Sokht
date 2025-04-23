@@ -54,9 +54,17 @@ export class CargoService {
                 relations: {
                     request: true,
                     tankers: {
-                        driver: true
+                        driver: true,
+                        depot: {
+                            location: true
+                        }
                     }
-
+                },
+                select: {
+                    tankers: {
+                        depot: {name: true,location: {lat: true,lon: true}},
+                        driver: {first_name: true,last_name: true,mobile: true}
+                    }
                 }
             })
             if (!cargo) throw new NotFoundException(CargoMessages.Notfound)
