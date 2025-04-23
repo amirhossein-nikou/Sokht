@@ -12,6 +12,6 @@ import { StationModule } from "./station.module";
   , UserModule,StationModule,AuthModule],
   controllers: [InventoryController],
   providers: [InventoryService],
-  exports: [TypeOrmModule]
+  exports: [InventoryService,TypeOrmModule]
 })
 export class InventoryModule { }

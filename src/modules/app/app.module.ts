@@ -7,13 +7,13 @@ import { LocationModule } from '../location/location.module';
 import { DepotModule } from '../depot/depot.module';
 import { TankerModule } from '../tanker/tanker.module';
 import { InventoryModule } from '../station/modules/inventory.module';
-
+import { HomeModule } from '../home/home.module';
 
 @Module({
   imports: [
-    CustomModule, UserModule, AuthModule,
+    CustomModule, HomeModule,UserModule, AuthModule,
     StationModule, InventoryModule, LocationModule,
-    DepotModule, TankerModule
+    DepotModule, TankerModule,
   ],
   controllers: [],
   providers: [],

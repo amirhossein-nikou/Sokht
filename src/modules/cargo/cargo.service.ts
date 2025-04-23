@@ -51,22 +51,7 @@ export class CargoService {
         try {
             const cargo = await this.cargoRepository.findOne({
                 where: { id },
-                relations: {
-                    request: true,
-                    tankers: {
-                        driver: true,
-                        depot: {
-                            location: true
-                        }
-                    }
-                },
-                select: {
-                    tankers: {
-                        depot: {name: true,location: {lat: true,lon: true}},
-                        driver: {first_name: true,last_name: true,mobile: true}
-                    }
-                }
-            })
+               })
             if (!cargo) throw new NotFoundException(CargoMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
@@ -130,5 +115,26 @@ export class CargoService {
         const cargo = await this.cargoRepository.findOneBy({ requestId })
         if (cargo) throw new NotFoundException('cargo for this request already exists')
         return false
+    }
+    async findCargoWithDetails(id: number){
+        const cargo = await this.cargoRepository.findOne({
+            where: { id },
+            relations: {
+                request: true,
+                tankers: {
+                    driver: true,
+                    depot: true
+                }
+            },
+            select: {
+                tankers: {
+                    id:true,
+                    depot: {name: true,id: true},
+                    driver: {first_name: true,last_name: true,mobile: true}
+                }
+            }
+        })
+        if (!cargo) throw new NotFoundException(CargoMessages.Notfound)
+        return cargo
     }
 }

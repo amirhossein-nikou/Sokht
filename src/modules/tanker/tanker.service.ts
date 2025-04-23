@@ -1,4 +1,4 @@
-import { HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import { ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -25,6 +25,8 @@ export class TankerService {
     async create(createTankerDto: CreateTankerDto) {
         try {
             const { capacity, depotId, driverId, fuel_type, number, cargoId } = createTankerDto
+            await this.checkExistsDriver(depotId)
+            await this.checkExistsTankerNumber(number)
             await this.userService.findOneById(driverId);
             await this.depotService.findOneById(depotId);
             if (cargoId) await this.cargoService.getOneById(cargoId);
@@ -94,9 +96,13 @@ export class TankerService {
         try {
             const { capacity, depotId, driverId, fuel_type, number, cargoId } = updateTankerDto
             await this.getTankerById(id)
-            if (driverId && driverId > 0) await this.userService.findOneById(driverId);
+            if (driverId && driverId > 0) {
+                await this.checkExistsDriver(depotId)
+                await this.userService.findOneById(driverId);
+            }
             if (depotId && depotId > 0) await this.depotService.findOneById(depotId);
             if (cargoId && cargoId > 0) await this.cargoService.getOneById(cargoId);
+            if(number && number > 0) await this.checkExistsTankerNumber(number)
             const updateObject = RemoveNullProperty({ capacity, depotId, driverId, fuel_type, number, cargoId })
             this.tankerRepository.update(id, updateObject)
             return {
@@ -128,5 +134,15 @@ export class TankerService {
         const tanker = await this.tankerRepository.findOneBy({ id })
         if (!tanker) throw new NotFoundException(TankerMessages.Notfound)
         return tanker
+    }
+    async checkExistsDriver(driverId: number) {
+        const tanker = await this.tankerRepository.findOne({ where: { driverId } })
+        if (tanker) throw new ConflictException('this driver is already own a tanker')
+        return true
+    }
+    async checkExistsTankerNumber(number: number) {
+        const tanker = await this.tankerRepository.findOne({ where: { number } })
+        if (tanker) throw new ConflictException('this driver is already own a tanker')
+        return true
     }
 }

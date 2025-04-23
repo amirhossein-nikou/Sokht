@@ -34,8 +34,8 @@ export class RequestService {
             const { fuel_type, stationId, value, depotId, receive_at, inventoryId } = createRequestDto
             // check exists station
             const now = FormatDateTime(new Date());
-            if (now > ReceiveTimeEnum.FOUR_PM || now < ReceiveTimeEnum.SEVEN_AM) throw new BadRequestException(`requests can be created from 07:00 until 16:00`)
-            if (receive_at < now) throw new BadRequestException(`receive_at must be more than ${now}`)
+            // if (now > ReceiveTimeEnum.FOUR_PM || now < ReceiveTimeEnum.SEVEN_AM) throw new BadRequestException(`requests can be created from 07:00 until 16:00`)
+            // if (receive_at < now) throw new BadRequestException(`receive_at must be more than ${now}`)
             const station = await this.stationService.findOneByIdWithRelations(stationId, {
                 inventory: true,
                 average_sale: true,

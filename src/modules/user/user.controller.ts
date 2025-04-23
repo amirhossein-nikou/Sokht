@@ -13,7 +13,7 @@ export class UserController {
 
     @Post('/create')
     @UserAuthGuard()
-    @CanAccess(PremiumRoles.Boss) // main admin
+    @CanAccess(PremiumRoles.Boss,PremiumRoles.Head)
     @MyApiConsumes()
     create(@Body() createUserDto: CreateUserDto) {
         return this.userService.create(createUserDto);
@@ -29,7 +29,7 @@ export class UserController {
     @Get('/list')
     @MyApiConsumes()
     @UserAuthGuard()
-    @CanAccess(PremiumRoles.Boss,PremiumRoles.Admin)
+    @CanAccess(PremiumRoles.Boss, PremiumRoles.Admin)
     findAll() {
         return this.userService.findAll();
     }

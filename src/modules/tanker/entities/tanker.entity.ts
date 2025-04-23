@@ -15,7 +15,7 @@ export class TankerEntity {
     capacity: number;
     @Column({enum: FuelTypes})
     fuel_type: FuelTypes;
-    @Column()
+    @Column({unique: true})
     number: number;
     @Column()
     depotId: number;

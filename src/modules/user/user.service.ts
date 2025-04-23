@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, HttpStatus, Inject, Injectable, NotFoundException, Scope, UnauthorizedException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -8,6 +8,7 @@ import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from './entity/user.entity';
 import { UserMessages } from './enum/user.message';
 import { isIdentityCard, isMobilePhone } from 'class-validator';
+import { UserRole } from './enum/role.enum';
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -18,10 +19,16 @@ export class UserService {
 	) { }
 	async create(createUserDto: CreateUserDto) {
 		try {
+			const {role: userRole} = this.req.user
 			const { first_name, last_name, mobile, national_code, certificateId, role } = createUserDto
+			if(userRole === UserRole.HeadUser){
+				if(role === UserRole.Driver || role === UserRole.HeadUser)
+					throw new ForbiddenException('you are not allow to create this roles')
+			}
 			await this.checkExistsMobile(mobile)
 			await this.checkExistsNationalCode(national_code)
 			if (certificateId) await this.checkExistsCertificateId(certificateId)
+			
 			const user = this.userRepository.create({
 				first_name, last_name,
 				mobile: ModifyMobileNumber(mobile)
@@ -42,7 +49,7 @@ export class UserService {
 			const { first_name, last_name, mobile, national_code, certificateId } = addSubUserDto
 			const { id } = this.req.user
 			const user = await this.findOneById(id)
-			if (user.parent) throw new BadRequestException('this user is not allowed to add sub users')
+			if (user.parent || user.parentId) throw new BadRequestException('this user is not allowed to add sub users')
 			await this.checkExistsMobile(mobile)
 			await this.checkExistsNationalCode(national_code)
 			if (certificateId) await this.checkExistsCertificateId(certificateId)
