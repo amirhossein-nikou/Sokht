@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope, UnauthorizedException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -30,7 +30,7 @@ export class UserService {
 			await this.userRepository.save(user)
 			return {
 				statusCode: HttpStatus.CREATED,
-				message: UserMessages.Created 
+				message: UserMessages.Created
 			}
 		} catch (error) {
 			throw error
@@ -134,7 +134,7 @@ export class UserService {
 		try {
 			const parentId = this.req.user.id
 			const user = await this.findOneById(id)
-			if(user.id !== parentId) throw new BadRequestException('you just can remove your sub users')
+			if (user.id !== parentId) throw new BadRequestException('you just can remove your sub users')
 			await this.userRepository.remove(user)
 			return {
 				statusCode: 200,
@@ -159,7 +159,7 @@ export class UserService {
 			throw error
 		}
 	}
-	
+
 	// utils 
 	async findOneById(id: number) {
 		const user = await this.userRepository.findOne({ where: { id } })
@@ -181,5 +181,12 @@ export class UserService {
 		if (user) throw new ConflictException('national code unavailable')
 		return false
 	}
-	
+	async checkIfParent(id: number) {
+		const user = await this.findOneById(id)
+		if (user.parent !== null) {
+			throw new UnauthorizedException(UserMessages.ParentAccess)
+		}
+		return user
+	}
+
 }

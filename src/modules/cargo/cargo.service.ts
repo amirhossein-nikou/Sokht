@@ -49,7 +49,16 @@ export class CargoService {
 
     async findOne(id: number) {
         try {
-            const cargo = await this.cargoRepository.findOne({ where: { id }, relations: { request: true } })
+            const cargo = await this.cargoRepository.findOne({
+                where: { id },
+                relations: {
+                    request: true,
+                    tankers: {
+                        driver: true
+                    }
+
+                }
+            })
             if (!cargo) throw new NotFoundException(CargoMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,

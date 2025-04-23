@@ -10,11 +10,13 @@ import { InventoryEntity } from "../entity/inventory.entity";
 import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
 import { FuelTypes } from "src/common/enums/fuelType.enum";
+import { UserService } from "src/modules/user/user.service";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
         @InjectRepository(InventoryEntity) private inventoryRepository: Repository<InventoryEntity>,
         private stationService: StationService,
+        private userService: UserService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createInventoryDto: CreateInventoryDto) {
@@ -110,7 +112,10 @@ export class InventoryService {
     }
     async statusToggle(id: number) {
         try {
+            const userId = this.req.user.id
+            await this.userService.checkIfParent(userId)
             const inventory = await this.findById(id)
+
             let message = ''
             if (inventory.status) {
                 inventory.status = false
