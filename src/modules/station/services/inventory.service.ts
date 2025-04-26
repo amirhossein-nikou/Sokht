@@ -22,10 +22,17 @@ export class InventoryService {
     async create(createInventoryDto: CreateInventoryDto) {
         try {
             const { fuel_type, value, stationId, max } = createInventoryDto
-            const { id } = this.req.user
-            await this.stationService.findByUserStation(id, stationId)
+            const { id, role } = this.req.user
+            if (role === UserRole.HeadUser) {
+                await this.stationService.findOneById(stationId)
+            } else {
+                await this.stationService.findByUserStation(id, stationId)
+            }
             let inventory = this.inventoryRepository.create({
-                fuel_type, value, stationId, max
+                fuel_type,
+                value,
+                stationId,
+                max
             })
             await this.inventoryRepository.save(inventory)
             return {

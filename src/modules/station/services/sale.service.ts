@@ -8,6 +8,7 @@ import { CreateSaleDto, UpdateSaleDto } from '../dto/sale.dto';
 import { AverageSaleEntity } from '../entity/sale.entity';
 import { SaleMessages } from '../enum/message.enum';
 import { StationService } from './station.service';
+import { UserRole } from 'src/modules/user/enum/role.enum';
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -21,8 +22,8 @@ export class SaleService {
 		try {
 			const { fuel_type, average_sale, stationId } = createSaleDto
 			const { id } = this.req.user
-			await this.checkExists(stationId)
-			await this.stationService.findByUserStation(id, stationId);
+			//await this.checkExists(stationId)
+			await this.stationService.findOneById(stationId)
 			let sale = await this.averageSaleRepository.findOne({
 				where: {
 					stationId, fuel_type

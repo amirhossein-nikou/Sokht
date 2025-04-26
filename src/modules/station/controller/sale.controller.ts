@@ -13,7 +13,7 @@ export class SaleController {
   constructor(private readonly saleService: SaleService) { }
   @MyApiConsumes()
   @Post('/create')
-  @CanAccess(UserRole.StationUser)
+  @CanAccess(UserRole.HeadUser)
   create(@Body() createSaleDto: CreateSaleDto) {
     return this.saleService.create(createSaleDto);
   }
@@ -31,13 +31,13 @@ export class SaleController {
   }
   @MyApiConsumes()
   @Patch('/update/:id')
-  @CanAccess(UserRole.StationUser)
+  @CanAccess(UserRole.HeadUser)
   update(@Param('id') id: string, @Body() updateSaleDto: UpdateSaleDto) {
     return this.saleService.update(+id, updateSaleDto);
   }
 
   @Delete('/remove/:id')
-  @CanAccess(UserRole.StationUser)
+  @CanAccess(UserRole.HeadUser)
   remove(@Param('id') id: string) {
     return this.saleService.remove(+id);
   }

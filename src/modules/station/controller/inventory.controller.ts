@@ -12,6 +12,7 @@ import { CanAccess } from 'src/common/decorators/role.decorator';
 export class InventoryController {
     constructor(private readonly inventoryService: InventoryService) { }
     @MyApiConsumes()
+    @CanAccess(UserRole.StationUser,UserRole.HeadUser)
     @Post('/create')
     create(@Body() createInventoryDto: CreateInventoryDto) {
         return this.inventoryService.create(createInventoryDto);
