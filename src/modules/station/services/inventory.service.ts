@@ -162,4 +162,13 @@ export class InventoryService {
         if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
         return inventory
     }
+    async findAllUserInventories(ownerId: number) {
+        const inventory = await this.inventoryRepository.find({
+            where: {
+                station: { ownerId }
+            }
+        });
+        if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
+        return inventory
+    }
 }

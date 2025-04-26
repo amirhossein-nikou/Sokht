@@ -10,7 +10,7 @@ export class HomeController {
 
   @Get('/dashboard')
   @CanAccess()
-  findAll(@Query('inventoryId',ParseIntPipe) inventoryId: number,@Query('cargoId',ParseIntPipe) cargoId: number) {
-    return this.homeService.dashboard({inventoryId,cargoId});
+  findAll() {
+    return this.homeService.dashboard();
   }
 }

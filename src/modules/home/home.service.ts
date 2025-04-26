@@ -14,11 +14,10 @@ export class HomeService {
         @Inject(REQUEST) private req: Request
 
     ) { }
-    async dashboard(dashboardDto: DashboardDto) {
-        const { inventoryId, cargoId } = dashboardDto
+    async dashboard() {
         const { id } = this.req.user
-        const inventory = await this.inventoryService.findOneById(inventoryId, id)
-        const cargo = await this.cargoService.findCargoWithDetails(cargoId)
+        const inventory = await this.inventoryService.findAllUserInventories(id)
+        const cargo = await this.cargoService.findCargoWithDetails()
         return {
             statusCode: HttpStatus.OK,
             data: {
