@@ -42,7 +42,10 @@ export class DepotService {
 	async findAll() {
 		try {
 			const { id } = this.req.user
-			const depots = await this.depotRepository.find({ where: { ownerId: id } })
+			const depots = await this.depotRepository.find({
+				where: { ownerId: id },
+				relations: { location: true }
+			})
 			return {
 				statusCode: HttpStatus.OK,
 				data: depots
@@ -55,7 +58,7 @@ export class DepotService {
 	async findOne(id: number) {
 		try {
 			const { id: ownerId } = this.req.user
-			const depot = await this.depotRepository.findOne({ where: { ownerId, id } })
+			const depot = await this.depotRepository.findOne({ where: { ownerId, id }, relations: { location: true } })
 			if (!depot) throw new NotFoundException(DepotMessages.Notfound)
 			return {
 				statusCode: HttpStatus.OK,

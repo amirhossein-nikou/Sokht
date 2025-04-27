@@ -1,0 +1,26 @@
+import { EntityName } from "src/common/enums/entity.enum";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { TicketTargetEnum } from "../enum/target.enum";
+import { TicketPriorityEnum } from "../enum/ticket-priority.enum";
+import { UserEntity } from "src/modules/user/entity/user.entity";
+
+@Entity(EntityName.Ticket)
+export class TicketEntity {
+    @PrimaryGeneratedColumn("increment")
+    id:number
+    @Column()
+    subject: string;
+    @Column()
+    title: string;
+    @Column()
+    content: string;
+    @Column({ enum: TicketTargetEnum })
+    target: TicketTargetEnum
+    @Column({ enum: TicketPriorityEnum })
+    priority: TicketPriorityEnum
+    @Column()
+    userId: number
+    // relations 
+    @ManyToOne(() => UserEntity, user => user.tickets, { onDelete: "CASCADE" })
+    user: UserEntity
+}

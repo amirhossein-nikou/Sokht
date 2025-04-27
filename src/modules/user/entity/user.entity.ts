@@ -5,6 +5,7 @@ import { OtpEntity } from "src/modules/auth/entity/otp.entity";
 import { StationEntity } from "src/modules/station/entity/station.entity";
 import { DepotEntity } from "src/modules/depot/entity/depot.entity";
 import { TankerEntity } from "src/modules/tanker/entities/tanker.entity";
+import { TicketEntity } from "src/modules/ticket/entities/ticket.entity";
 
 @Entity(EntityName.User)
 export class UserEntity {
@@ -37,6 +38,8 @@ export class UserEntity {
     otp: OtpEntity;
     @OneToMany(() => StationEntity, station => station.owner)
     stations: StationEntity[];
+    @OneToMany(() => TicketEntity, ticket => ticket.user)
+    tickets: TicketEntity[];
     @OneToOne(() => DepotEntity, depot => depot.owner)
     depot: DepotEntity;
     @OneToOne(() => TankerEntity, tanker => tanker.driver)

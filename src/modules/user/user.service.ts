@@ -9,26 +9,28 @@ import { UserEntity } from './entity/user.entity';
 import { UserMessages } from './enum/user.message';
 import { isIdentityCard, isMobilePhone } from 'class-validator';
 import { UserRole } from './enum/role.enum';
+import { UpdateMobileDto, VerifyMobileDto } from './dto/update-user.dto';
+import { AuthService } from '../auth/auth.service';
 
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
 	constructor(
 		@InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
+		private authService: AuthService,
 		@Inject(REQUEST) private req: Request
 	) { }
 	async create(createUserDto: CreateUserDto) {
 		try {
-			const {role: userRole} = this.req.user
+			const { role: userRole } = this.req.user
 			const { first_name, last_name, mobile, national_code, certificateId, role } = createUserDto
-			if(userRole === UserRole.HeadUser){
-				if(role === UserRole.Driver || role === UserRole.HeadUser)
+			if (userRole === UserRole.HeadUser) {
+				if (role === UserRole.Driver || role === UserRole.HeadUser)
 					throw new ForbiddenException('you are not allow to create this roles')
 			}
 			await this.checkExistsMobile(mobile)
 			await this.checkExistsNationalCode(national_code)
 			if (certificateId) await this.checkExistsCertificateId(certificateId)
-			
 			const user = this.userRepository.create({
 				first_name, last_name,
 				mobile: ModifyMobileNumber(mobile)
@@ -59,6 +61,30 @@ export class UserService {
 				role: user.role
 			})
 			await this.userRepository.save(subUser)
+			return {
+				statusCode: HttpStatus.CREATED,
+				message: UserMessages.Created
+			}
+		} catch (error) {
+			throw error
+		}
+	}
+	async addDriver(addSubUserDto: AddSubUserDto) {
+		try {
+			const { first_name, last_name, mobile, national_code, certificateId } = addSubUserDto
+			const { id } = this.req.user
+			const user = await this.findOneById(id)
+			if (user.parent || user.parentId) throw new BadRequestException('this user is not allowed to add driver')
+			await this.checkExistsMobile(mobile)
+			await this.checkExistsNationalCode(national_code)
+			if (certificateId) await this.checkExistsCertificateId(certificateId)
+			const driver = this.userRepository.create({
+				first_name, last_name,
+				mobile: ModifyMobileNumber(mobile), national_code, certificateId,
+				parentId: user.id,
+				role: UserRole.Driver
+			})
+			await this.userRepository.save(driver)
 			return {
 				statusCode: HttpStatus.CREATED,
 				message: UserMessages.Created
@@ -122,9 +148,39 @@ export class UserService {
 			throw error
 		}
 	}
-	// update(id: number, updateUserDto: UpdateUserDto) {
-	// 	return `This action updates a #${id} user`;
-	// }
+	async updateSubUserMobile(id: number, updateMobileDto: UpdateMobileDto) {
+		try {
+			const { id: parentId } = this.req.user
+			const { mobile } = updateMobileDto
+			await this.checkExistsMobile(mobile)
+			const user = await this.findOneById(id)
+			if (user.parentId && user.parentId != parentId || !user.parentId) {
+				throw new BadRequestException('this user is not your sub user')
+			}
+			await this.userRepository.update(id, { mobile: ModifyMobileNumber(mobile), verify_mobile: false })
+			return {
+				statusCode: HttpStatus.OK,
+				message: UserMessages.UpdateMobile
+			}
+		} catch (error) {
+			throw error
+		}
+	}
+	async updateMyPhone(updateMobileDto: UpdateMobileDto) {
+		try {
+			const { id } = this.req.user
+			const { mobile } = updateMobileDto
+			await this.checkExistsMobile(mobile)
+			await this.userRepository.update(id, { mobile: ModifyMobileNumber(mobile), verify_mobile: false })
+			await this.authService.sendOtp({ mobile })
+			return {
+				statusCode: HttpStatus.OK,
+				message: 'mobile updated. check otp for verify number'
+			}
+		} catch (error) {
+			throw error
+		}
+	}
 	async remove(id: number) {
 		try {
 			const user = await this.findOneById(id)
@@ -169,6 +225,11 @@ export class UserService {
 
 	// utils 
 	async findOneById(id: number) {
+		const user = await this.userRepository.findOne({ where: { id } })
+		if (!user) throw new NotFoundException(UserMessages.NotFound)
+		return user
+	}
+	async findStationId(id: number) {
 		const user = await this.userRepository.findOne({ where: { id } })
 		if (!user) throw new NotFoundException(UserMessages.NotFound)
 		return user

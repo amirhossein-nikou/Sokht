@@ -5,7 +5,7 @@ import { Request } from "express";
 import { RemoveNullProperty } from "src/common/utils/update.utils";
 import { UserRole } from "src/modules/user/enum/role.enum";
 import { Repository } from "typeorm";
-import { CreateInventoryDto, UpdateInventoryDto } from "../dto/inventory.dto";
+import { CreateInventoryDto, UpdateInventoryDto, UpdateValue } from "../dto/inventory.dto";
 import { InventoryEntity } from "../entity/inventory.entity";
 import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
@@ -21,7 +21,7 @@ export class InventoryService {
     ) { }
     async create(createInventoryDto: CreateInventoryDto) {
         try {
-            const { fuel_type, value, stationId, max } = createInventoryDto
+            const { fuel_type, value, stationId, max,name } = createInventoryDto
             const { id, role } = this.req.user
             if (role === UserRole.HeadUser) {
                 await this.stationService.findOneById(stationId)
@@ -29,6 +29,7 @@ export class InventoryService {
                 await this.stationService.findByUserStation(id, stationId)
             }
             let inventory = this.inventoryRepository.create({
+                name,
                 fuel_type,
                 value,
                 stationId,
@@ -95,9 +96,22 @@ export class InventoryService {
             await this.inventoryRepository.update({ id: inventory.id }, obj)
             return {
                 status: HttpStatus.OK,
-
                 message: InventoryMessages.Update
-
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    async updateValue(id: number, updateValue: UpdateValue) {
+        try {
+            const {value} = updateValue;
+            const { id: userId } = this.req.user;
+            const obj = RemoveNullProperty(updateValue)
+            const inventory = await this.findOneById(id, userId);
+            await this.inventoryRepository.update({ id: inventory.id }, obj)
+            return {
+                status: HttpStatus.OK,
+                message: InventoryMessages.Update
             }
         } catch (error) {
             throw error

@@ -9,6 +9,7 @@ import { UserService } from '../../user/user.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { StationEntity } from '../entity/station.entity';
 import { StationMessages } from '../enum/message.enum';
+import { StringToArray } from 'src/common/utils/stringToArray.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class StationService {
@@ -20,14 +21,17 @@ export class StationService {
     ) { }
     async create(createStationDto: CreateStationDto) {
         try {
-            const { isActive, locationId, name, ownerId } = createStationDto
+            const { isActive, locationId, name, ownerId, fuel_types } = createStationDto
             //check user exist
             const user = await this.userService.findOneById(ownerId)
             if (user.parentId) throw new BadRequestException(StationMessages.ParentExists)
             //check location
             await this.locationService.findOne(locationId)
             await this.checkExistsLocation(locationId)
-            const station = this.stationRepository.create({ isActive, locationId, name, ownerId })
+            const station = this.stationRepository.create({
+                isActive, locationId, name, ownerId,
+                fuel_types: StringToArray(fuel_types)
+            })
             await this.stationRepository.save(station)
             return {
                 status: HttpStatus.OK,
@@ -40,7 +44,7 @@ export class StationService {
 
     async findAll() {
         try {
-            const stations = await this.stationRepository.find();
+            const stations = await this.stationRepository.find({ relations: { location: true } });
             return {
                 status: HttpStatus.OK,
                 data: stations
@@ -71,7 +75,8 @@ export class StationService {
 
     async update(id: number, updateStationDto: UpdateStationDto) {
         try {
-            const { isActive, locationId, name, ownerId } = updateStationDto
+            const { isActive, locationId, name, ownerId, fuel_types } = updateStationDto
+            if (fuel_types) updateStationDto.fuel_types = StringToArray(fuel_types);
             const station = await this.findOneById(id)
             const updateObj = RemoveNullProperty(updateStationDto)
             //check user exist
@@ -84,9 +89,7 @@ export class StationService {
             await this.stationRepository.update(id, updateObj)
             return {
                 status: HttpStatus.CREATED,
-
                 message: StationMessages.Update
-
             }
         } catch (error) {
             throw error

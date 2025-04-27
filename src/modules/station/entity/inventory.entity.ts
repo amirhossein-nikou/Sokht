@@ -7,6 +7,8 @@ import { StationEntity } from "./station.entity";
 export class InventoryEntity {
     @PrimaryGeneratedColumn()
     id: number;
+    @Column()
+    name: string;
     @Column({type: 'bigint'})
     value: number;
     @Column({type: 'bigint'})

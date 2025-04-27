@@ -1,7 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNumberString, IsString } from "class-validator";
+import { IsEnum, IsNumber, IsNumberString, IsString } from "class-validator";
 import { FuelTypes } from "src/common/enums/fuelType.enum";
 import { ReceiveTimeEnum } from "../enums/time.enum";
+import { Transform } from "class-transformer";
 
 export class CreateRequestDto {
     @ApiProperty()
@@ -11,7 +12,8 @@ export class CreateRequestDto {
     @IsNumberString()
     inventoryId: number;
     @ApiProperty({ enum: FuelTypes })
-    @IsString()
+    @IsNumber()
+    @Transform(({ value }) => Number(value))
     @IsEnum(FuelTypes)
     fuel_type: FuelTypes
     @ApiProperty()

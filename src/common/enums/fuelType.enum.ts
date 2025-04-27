@@ -1,6 +1,7 @@
 export enum FuelTypes {
     // Oil = 'oil',
     // Gas = 'gas',
-    Diesel = 'diesel',
-    Petrol = 'petrol'
+    Diesel = 0, //'diesel',
+    Petrol = 1, //'petrol',
+    Super = 2, //'petrol',
 }

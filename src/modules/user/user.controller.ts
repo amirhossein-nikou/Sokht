@@ -1,11 +1,12 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
-import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
-import { UserService } from './user.service';
 import { CanAccess } from 'src/common/decorators/role.decorator';
-import { UserRole } from './enum/role.enum';
 import { PremiumRoles } from 'src/common/enums/otherRole.enum';
+import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
+import { UpdateMobileDto } from './dto/update-user.dto';
+import { UserRole } from './enum/role.enum';
+import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
@@ -13,7 +14,7 @@ export class UserController {
 
     @Post('/create')
     @UserAuthGuard()
-    @CanAccess(PremiumRoles.Boss,PremiumRoles.Head)
+    @CanAccess(PremiumRoles.Boss, PremiumRoles.Head)
     @MyApiConsumes()
     create(@Body() createUserDto: CreateUserDto) {
         return this.userService.create(createUserDto);
@@ -24,6 +25,13 @@ export class UserController {
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     addSubUser(@Body() addSubUserDto: AddSubUserDto) {
         return this.userService.addSubUsers(addSubUserDto);
+    }
+    @Post('/driver')
+    @UserAuthGuard()
+    @CanAccess(UserRole.OilDepotUser)
+    @MyApiConsumes()
+    addDriver(@Body() createUserDto: CreateUserDto) {
+        return this.userService.addDriver(createUserDto);
     }
 
     @Get('/list')
@@ -52,11 +60,19 @@ export class UserController {
     profile() {
         return this.userService.profile();
     }
-    // @Patch(':id')
-    // @MyApiConsumes()
-    // update(@Param('id',ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
-    //   return this.userService.update(+id, updateUserDto);
-    // }
+    @Patch('/subUser-phone/:id')
+    @MyApiConsumes()
+    @UserAuthGuard()
+    updateSubUserMobile(@Param('id', ParseIntPipe) id: number, @Body() updateMobileDto: UpdateMobileDto) {
+        return this.userService.updateSubUserMobile(id, updateMobileDto);
+    }
+
+    @Patch('/mobile')
+    @MyApiConsumes()
+    @UserAuthGuard()
+    updateMyMobile(@Body() updateMobileDto: UpdateMobileDto) {
+        return this.userService.updateMyPhone(updateMobileDto);
+    }
 
     @Delete('/remove/:id')
     @MyApiConsumes()

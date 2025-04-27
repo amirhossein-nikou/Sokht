@@ -1,8 +1,11 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsEnum, IsNumberString } from "class-validator";
+import { IsEnum, IsNumberString, IsString } from "class-validator";
 import { FuelTypes } from "src/common/enums/fuelType.enum";
 
 export class CreateInventoryDto {
+    @ApiProperty()
+    @IsString()
+    name: string;
     @ApiProperty()
     @IsNumberString({no_symbols: true})
     value: number;
@@ -15,5 +18,10 @@ export class CreateInventoryDto {
     @ApiProperty()
     @IsNumberString()
     stationId: number
+}
+export class UpdateValue {
+    @ApiProperty()
+    @IsNumberString({no_symbols: true})
+    value: number;
 }
 export class UpdateInventoryDto extends PartialType(CreateInventoryDto) { }

@@ -8,12 +8,13 @@ import { DepotModule } from '../depot/depot.module';
 import { TankerModule } from '../tanker/tanker.module';
 import { InventoryModule } from '../station/modules/inventory.module';
 import { HomeModule } from '../home/home.module';
+import { TicketModule } from '../ticket/ticket.module';
 
 @Module({
   imports: [
     CustomModule, HomeModule,UserModule, AuthModule,
     StationModule, InventoryModule, LocationModule,
-    DepotModule, TankerModule,
+    DepotModule, TankerModule,TicketModule
   ],
   controllers: [],
   providers: [],

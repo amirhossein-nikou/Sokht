@@ -5,6 +5,7 @@ import { InventoryEntity } from "./inventory.entity";
 import { AverageSaleEntity } from "./sale.entity";
 import { LocationEntity } from "src/modules/location/entity/location.entity";
 import { RequestEntity } from "src/modules/request/entities/request.entity";
+import { FuelTypes } from "src/common/enums/fuelType.enum";
 
 @Entity(EntityName.Station)
 export class StationEntity {
@@ -12,19 +13,21 @@ export class StationEntity {
     id: number;
     @Column()
     name: string;
-    @Column({default: false})
+    @Column({ default: false })
     isActive: boolean;
     @Column({ nullable: true })
     ownerId: number;
-    @Column({nullable: true})
+    @Column({ nullable: true })
     locationId: number;
+    @Column({type: 'int' ,array: true})
+    fuel_types: number[]
     @CreateDateColumn()
     created_at: Date
     // relations
     @ManyToOne(() => UserEntity, user => user.stations)
     owner: UserEntity;
     @OneToOne(() => LocationEntity, location => location.station)
-    @JoinColumn({name:"locationId"})
+    @JoinColumn({ name: "locationId" })
     location: LocationEntity
     @OneToMany(() => AverageSaleEntity, sale => sale.station)
     average_sale: AverageSaleEntity[]

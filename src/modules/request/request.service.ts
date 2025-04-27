@@ -19,6 +19,7 @@ import { FuelTypes } from 'src/common/enums/fuelType.enum';
 import { UserRole } from '../user/enum/role.enum';
 import { SearchDto } from './dto/search.dto';
 import { InventoryService } from '../station/services/inventory.service';
+import { UserService } from '../user/user.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -26,12 +27,11 @@ export class RequestService {
         @InjectRepository(RequestEntity) private requestRepository: Repository<RequestEntity>,
         private stationService: StationService,
         private depotService: DepotService,
-        private inventoryService: InventoryService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createRequestDto: CreateRequestDto) {
         try {
-            const { fuel_type, stationId, value, depotId, receive_at, inventoryId } = createRequestDto
+            const { fuel_type, stationId, value, depotId, receive_at } = createRequestDto
             // check exists station
             const now = FormatDateTime(new Date());
             // if (now > ReceiveTimeEnum.FOUR_PM || now < ReceiveTimeEnum.SEVEN_AM) throw new BadRequestException(`requests can be created from 07:00 until 16:00`)
@@ -41,26 +41,28 @@ export class RequestService {
                 average_sale: true,
                 requests: true
             })
-            const inventory = await this.inventoryService.findById(inventoryId)
-            if ((inventory.value + value) > inventory.max) throw new BadRequestException('you cant receive more than your max capacity')
-            // limit send requests just 4 time in day
-            this.limitSendRequests(station)
-            //---
-            const priority = this.detectPriority(station, fuel_type)
-            // check exists depot
-            await this.depotService.findOneById(depotId)
-            const request = this.requestRepository.create({
-                fuel_type,
-                stationId,
-                value,
-                priority: PriorityEnum.High,
-                depotId,
-                receive_at
-            })
-            await this.requestRepository.save(request);
+            //check fuel type
+            if (!station.fuel_types.includes(fuel_type))
+                throw new BadRequestException("you don't have this fuel in this station")
+            //
+            // this.filterRequestValue(station, fuel_type, value)
+            // // limit send requests just 4 time in day
+            // this.limitSendRequests(station)
+            // //---
+            // const priority = this.detectPriority(station, fuel_type)
+            // // check exists depot
+            // await this.depotService.findOneById(depotId)
+            // const request = this.requestRepository.create({
+            //     fuel_type,
+            //     stationId,
+            //     value,
+            //     priority: PriorityEnum.High,
+            //     depotId,
+            //     receive_at
+            // })
+            // await this.requestRepository.save(request);
             return {
                 statusCode: HttpStatus.CREATED,
-
                 message: RequestMessages.Create,
                 // priorityDates: {
                 //     average_sale_date: station.average_sale.updated_at,
@@ -86,6 +88,9 @@ export class RequestService {
             }
             const requests = await this.requestRepository.find({
                 where,
+                relations: {
+                    depot: true
+                },
                 order: {
                     receive_at: 'ASC',
                     priority: 'ASC'
@@ -113,7 +118,12 @@ export class RequestService {
             if (role === UserRole.HeadUser) {
                 where = { id }
             }
-            const request = await this.requestRepository.findOne({ where })
+            const request = await this.requestRepository.findOne({
+                where,
+                relations: {
+                    depot: true
+                },
+            })
             if (!request) throw new NotFoundException(RequestMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
@@ -262,7 +272,7 @@ export class RequestService {
     }
 
     // utils
-    detectPriority(station: StationEntity, fuel_type: FuelTypes): PriorityEnum {
+    detectPriority(station: StationEntity, fuel_type: FuelTypes,): PriorityEnum {
         const inventories = station.inventory.filter(inventory => inventory.fuel_type == fuel_type)
         const average_sale = station.average_sale.find(sale => sale.fuel_type = fuel_type)
         if (!inventories || inventories.length == 0)
@@ -275,6 +285,17 @@ export class RequestService {
         else if (priorityNumber < 100 && priorityNumber >= 30) return PriorityEnum.High
         else if (priorityNumber < 30) return PriorityEnum.Critical
         return
+    }
+    filterRequestValue(station: StationEntity, fuel_type: FuelTypes, value: number) {
+        const inventories = station.inventory.filter(inventory => inventory.fuel_type == fuel_type)
+        const inventoryValueSum = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
+        const maxSum = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
+        if ((inventoryValueSum + value) > maxSum)
+            throw new BadRequestException('you cant receive more than your max capacity')
+        return {
+            inventoryValueSum,
+            maxSum
+        }
     }
     async getOneById(id: number) {
         const request = await this.requestRepository.findOneBy({ id })

@@ -14,8 +14,8 @@ export class LocationService {
 	) { }
 	async create(createLocationDto: CreateLocationDto) {
 		try {
-			const { lat, lon } = createLocationDto;
-			const location = this.locationRepository.create({ lat, lon })
+			const { lat, lon,address } = createLocationDto;
+			const location = this.locationRepository.create({ lat, lon,address })
 			await this.locationRepository.save(location)
 			return {
 				statusCode: HttpStatus.CREATED,

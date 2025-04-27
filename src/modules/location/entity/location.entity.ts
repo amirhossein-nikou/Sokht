@@ -8,6 +8,8 @@ import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 export class LocationEntity {
     @PrimaryGeneratedColumn()
     id: number;
+    @Column()
+    address: string;
     @Column({type: 'numeric'})
     lat: number;
     @Column({type: 'numeric'})

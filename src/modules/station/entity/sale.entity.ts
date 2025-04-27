@@ -8,7 +8,7 @@ export class AverageSaleEntity {
     id: number;
     @Column()
     average_sale: number;
-    @Column({ enum: FuelTypes })
+    @Column({ enum: FuelTypes})
     fuel_type: FuelTypes;
     @Column({ nullable: true })
     stationId: number
