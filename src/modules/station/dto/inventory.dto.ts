@@ -1,4 +1,5 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { Transform } from "class-transformer";
 import { IsEnum, IsNumberString, IsString } from "class-validator";
 import { FuelTypes } from "src/common/enums/fuelType.enum";
 
@@ -13,6 +14,7 @@ export class CreateInventoryDto {
     @IsNumberString({no_symbols: true})
     max: number;
     @ApiProperty({ enum: FuelTypes })
+    @Transform(({ value }) => Number(value))
     @IsEnum(FuelTypes)
     fuel_type: FuelTypes;
     @ApiProperty()
