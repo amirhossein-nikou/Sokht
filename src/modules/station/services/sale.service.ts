@@ -90,7 +90,7 @@ export class SaleService {
 			const { id: userId } = this.req.user;
 			if (updateSaleDto.stationId) await this.checkExists(updateSaleDto.stationId)
 			const updateObj = RemoveNullProperty(updateSaleDto)
-			await this.getOneById(id, userId)
+			await this.getOne(id)
 			await this.averageSaleRepository.update({ id, station: { ownerId: userId } }, updateObj)
 			return {
 				statusCode: HttpStatus.CREATED,
@@ -103,8 +103,7 @@ export class SaleService {
 
 	async remove(id: number) {
 		try {
-			const { id: userId } = this.req.user;
-			const averageSale = await this.getOneById(id, userId)
+			const averageSale = await this.getOne(id)
 			await this.averageSaleRepository.remove(averageSale)
 			return {
 				statusCode: HttpStatus.OK,
@@ -118,6 +117,13 @@ export class SaleService {
 	async getOneById(id: number, userId: number) {
 		const averageSale = await this.averageSaleRepository.findOne({
 			where: { id, station: { ownerId: userId } },
+		});
+		if (!averageSale) throw new NotFoundException(SaleMessages.NotFound)
+		return averageSale
+	}
+	async getOne(id: number) {
+		const averageSale = await this.averageSaleRepository.findOne({
+			where: { id },
 		});
 		if (!averageSale) throw new NotFoundException(SaleMessages.NotFound)
 		return averageSale

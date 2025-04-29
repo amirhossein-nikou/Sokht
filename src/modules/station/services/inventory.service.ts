@@ -21,7 +21,7 @@ export class InventoryService {
     ) { }
     async create(createInventoryDto: CreateInventoryDto) {
         try {
-            const { fuel_type, value, stationId, max,name } = createInventoryDto
+            const { fuel_type, value, stationId, max, name } = createInventoryDto
             const { id, role } = this.req.user
             if (role === UserRole.HeadUser) {
                 await this.stationService.findOneById(stationId)
@@ -104,10 +104,10 @@ export class InventoryService {
     }
     async updateValue(id: number, updateValue: UpdateValue) {
         try {
-            const {value} = updateValue;
+            const { value } = updateValue;
             const { id: userId } = this.req.user;
             const obj = RemoveNullProperty(updateValue)
-            const inventory = await this.findOneById(id, userId);
+            const inventory = await this.findById(id);
             await this.inventoryRepository.update({ id: inventory.id }, obj)
             return {
                 status: HttpStatus.OK,
@@ -120,7 +120,7 @@ export class InventoryService {
     async remove(id: number) {
         try {
             const { id: userId } = this.req.user
-            const inventory = await this.findOneById(id, userId)
+            const inventory = await this.findById(id)
             await this.inventoryRepository.remove(inventory)
             return {
                 status: HttpStatus.OK,
