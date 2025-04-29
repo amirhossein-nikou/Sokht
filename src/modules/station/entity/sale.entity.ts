@@ -12,7 +12,6 @@ export class AverageSaleEntity {
     average_sale: number;
     @Column({ enum: FuelTypes })
     @Transform(({ value }) => Number(value))
-    @IsEnum(FuelTypes)
     fuel_type: FuelTypes;
     @Column({ nullable: true })
     stationId: number

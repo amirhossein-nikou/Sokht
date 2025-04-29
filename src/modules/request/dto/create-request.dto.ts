@@ -14,7 +14,6 @@ export class CreateRequestDto {
     @ApiProperty({ enum: FuelTypes })
     @IsNumber()
     @Transform(({ value }) => Number(value))
-    @IsEnum(FuelTypes)
     fuel_type: FuelTypes
     @ApiProperty()
     @IsNumberString()

@@ -42,25 +42,25 @@ export class RequestService {
                 requests: true
             })
             //check fuel type
-            if (!station.fuel_types.includes(fuel_type))
+            if (!station.fuel_types.includes(Number(fuel_type)))
                 throw new BadRequestException("you don't have this fuel in this station")
             //
-            // this.filterRequestValue(station, fuel_type, value)
-            // // limit send requests just 4 time in day
-            // this.limitSendRequests(station)
-            // //---
-            // const priority = this.detectPriority(station, fuel_type)
-            // // check exists depot
-            // await this.depotService.findOneById(depotId)
-            // const request = this.requestRepository.create({
-            //     fuel_type,
-            //     stationId,
-            //     value,
-            //     priority: PriorityEnum.High,
-            //     depotId,
-            //     receive_at
-            // })
-            // await this.requestRepository.save(request);
+            this.filterRequestValue(station, fuel_type, value)
+            // limit send requests just 4 time in day
+            this.limitSendRequests(station)
+            //---
+            const priority = this.detectPriority(station, fuel_type)
+            // check exists depot
+            await this.depotService.findOneById(depotId)
+            const request = this.requestRepository.create({
+                fuel_type,
+                stationId,
+                value,
+                priority: PriorityEnum.High,
+                depotId,
+                receive_at
+            })
+            await this.requestRepository.save(request);
             return {
                 statusCode: HttpStatus.CREATED,
                 message: RequestMessages.Create,
