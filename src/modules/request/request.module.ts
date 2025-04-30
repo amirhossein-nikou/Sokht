@@ -9,9 +9,10 @@ import { DepotModule } from '../depot/depot.module';
 import { InventoryService } from '../station/services/inventory.service';
 import { InventoryModule } from '../station/modules/inventory.module';
 import { UserModule } from '../user/user.module';
+import { StatusEntity } from './entities/status.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RequestEntity]),
+  imports: [TypeOrmModule.forFeature([RequestEntity,StatusEntity]),
    AuthModule, StationModule,InventoryModule,UserModule,DepotModule],
   controllers: [RequestController],
   providers: [RequestService,InventoryService],

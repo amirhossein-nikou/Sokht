@@ -20,11 +20,13 @@ import { UserRole } from '../user/enum/role.enum';
 import { SearchDto } from './dto/search.dto';
 import { InventoryService } from '../station/services/inventory.service';
 import { UserService } from '../user/user.service';
+import { StatusEntity } from './entities/status.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
     constructor(
         @InjectRepository(RequestEntity) private requestRepository: Repository<RequestEntity>,
+        @InjectRepository(StatusEntity) private statusRepository: Repository<StatusEntity>,
         private stationService: StationService,
         private depotService: DepotService,
         @Inject(REQUEST) private req: Request
@@ -32,9 +34,10 @@ export class RequestService {
     async create(createRequestDto: CreateRequestDto) {
         try {
             const { fuel_type, stationId, value, depotId, receive_at } = createRequestDto
+            await this.insertStatus()
             // check exists station
             const now = FormatDateTime(new Date());
-            // if (now > ReceiveTimeEnum.FOUR_PM || now < ReceiveTimeEnum.SEVEN_AM) throw new BadRequestException(`requests can be created from 07:00 until 16:00`)
+            //if (now > ReceiveTimeEnum.FOUR_PM || now < ReceiveTimeEnum.SEVEN_AM) throw new BadRequestException(`requests can be created from 07:00 until 16:00`)
             // if (receive_at < now) throw new BadRequestException(`receive_at must be more than ${now}`)
             const station = await this.stationService.findOneByIdWithRelations(stationId, {
                 inventory: true,
@@ -47,7 +50,7 @@ export class RequestService {
             //
             this.filterRequestValue(station, fuel_type, value)
             // limit send requests just 4 time in day
-            this.limitSendRequests(station)
+            await this.limitSendRequests(station.id)
             //---
             const priority = this.detectPriority(station, fuel_type)
             // check exists depot
@@ -57,6 +60,7 @@ export class RequestService {
                 stationId,
                 value,
                 priority: PriorityEnum.High,
+                statusId: StatusEnum.Posted,
                 depotId,
                 receive_at
             })
@@ -64,11 +68,6 @@ export class RequestService {
             return {
                 statusCode: HttpStatus.CREATED,
                 message: RequestMessages.Create,
-                // priorityDates: {
-                //     average_sale_date: station.average_sale.updated_at,
-                //     inventory_date: station.inventory.updated_at
-                // }
-
             }
         } catch (error) {
             throw error
@@ -89,7 +88,13 @@ export class RequestService {
             const requests = await this.requestRepository.find({
                 where,
                 relations: {
-                    depot: true
+                    depot: true,
+                    status: true
+                },
+                select: {
+                    status: {
+                        status: true
+                    }
                 },
                 order: {
                     receive_at: 'ASC',
@@ -140,16 +145,16 @@ export class RequestService {
             end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
             const { id: userId, role } = this.req.user
             let where: object = {
-                created_at: Between(start, end),
+                created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
                 station: {
                     ownerId: userId
                 }
             }
             if (role === UserRole.HeadUser) {
-                where = { created_at: Between(start, end) }
+                where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
             }
             const request = await this.requestRepository.find({
-                where: { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) },
+                where,
                 order: {
                     receive_at: 'ASC',
                     priority: 'ASC'
@@ -190,7 +195,7 @@ export class RequestService {
             })
             const priority = this.detectPriority(station, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
-                status: StatusEnum.Posted,
+                statusId: StatusEnum.Posted,
                 priority
                 , ...updateObject
             })
@@ -224,10 +229,10 @@ export class RequestService {
     async approvedRequest(id: number) {
         try {
             const request = await this.getOneById(id)
-            if ([StatusEnum.Approved, StatusEnum.Licensing].includes(request.status)) {
+            if ([StatusEnum.Approved, StatusEnum.Licensing].includes(request.statusId)) {
                 throw new BadRequestException(RequestMessages.Approved)
             }
-            request.status = StatusEnum.Approved
+            request.statusId = StatusEnum.Approved
             await this.requestRepository.save(request)
             return {
                 statusCode: HttpStatus.OK,
@@ -242,9 +247,9 @@ export class RequestService {
     async licenseRequest(id: number) {
         try {
             const request = await this.getOneById(id)
-            if (request.status == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
-            if (request.status == StatusEnum.Licensing) throw new BadRequestException(RequestMessages.Licensed)
-            request.status = StatusEnum.Licensing
+            if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
+            if (request.statusId == StatusEnum.Licensing) throw new BadRequestException(RequestMessages.Licensed)
+            request.statusId = StatusEnum.Licensing
             await this.requestRepository.save(request)
             return {
                 statusCode: HttpStatus.OK,
@@ -257,10 +262,10 @@ export class RequestService {
     async receivedRequest(id: number) {
         try {
             const request = await this.getOneById(id)
-            if (request.status == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
-            if (request.status == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
-            if (request.status == StatusEnum.received) throw new BadRequestException(RequestMessages.AlreadyReceived)
-            request.status = StatusEnum.received
+            if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
+            if (request.statusId == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
+            if (request.statusId == StatusEnum.received) throw new BadRequestException(RequestMessages.AlreadyReceived)
+            request.statusId = StatusEnum.received
             await this.requestRepository.save(request)
             return {
                 statusCode: HttpStatus.OK,
@@ -302,14 +307,38 @@ export class RequestService {
         if (!request) throw new NotFoundException(RequestMessages.Notfound)
         return request
     }
-    limitSendRequests(station: StationEntity) {
-        const now = new Date().toISOString().split('T')[0]
-        let counter = 0
-        station.requests.forEach(request => {
-            const created_at = request.created_at.toISOString().split('T')[0];
-            if (now == created_at) counter++
+    async limitSendRequests(stationId: number) {
+        const now = new Date(new Date().toISOString().split('T')[0])
+        const end = new Date(now.getTime() + (1 * 1000 * 60 * 60 * 24));
+        const request = await this.requestRepository.find({
+            where: {
+                created_at: Between(now, end),
+                stationId
+            },
         })
-        if (counter >= 4) throw new BadRequestException('cant send more than 4')
+        if (request.length >= 4) throw new BadRequestException('cant send more than 4')
+        // //const now = new Date().toISOString().split('T')[0]
+        // let counter = 0
+        // station.requests.forEach(request => {
+        //     const created_at = request.created_at.toISOString().split('T')[0];
+        //     if (now == created_at) counter++
+        // })
     }
-
+    async checkExistsStatus(statusId: number) {
+        const status = await this.statusRepository.findOneBy({ id: statusId })
+        if (status) throw new BadRequestException('status already exists')
+    }
+    async createStatus(id: number, title: string) {
+        const status = await this.statusRepository.findOneBy({ id })
+        if (status) return
+        const result = this.statusRepository.create({ id, status: title })
+        await this.statusRepository.save(result)
+        return 'created'
+    }
+    async insertStatus() {
+        await this.createStatus(StatusEnum.Posted, "در انتظار تایید")
+        await this.createStatus(StatusEnum.Licensing, 'صدور پروانه و ارسال نفت کش')
+        await this.createStatus(StatusEnum.Approved, "تایید شده")
+        await this.createStatus(StatusEnum.received, "دریافت شده")
+    }
 }

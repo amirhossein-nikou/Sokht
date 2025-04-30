@@ -4,6 +4,7 @@ import { InventoryService } from "../station/services/inventory.service";
 import { CargoService } from "../cargo/cargo.service";
 import { DashboardDto } from "./dto/dashboard.dto";
 import { REQUEST } from "@nestjs/core";
+import { FuelTypes } from "src/common/enums/fuelType.enum";
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -23,8 +24,14 @@ export class HomeService {
             data: {
                 inventory,
                 cargo
-            } 
+            }
         }
+    }
+    async allFuelTypes() {
+        const fuelTypeList = []
+        console.log(Object.values(FuelTypes));
+        Object.values(FuelTypes).forEach(item => fuelTypeList.push(FuelTypes[0]))
+        return fuelTypeList
     }
 
 }

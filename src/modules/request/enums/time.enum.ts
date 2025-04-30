@@ -9,4 +9,12 @@ export enum ReceiveTimeEnum {
     TWO_PM = "14:00",
     THREE_PM = "15:00",
     FOUR_PM = "16:00",
+    FIVE_PM = "17:00",
+    SIX_PM = "18:00",
+    SEVEN_PM = "19:00",
+    EIGHT_PM = "20:00",
+    NINE_PM = "21:00",
+    THEN_PM = "22:00",
+    ELEVEN_PM = "23:00",
+    MIDNIGHT = "00:00",
 }

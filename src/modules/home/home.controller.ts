@@ -13,4 +13,9 @@ export class HomeController {
   findAll() {
     return this.homeService.dashboard();
   }
+  // @Get('/fuels')
+  // @CanAccess()
+  // findFuels() {
+  //   return this.homeService.allFuelTypes();
+  // }
 }
