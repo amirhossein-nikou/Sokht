@@ -45,7 +45,7 @@ export class InventoryController {
         return this.inventoryService.updateValue(id, updateValue);
     }
     @Get('/status-toggle/:id')
-    @CanAccess(UserRole.HeadUser)
+    @CanAccess(UserRole.StationUser)
     statusToggle(@Param('id', ParseIntPipe) id: number) {
         return this.inventoryService.statusToggle(id);
     }
