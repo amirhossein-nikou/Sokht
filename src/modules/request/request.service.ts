@@ -126,7 +126,8 @@ export class RequestService {
             const request = await this.requestRepository.findOne({
                 where,
                 relations: {
-                    depot: true
+                    depot: true,
+                    status: true
                 },
             })
             if (!request) throw new NotFoundException(RequestMessages.Notfound)
@@ -155,6 +156,10 @@ export class RequestService {
             }
             const request = await this.requestRepository.find({
                 where,
+                relations: {
+                    depot: true,
+                    status: true
+                },
                 order: {
                     receive_at: 'ASC',
                     priority: 'ASC'
@@ -171,7 +176,12 @@ export class RequestService {
     }
     async findStationRequests(stationId: number) {
         try {
-            const requests = await this.requestRepository.findBy({ stationId })
+            const requests = await this.requestRepository.findOne({
+                where: { stationId }, relations: {
+                    depot: true,
+                    status: true
+                },
+            })
             if (!requests) throw new NotFoundException(RequestMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
