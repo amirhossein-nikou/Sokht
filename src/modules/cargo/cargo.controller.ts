@@ -5,12 +5,14 @@ import { UpdateCargoDto } from './dto/update-cargo.dto';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserRole } from '../user/enum/role.enum';
+import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 
 @Controller('cargo')
 @UserAuthGuard()
 export class CargoController {
   constructor(private readonly cargoService: CargoService) { }
   @CanAccess(UserRole.OilDepotUser)
+  @MyApiConsumes()
   @Post('/create')
   create(@Body() createCargoDto: CreateCargoDto) {
     return this.cargoService.create(createCargoDto);
@@ -23,17 +25,20 @@ export class CargoController {
   }
 
   @Get('/one-by/:id')
+  @MyApiConsumes()
   @CanAccess(UserRole.OilDepotUser, UserRole.HeadUser)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.cargoService.findOne(id);
   }
   @Patch('/update/:id')
+  @MyApiConsumes()
   @CanAccess(UserRole.OilDepotUser)
   update(@Param('id', ParseIntPipe) id: number, @Body() updateCargoDto: UpdateCargoDto) {
     return this.cargoService.update(id, updateCargoDto);
   }
 
   @Delete('/remove/:id')
+  @MyApiConsumes()
   @CanAccess(UserRole.OilDepotUser)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.cargoService.remove(id);
