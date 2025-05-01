@@ -1,15 +1,18 @@
 import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
+import { isNumberString } from 'class-validator';
 import { Request } from 'express';
+import { StringToBoolean } from 'src/common/utils/boolean.utils';
+import { StringToArray } from 'src/common/utils/stringToArray.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
+import { FuelTypeService } from 'src/modules/fuel-type/fuel-type.service';
 import { Repository } from 'typeorm';
 import { LocationService } from '../../location/location.service';
 import { UserService } from '../../user/user.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { StationEntity } from '../entity/station.entity';
 import { StationMessages } from '../enum/message.enum';
-import { StringToArray } from 'src/common/utils/stringToArray.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class StationService {
@@ -17,20 +20,25 @@ export class StationService {
         @InjectRepository(StationEntity) private stationRepository: Repository<StationEntity>,
         private userService: UserService,
         private locationService: LocationService,
+        private fuelTypeService: FuelTypeService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createStationDto: CreateStationDto) {
         try {
             const { isActive, locationId, name, ownerId, fuel_types } = createStationDto
             //check user exist
+            const fuelIdList = this.getIdList(StringToArray(fuel_types))
+            const fuels = await this.fuelTypeService.getByIdList(fuelIdList)
             const user = await this.userService.findOneById(ownerId)
             if (user.parentId) throw new BadRequestException(StationMessages.ParentExists)
             //check location
             await this.locationService.findOne(locationId)
             await this.checkExistsLocation(locationId)
             const station = this.stationRepository.create({
-                isActive, locationId, name, ownerId,
-                fuel_types: StringToArray(fuel_types)
+                isActive: StringToBoolean(isActive),
+                locationId, name, ownerId,
+                //fuel_types: StringToArray(fuel_types),
+                fuels
             })
             await this.stationRepository.save(station)
             return {
@@ -76,9 +84,15 @@ export class StationService {
     async update(id: number, updateStationDto: UpdateStationDto) {
         try {
             const { isActive, locationId, name, ownerId, fuel_types } = updateStationDto
-            if (fuel_types) updateStationDto.fuel_types = StringToArray(fuel_types);
+            let fuels
+            if (fuel_types) {
+                const fuelIdList = this.getIdList(StringToArray(fuel_types))
+                fuels = await this.fuelTypeService.getByIdList(fuelIdList)
+            }
             const station = await this.findOneById(id)
-            const updateObj = RemoveNullProperty(updateStationDto)
+            const updateObj = RemoveNullProperty({
+                ...updateStationDto, isActive: StringToBoolean(isActive), fuels
+            })
             //check user exist
             if (ownerId) await this.userService.findOneById(ownerId)
             //check location
@@ -168,14 +182,15 @@ export class StationService {
         const station = await this.stationRepository.findOne({
             where: { id },
             relations: {
-                location: true
+                location: true,
+                fuels: true
             }
         })
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
     async findByUserStation(userId: number, id: number) {
-        const station = await this.stationRepository.findOne({ where: { ownerId: userId, id } })
+        const station = await this.stationRepository.findOne({ where: { ownerId: userId, id },relations:{fuels: true} })
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
@@ -186,5 +201,16 @@ export class StationService {
         })
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
+    }
+    private getIdList(fuel_types: []) {
+        let fuelIdList = []
+        StringToArray(fuel_types).map(async (item) => {
+            if (isNumberString(item)) {
+                fuelIdList.push(Number(item))
+            } else {
+                throw new BadRequestException('fuel_types must be number')
+            }
+        })
+        return fuelIdList
     }
 }

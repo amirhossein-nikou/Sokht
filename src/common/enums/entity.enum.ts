@@ -12,4 +12,5 @@ export enum EntityName {
     Cargo = 'cargo',
     Ticket = "ticket",
     Status = "status",
+    FuelType = "fuel-type",
 }

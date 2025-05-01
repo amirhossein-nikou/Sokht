@@ -1,4 +1,4 @@
-import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional, PartialType, PickType } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
 import { IsEnum, IsNumberString, IsString } from "class-validator";
 import { FuelTypes } from "src/common/enums/fuelType.enum";
@@ -7,23 +7,24 @@ export class CreateInventoryDto {
     @ApiProperty()
     @IsString()
     name: string;
-    @ApiProperty()
-    @IsNumberString({no_symbols: true})
+    @ApiPropertyOptional()
+    @IsNumberString({ no_symbols: true })
     value: number;
     @ApiProperty()
-    @IsNumberString({no_symbols: true})
+    @IsNumberString({ no_symbols: true })
     max: number;
-    @ApiProperty({ enum: FuelTypes })
-    @Transform(({ value }) => Number(value))
-    @IsEnum(FuelTypes)
-    fuel_type: FuelTypes;
+    @ApiProperty()
+    @IsNumberString()
+    fuel_type: number;
     @ApiProperty()
     @IsNumberString()
     stationId: number
 }
 export class UpdateValue {
     @ApiProperty()
-    @IsNumberString({no_symbols: true})
+    @IsNumberString({ no_symbols: true })
     value: number;
 }
-export class UpdateInventoryDto extends PartialType(CreateInventoryDto) { }
+export class UpdateInventoryDto extends PartialType(PickType(CreateInventoryDto,
+    ['max','name','stationId',"value"]
+)) { }

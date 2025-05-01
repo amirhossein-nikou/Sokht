@@ -21,6 +21,7 @@ import { SearchDto } from './dto/search.dto';
 import { InventoryService } from '../station/services/inventory.service';
 import { UserService } from '../user/user.service';
 import { StatusEntity } from './entities/status.entity';
+import { SaleService } from '../station/services/sale.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -28,6 +29,8 @@ export class RequestService {
         @InjectRepository(RequestEntity) private requestRepository: Repository<RequestEntity>,
         @InjectRepository(StatusEntity) private statusRepository: Repository<StatusEntity>,
         private stationService: StationService,
+        private inventoryService: InventoryService,
+        private saleService: SaleService,
         private depotService: DepotService,
         @Inject(REQUEST) private req: Request
     ) { }
@@ -45,21 +48,21 @@ export class RequestService {
                 requests: true
             })
             //check fuel type
-            if (!station.fuel_types.includes(Number(fuel_type)))
+            if (!station.fuels.find(item => item.id == Number(fuel_type)))
                 throw new BadRequestException("you don't have this fuel in this station")
             //
-            this.filterRequestValue(station, fuel_type, value)
+            await this.filterRequestValue(station.id, fuel_type, value)
             // limit send requests just 4 time in day
             await this.limitSendRequests(station.id)
             //---
-            const priority = this.detectPriority(station, fuel_type)
+            const priority = await this.detectPriority(station.id, fuel_type)
             // check exists depot
             await this.depotService.findOneById(depotId)
             const request = this.requestRepository.create({
                 fuel_type,
                 stationId,
                 value,
-                priority: PriorityEnum.High,
+                priority,
                 statusId: StatusEnum.Posted,
                 depotId,
                 receive_at
@@ -76,13 +79,20 @@ export class RequestService {
 
     async findAll() {
         try {
-            const { id: userId, role } = this.req.user
+            const { id: userId, role, parentId } = this.req.user
             let where: object = {
                 station: {
                     ownerId: userId
                 }
             }
-            if (role === UserRole.HeadUser) {
+            if (parentId) {
+                where = {
+                    station: {
+                        ownerId: parentId
+                    }
+                }
+            }
+            if (role !== UserRole.StationUser) {
                 where = {}
             }
             const requests = await this.requestRepository.find({
@@ -107,14 +117,22 @@ export class RequestService {
 
     async findOne(id: number) {
         try {
-            const { id: userId, role } = this.req.user
+            const { id: userId, role, parentId } = this.req.user
             let where: object = {
                 id,
                 station: {
                     ownerId: userId
                 }
             }
-            if (role === UserRole.HeadUser) {
+            if (parentId) {
+                where = {
+                    id,
+                    station: {
+                        ownerId: parentId
+                    }
+                }
+            }
+            if (role !== UserRole.StationUser) {
                 where = { id }
             }
             const request = await this.requestRepository.findOne({
@@ -137,14 +155,22 @@ export class RequestService {
             let { start, end } = search
             if (start > end) throw new BadRequestException('start date must be bigger than end date')
             end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
-            const { id: userId, role } = this.req.user
+            const { id: userId, role, parentId } = this.req.user
             let where: object = {
                 created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
                 station: {
                     ownerId: userId
                 }
             }
-            if (role === UserRole.HeadUser) {
+            if (parentId) {
+                where = {
+                    created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
+                    station: {
+                        ownerId: parentId
+                    }
+                }
+            }
+            if (role !== UserRole.StationUser) {
                 where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
             }
             const request = await this.requestRepository.find({
@@ -186,7 +212,7 @@ export class RequestService {
     async update(id: number, updateRequestDto: UpdateRequestDto) {
         try {
             const { value, receive_at } = updateRequestDto
-            const request = await this.getOneById(id)
+            const request = await this.getOneByIdForUpdateAndRemove(id)
             const updateObject = RemoveNullProperty({ receive_at, value, })
             //calculate priority => 
             const station = await this.stationService.findOneByIdWithRelations(request.stationId, {
@@ -194,7 +220,7 @@ export class RequestService {
                 average_sale: true,
                 requests: true
             })
-            const priority = this.detectPriority(station, request.fuel_type)
+            const priority = await this.detectPriority(station.id, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
                 statusId: StatusEnum.Posted,
                 priority
@@ -214,7 +240,7 @@ export class RequestService {
 
     async remove(id: number) {
         try {
-            const request = await this.getOneById(id)
+            const request = await this.getOneByIdForUpdateAndRemove(id)
             await this.requestRepository.remove(request)
             return {
                 statusCode: HttpStatus.OK,
@@ -233,13 +259,11 @@ export class RequestService {
             if ([StatusEnum.Approved, StatusEnum.Licensing].includes(request.statusId)) {
                 throw new BadRequestException(RequestMessages.Approved)
             }
-            request.statusId = StatusEnum.Approved
-            await this.requestRepository.save(request)
+
+            await this.requestRepository.update(id, { statusId: StatusEnum.Approved })
             return {
                 statusCode: HttpStatus.OK,
-
                 message: RequestMessages.ApprovedSuccess
-
             }
         } catch (error) {
             throw error
@@ -250,8 +274,7 @@ export class RequestService {
             const request = await this.getOneById(id)
             if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
             if (request.statusId == StatusEnum.Licensing) throw new BadRequestException(RequestMessages.Licensed)
-            request.statusId = StatusEnum.Licensing
-            await this.requestRepository.save(request)
+            await this.requestRepository.update(id, { statusId: StatusEnum.Licensing })
             return {
                 statusCode: HttpStatus.OK,
                 message: RequestMessages.LicenseSuccess
@@ -266,8 +289,7 @@ export class RequestService {
             if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
             if (request.statusId == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
             if (request.statusId == StatusEnum.received) throw new BadRequestException(RequestMessages.AlreadyReceived)
-            request.statusId = StatusEnum.received
-            await this.requestRepository.save(request)
+            await this.requestRepository.update(id, { statusId: StatusEnum.received })
             return {
                 statusCode: HttpStatus.OK,
                 message: RequestMessages.Received
@@ -278,34 +300,37 @@ export class RequestService {
     }
 
     // utils
-    detectPriority(station: StationEntity, fuel_type: FuelTypes,): PriorityEnum {
-        const inventories = station.inventory.filter(inventory => inventory.fuel_type == fuel_type)
-        const average_sale = station.average_sale.find(sale => sale.fuel_type = fuel_type)
-        if (!inventories || inventories.length == 0)
+    async detectPriority(stationId: number, fuel_type: FuelTypes,): Promise<PriorityEnum> {
+        const inventories = await this.getSumValueForInventory(stationId, fuel_type)
+        const average_sale = await this.getSumValueForSale(stationId, fuel_type)
+        if (!inventories)
             throw new BadRequestException('station inventory is invalid')
-        if (!average_sale || !average_sale.average_sale)
+        if (!average_sale)
             throw new BadRequestException('station average_sale is invalid')
-        const inventory = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
-        const priorityNumber: number = (inventory / average_sale.average_sale) * 100
+        const priorityNumber: number = (inventories / average_sale) * 100
         if (priorityNumber >= 100) return PriorityEnum.Normal
         else if (priorityNumber < 100 && priorityNumber >= 30) return PriorityEnum.High
         else if (priorityNumber < 30) return PriorityEnum.Critical
-        return
     }
-    filterRequestValue(station: StationEntity, fuel_type: FuelTypes, value: number) {
-        const inventories = station.inventory.filter(inventory => inventory.fuel_type == fuel_type)
-        const inventoryValueSum = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
-        const maxSum = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
-        if ((inventoryValueSum + value) > maxSum)
+    async filterRequestValue(stationId: number, fuel_type: FuelTypes, value: number) {
+        const inventoryValueSum = await this.getSumValueForInventory(stationId, fuel_type)
+        const maxCap = await this.getMacInventoryCapacity(stationId, fuel_type)
+        if ((inventoryValueSum + Number(value)) > maxCap)
             throw new BadRequestException('you cant receive more than your max capacity')
         return {
             inventoryValueSum,
-            maxSum
+            maxCap
         }
     }
     async getOneById(id: number) {
         const request = await this.requestRepository.findOneBy({ id })
         if (!request) throw new NotFoundException(RequestMessages.Notfound)
+        return request
+    }
+    private async getOneByIdForUpdateAndRemove(id: number) {
+        const request = await this.requestRepository.findOneBy({ id })
+        if (!request) throw new NotFoundException(RequestMessages.Notfound)
+        if (request.statusId != 0) throw new BadRequestException('you cant update or remove on this status')
         return request
     }
     async limitSendRequests(stationId: number) {
@@ -341,5 +366,19 @@ export class RequestService {
         await this.createStatus(StatusEnum.Licensing, 'صدور پروانه و ارسال نفت کش')
         await this.createStatus(StatusEnum.Approved, "تایید شده")
         await this.createStatus(StatusEnum.received, "دریافت شده")
+    }
+    async getSumValueForInventory(stationId: number, fuel_type) {
+        const inventories = await this.inventoryService.findByStationIdAndFuel(stationId, fuel_type)
+        const sumValue = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
+        return sumValue
+    }
+    async getMacInventoryCapacity(stationId: number, fuel_type) {
+        const inventories = await this.inventoryService.findByStationIdAndFuel(stationId, fuel_type)
+        const sumValue = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
+        return sumValue
+    }
+    async getSumValueForSale(stationId: number, fuel_type) {
+        const sales = await this.saleService.findByStationIdAndFuel(stationId, fuel_type)
+        return sales.average_sale
     }
 }

@@ -1,7 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Transform } from "class-transformer";
-import { IsEnum, IsNumberString, Length } from "class-validator";
-import { FuelTypes } from "src/common/enums/fuelType.enum";
+import { IsNumberString } from "class-validator";
 
 export class CreateTankerDto {
     @ApiProperty()
@@ -10,10 +8,6 @@ export class CreateTankerDto {
     @ApiProperty()
     @IsNumberString()
     capacity: number;
-    @ApiProperty({ enum: FuelTypes })
-    @Transform(({ value }) => Number(value))
-    @IsEnum(FuelTypes)
-    fuel_type: FuelTypes;
     @ApiProperty()
     @IsNumberString()
     // @Length()
@@ -24,5 +18,4 @@ export class CreateTankerDto {
     @ApiPropertyOptional()
     @IsNumberString()
     cargoId: number;
-
 }

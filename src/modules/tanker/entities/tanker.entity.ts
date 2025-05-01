@@ -13,8 +13,6 @@ export class TankerEntity {
     driverId: number;
     @Column({type: 'bigint'})
     capacity: number;
-    @Column({enum: FuelTypes})
-    fuel_type: FuelTypes;
     @Column({unique: true})
     number: number;
     @Column()

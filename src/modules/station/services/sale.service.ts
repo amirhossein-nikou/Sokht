@@ -1,4 +1,4 @@
-import { ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -8,7 +8,7 @@ import { CreateSaleDto, UpdateSaleDto } from '../dto/sale.dto';
 import { AverageSaleEntity } from '../entity/sale.entity';
 import { SaleMessages } from '../enum/message.enum';
 import { StationService } from './station.service';
-import { UserRole } from 'src/modules/user/enum/role.enum';
+import { FuelTypes } from 'src/common/enums/fuelType.enum';
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -21,9 +21,9 @@ export class SaleService {
 	async create(createSaleDto: CreateSaleDto) {
 		try {
 			const { fuel_type, average_sale, stationId } = createSaleDto
-			const { id } = this.req.user
-			//await this.checkExists(stationId)
-			await this.stationService.findOneById(stationId)
+			const station = await this.stationService.findOneById(stationId)
+			if (!station.fuels.find(item => item.id == fuel_type))
+				throw new BadRequestException("you don't have this fuel in this station")
 			let sale = await this.averageSaleRepository.findOne({
 				where: {
 					stationId, fuel_type
@@ -48,14 +48,8 @@ export class SaleService {
 
 	async findAll() {
 		try {
-			const { id } = this.req.user
 			const averageSales = await this.averageSaleRepository.find({
 				relations: { station: true },
-				where: {
-					station: {
-						ownerId: id
-					}
-				}
 			});
 			return {
 				statusCode: HttpStatus.CREATED,
@@ -68,9 +62,8 @@ export class SaleService {
 
 	async findOne(id: number) {
 		try {
-			const { id: userId } = this.req.user
 			const averageSale = await this.averageSaleRepository.findOne({
-				where: { id, station: { ownerId: userId } },
+				where: { id },
 				relations: {
 					station: true
 				}
@@ -87,11 +80,10 @@ export class SaleService {
 
 	async update(id: number, updateSaleDto: UpdateSaleDto) {
 		try {
-			const { id: userId } = this.req.user;
 			if (updateSaleDto.stationId) await this.checkExists(updateSaleDto.stationId)
 			const updateObj = RemoveNullProperty(updateSaleDto)
 			await this.getOne(id)
-			await this.averageSaleRepository.update({ id, station: { ownerId: userId } }, updateObj)
+			await this.averageSaleRepository.update({ id }, updateObj)
 			return {
 				statusCode: HttpStatus.CREATED,
 				message: SaleMessages.Update
@@ -114,13 +106,6 @@ export class SaleService {
 		}
 	}
 	//utils
-	async getOneById(id: number, userId: number) {
-		const averageSale = await this.averageSaleRepository.findOne({
-			where: { id, station: { ownerId: userId } },
-		});
-		if (!averageSale) throw new NotFoundException(SaleMessages.NotFound)
-		return averageSale
-	}
 	async getOne(id: number) {
 		const averageSale = await this.averageSaleRepository.findOne({
 			where: { id },
@@ -134,5 +119,15 @@ export class SaleService {
 		});
 		if (averageSale) throw new ConflictException(SaleMessages.AlreadyExists)
 		return false
+	}
+	async findByStationIdAndFuel(stationId: number, fuelType: FuelTypes) {
+		const sale = await this.averageSaleRepository.findOne({
+			where: {
+				stationId,
+				fuel_type: fuelType
+			}
+		});
+		if (!sale) throw new NotFoundException(SaleMessages.NotFound)
+		return sale
 	}
 }

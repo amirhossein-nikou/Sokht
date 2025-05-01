@@ -9,7 +9,7 @@ export class InventoryEntity {
     id: number;
     @Column()
     name: string;
-    @Column({type: 'bigint'})
+    @Column({type: 'bigint',default: 0})
     value: number;
     @Column({type: 'bigint'})
     max: number;

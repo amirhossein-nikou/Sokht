@@ -19,13 +19,13 @@ export class SaleController {
   }
 
   @Get('/list')
-  @CanAccess(UserRole.StationUser, UserRole.HeadUser)
+  @CanAccess(UserRole.HeadUser)
   findAll() {
     return this.saleService.findAll();
   }
 
   @Get('/get-one/:id')
-  @CanAccess(UserRole.StationUser, UserRole.HeadUser)
+  @CanAccess(UserRole.HeadUser)
   findOne(@Param('id') id: string) {
     return this.saleService.findOne(+id);
   }

@@ -9,12 +9,13 @@ import { StationService } from '../services/station.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StationEntity } from '../entity/station.entity';
 import { AverageSaleEntity } from '../entity/sale.entity';
+import { FuelTypeModule } from 'src/modules/fuel-type/fuel-type.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([StationEntity, AverageSaleEntity])
-  , UserModule, LocationModule,AuthModule],
+  , UserModule, LocationModule,AuthModule,FuelTypeModule],
   controllers: [StationController, SaleController],
   providers: [StationService, SaleService],
-  exports: [StationService, TypeOrmModule]
+  exports: [StationService,SaleService ,TypeOrmModule]
 })
 export class StationModule { }

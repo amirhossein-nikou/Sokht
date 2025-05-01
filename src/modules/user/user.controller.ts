@@ -30,7 +30,7 @@ export class UserController {
     @UserAuthGuard()
     @CanAccess(UserRole.OilDepotUser)
     @MyApiConsumes()
-    addDriver(@Body() createUserDto: CreateUserDto) {
+    addDriver(@Body() createUserDto: AddSubUserDto) {
         return this.userService.addDriver(createUserDto);
     }
 

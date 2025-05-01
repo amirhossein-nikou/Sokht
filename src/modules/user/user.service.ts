@@ -1,16 +1,16 @@
 import { BadRequestException, ConflictException, ForbiddenException, HttpStatus, Inject, Injectable, NotFoundException, Scope, UnauthorizedException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
+import { isIdentityCard, isMobilePhone } from 'class-validator';
 import { Request } from 'express';
 import { ModifyMobileNumber } from 'src/common/utils/mobile.utils';
 import { Repository } from 'typeorm';
-import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
-import { UserEntity } from './entity/user.entity';
-import { UserMessages } from './enum/user.message';
-import { isIdentityCard, isMobilePhone } from 'class-validator';
-import { UserRole } from './enum/role.enum';
-import { UpdateMobileDto, VerifyMobileDto } from './dto/update-user.dto';
 import { AuthService } from '../auth/auth.service';
+import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
+import { UpdateMobileDto } from './dto/update-user.dto';
+import { UserEntity } from './entity/user.entity';
+import { UserRole } from './enum/role.enum';
+import { UserMessages } from './enum/user.message';
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -33,8 +33,8 @@ export class UserService {
 			if (certificateId) await this.checkExistsCertificateId(certificateId)
 			const user = this.userRepository.create({
 				first_name, last_name,
-				mobile: ModifyMobileNumber(mobile)
-				, national_code, certificateId, role
+				mobile: ModifyMobileNumber(mobile),
+				national_code, certificateId, role
 			})
 			await this.userRepository.save(user)
 			return {
@@ -251,7 +251,7 @@ export class UserService {
 	}
 	async checkIfParent(id: number) {
 		const user = await this.findOneById(id)
-		if (user.parent !== null) {
+		if (user.parent || user.parentId) {
 			throw new UnauthorizedException(UserMessages.ParentAccess)
 		}
 		return user

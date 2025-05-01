@@ -5,5 +5,5 @@ export enum UserMessages {
     Delete = 'User removed',
     NotFound = 'User not found',
     NoStation = 'User have no station',
-    ParentAccess = 'joust main users can access this part'
+    ParentAccess = 'just main users can access this part'
 }

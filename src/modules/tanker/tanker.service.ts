@@ -24,18 +24,17 @@ export class TankerService {
 
     async create(createTankerDto: CreateTankerDto) {
         try {
-            const { capacity, depotId, driverId, fuel_type, number, cargoId } = createTankerDto
+            const { capacity, depotId, driverId, number, cargoId } = createTankerDto
             await this.checkExistsDriver(depotId)
             await this.checkExistsTankerNumber(number)
             await this.userService.findOneById(driverId);
             await this.depotService.findOneById(depotId);
             if (cargoId) await this.cargoService.getOneById(cargoId);
-            const tanker = this.tankerRepository.create({ capacity, depotId, driverId, fuel_type, number, cargoId })
+            const tanker = this.tankerRepository.create({ capacity, depotId, driverId, number, cargoId })
             await this.tankerRepository.save(tanker)
             return {
                 statusCode: HttpStatus.CREATED,
                 message: TankerMessages.Create
-
             }
         } catch (error) {
             throw error
@@ -94,7 +93,7 @@ export class TankerService {
     }
     async update(id: number, updateTankerDto: UpdateTankerDto) {
         try {
-            const { capacity, depotId, driverId, fuel_type, number, cargoId } = updateTankerDto
+            const { capacity, depotId, driverId, number, cargoId } = updateTankerDto
             await this.getTankerById(id)
             if (driverId && driverId > 0) {
                 await this.checkExistsDriver(depotId)
@@ -103,7 +102,7 @@ export class TankerService {
             if (depotId && depotId > 0) await this.depotService.findOneById(depotId);
             if (cargoId && cargoId > 0) await this.cargoService.getOneById(cargoId);
             if(number && number > 0) await this.checkExistsTankerNumber(number)
-            const updateObject = RemoveNullProperty({ capacity, depotId, driverId, fuel_type, number, cargoId })
+            const updateObject = RemoveNullProperty({ capacity, depotId, driverId, number, cargoId })
             this.tankerRepository.update(id, updateObject)
             return {
                 statusCode: HttpStatus.OK,

@@ -14,9 +14,10 @@ export class RoleGuard implements CanActivate {
         const requireRoles: UserRole | PremiumRoles = this.reflector.getAllAndOverride(ROLE,
             [context.getHandler(), context.getClass()]
         )
-        const userRole =request?.user.role
-        if(!requireRoles || requireRoles.length <= 0 ) return true
-        if(requireRoles.includes(userRole)) return true
+        const userRole = request?.user.role
+        //if (userRole as any == PremiumRoles.Boss) return true
+        if (!requireRoles || requireRoles.length <= 0) return true
+        if (requireRoles.includes(userRole)) return true
         throw new ForbiddenException('you are not allowed to access this part')
     }
 

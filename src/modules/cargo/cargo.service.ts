@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { RequestService } from '../request/request.service';
 import { CargoMessages } from './enums/message.enum';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
+import { StatusEnum } from 'src/common/enums/status.enum';
 
 @Injectable()
 export class CargoService {
@@ -15,17 +16,20 @@ export class CargoService {
         private requestService: RequestService
     ) { }
     async create(createCargoDto: CreateCargoDto) {
+        const { arrival_time, dispatch_time, requestId } = createCargoDto
         try {
-            const { arrival_time, dispatch_time, requestId } = createCargoDto
-            await this.requestService.getOneById(requestId)
-            await this.checkExistsRequestId(requestId)
             const now = new Date().toISOString()
             if (arrival_time.toString() <= now) throw new BadRequestException('arrival_time is less than current time')
             if (dispatch_time.toString() <= now) throw new BadRequestException('dispatch_time is less than current time')
+            const request = await this.requestService.getOneById(requestId)
+            if (request.statusId !== StatusEnum.Approved)
+                throw new BadRequestException('you can create cargo for approved requests')
+            await this.checkExistsRequestId(requestId)
             const cargo = this.cargoRepository.create({
                 arrival_time, dispatch_time, requestId
             })
             await this.cargoRepository.save(cargo)
+            await this.requestService.approvedRequest(requestId)
             return {
                 statusCode: HttpStatus.CREATED,
                 message: CargoMessages.Create
@@ -78,7 +82,9 @@ export class CargoService {
                 throw new BadRequestException('dispatch_time is less than current time')
             await this.getOneById(id)
             if (requestId) {
-                await this.requestService.getOneById(requestId)
+                const request = await this.requestService.getOneById(requestId)
+                if (request.statusId !== StatusEnum.Approved)
+                    throw new BadRequestException('this request is not approved yet')
                 await this.checkExistsRequestId(requestId)
             }
             let updateObject = RemoveNullProperty(updateCargoDto)
@@ -88,9 +94,7 @@ export class CargoService {
             await this.cargoRepository.update(id, updateObject)
             return {
                 statusCode: HttpStatus.OK,
-
                 message: CargoMessages.Update
-
             }
         } catch (error) {
             throw error

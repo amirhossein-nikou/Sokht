@@ -1,6 +1,6 @@
 import { isNumberString } from "class-validator"
 
-export function StringToArray(field: any) {
+export function StringToArray(field: any):[] {
     if (field) {
         if (typeof field == "string") {
             if (field.indexOf(",") >= 0) {
@@ -16,10 +16,5 @@ export function StringToArray(field: any) {
     } else {
         field = []
     }
-    field.forEach(item => {
-        if (isNumberString(item)) {
-            field = [Number(item)]
-        }
-    });
     return field
 }

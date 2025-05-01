@@ -12,7 +12,7 @@ export class CreateStationDto {
     @Length(2, 50)
     name: string;
     @ApiProperty({ type: 'array' })
-    fuel_types: FuelTypes
+    fuel_types: number[]
     @ApiProperty({ type: 'boolean' })
     @IsBooleanString()
     isActive: boolean;

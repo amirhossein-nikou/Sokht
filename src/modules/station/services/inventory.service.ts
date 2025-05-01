@@ -1,4 +1,4 @@
-import { HttpStatus, Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
+import { BadRequestException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
@@ -11,6 +11,7 @@ import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
 import { FuelTypes } from "src/common/enums/fuelType.enum";
 import { UserService } from "src/modules/user/user.service";
+import { StationEntity } from "../entity/station.entity";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
@@ -23,11 +24,14 @@ export class InventoryService {
         try {
             const { fuel_type, value, stationId, max, name } = createInventoryDto
             const { id, role } = this.req.user
+            let station: StationEntity;
             if (role === UserRole.HeadUser) {
-                await this.stationService.findOneById(stationId)
+                station = await this.stationService.findOneById(stationId)
             } else {
-                await this.stationService.findByUserStation(id, stationId)
+                station = await this.stationService.findByUserStation(id, stationId)
             }
+            if (!station.fuels.find(item => item.id == fuel_type))
+                throw new BadRequestException("you don't have this fuel in this station")
             let inventory = this.inventoryRepository.create({
                 name,
                 fuel_type,
@@ -68,8 +72,8 @@ export class InventoryService {
         try {
             const { id: userId, role } = this.req.user
             let where: object = {
+                id,
                 station: {
-                    id,
                     ownerId: userId
                 }
             }
@@ -106,8 +110,9 @@ export class InventoryService {
         try {
             const { value } = updateValue;
             const { id: userId } = this.req.user;
-            const obj = RemoveNullProperty(updateValue)
             const inventory = await this.findById(id);
+            if (inventory.status == false) throw new BadRequestException('inventory is deActive')
+            const obj = RemoveNullProperty(updateValue)
             await this.inventoryRepository.update({ id: inventory.id }, obj)
             return {
                 status: HttpStatus.OK,
@@ -136,14 +141,13 @@ export class InventoryService {
             const userId = this.req.user.id
             await this.userService.checkIfParent(userId)
             const inventory = await this.findById(id)
-
             let message = ''
             if (inventory.status) {
                 inventory.status = false
-                message = 'capacity status change to false'
+                message = 'inventory status change to false'
             } else {
                 inventory.status = true
-                message = 'capacity status change to true'
+                message = 'inventory status change to true'
             }
             await this.inventoryRepository.save(inventory)
             return {
@@ -180,7 +184,7 @@ export class InventoryService {
                 fuel_type: fuelType
             }
         });
-        if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
+        if (!inventory || inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
         return inventory
     }
     async findAllUserInventories(ownerId: number) {
