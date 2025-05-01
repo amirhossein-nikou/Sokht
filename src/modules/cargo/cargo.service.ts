@@ -37,7 +37,13 @@ export class CargoService {
 
     async findAll() {
         try {
-            const cargoes = await this.cargoRepository.find()
+            const cargoes = await this.cargoRepository.find({
+                relations: {
+                    request: {
+                        status: true
+                    }
+                }
+            })
             return {
                 statusCode: HttpStatus.OK,
                 data: cargoes
@@ -51,7 +57,7 @@ export class CargoService {
         try {
             const cargo = await this.cargoRepository.findOne({
                 where: { id },
-               })
+            })
             if (!cargo) throw new NotFoundException(CargoMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
@@ -116,7 +122,7 @@ export class CargoService {
         if (cargo) throw new NotFoundException('cargo for this request already exists')
         return false
     }
-    async findCargoWithDetails(){
+    async findCargoWithDetails() {
         const cargo = await this.cargoRepository.find({
             relations: {
                 request: true,
@@ -127,9 +133,9 @@ export class CargoService {
             },
             select: {
                 tankers: {
-                    id:true,
-                    depot: {name: true,id: true},
-                    driver: {first_name: true,last_name: true,mobile: true}
+                    id: true,
+                    depot: { name: true, id: true },
+                    driver: { first_name: true, last_name: true, mobile: true }
                 }
             }
         })

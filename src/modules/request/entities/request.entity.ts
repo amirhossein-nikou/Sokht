@@ -33,7 +33,7 @@ export class RequestEntity {
     depot: DepotEntity;
     @ManyToOne(() => StationEntity, station => station.requests, { onDelete: "CASCADE" })
     station: StationEntity;
-    @ManyToOne(() => StatusEntity)
+    @ManyToOne(() => StatusEntity,{eager: true})
     @JoinColumn({name:'statusId'})
     status: StatusEntity;
     @OneToOne(() => CargoEntity, cargo => cargo.request)

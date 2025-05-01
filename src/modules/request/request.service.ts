@@ -89,12 +89,6 @@ export class RequestService {
                 where,
                 relations: {
                     depot: true,
-                    status: true
-                },
-                select: {
-                    status: {
-                        status: true
-                    }
                 },
                 order: {
                     receive_at: 'ASC',
@@ -127,7 +121,6 @@ export class RequestService {
                 where,
                 relations: {
                     depot: true,
-                    status: true
                 },
             })
             if (!request) throw new NotFoundException(RequestMessages.Notfound)
@@ -158,7 +151,6 @@ export class RequestService {
                 where,
                 relations: {
                     depot: true,
-                    status: true
                 },
                 order: {
                     receive_at: 'ASC',
@@ -179,7 +171,6 @@ export class RequestService {
             const requests = await this.requestRepository.findOne({
                 where: { stationId }, relations: {
                     depot: true,
-                    status: true
                 },
             })
             if (!requests) throw new NotFoundException(RequestMessages.Notfound)
