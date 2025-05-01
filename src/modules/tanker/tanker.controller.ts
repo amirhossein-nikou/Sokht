@@ -5,6 +5,7 @@ import { UpdateTankerDto } from './dto/update-tanker.dto';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserRole } from '../user/enum/role.enum';
+import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 
 @Controller('tanker')
 @UserAuthGuard()
@@ -12,6 +13,7 @@ export class TankerController {
   constructor(private readonly tankerService: TankerService) { }
 
   @Post('/create')
+  @MyApiConsumes()
   @CanAccess(UserRole.OilDepotUser)
   create(@Body() createTankerDto: CreateTankerDto) {
     return this.tankerService.create(createTankerDto);
@@ -42,6 +44,7 @@ export class TankerController {
   }
 
   @Patch('/update/:id')
+  @MyApiConsumes()
   @CanAccess(UserRole.OilDepotUser)
   update(@Param('id', ParseIntPipe) id: number, @Body() updateTankerDto: UpdateTankerDto) {
     return this.tankerService.update(id, updateTankerDto);
