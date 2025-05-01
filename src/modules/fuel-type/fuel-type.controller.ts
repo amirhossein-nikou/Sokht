@@ -7,27 +7,27 @@ import { UpdateFuelTypeDto } from './dto/update-fuel-type.dto';
 export class FuelTypeController {
   constructor(private readonly fuelTypeService: FuelTypeService) {}
 
-  @Post()
+  @Post('/create')
   create(@Body() createFuelTypeDto: CreateFuelTypeDto) {
     return this.fuelTypeService.create(createFuelTypeDto);
   }
 
-  @Get()
+  @Get('/list')
   findAll() {
     return this.fuelTypeService.findAll();
   }
 
-  @Get(':id')
+  @Get('/one-by/:id')
   findOne(@Param('id') id: string) {
     return this.fuelTypeService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFuelTypeDto: UpdateFuelTypeDto) {
-    return this.fuelTypeService.update(+id, updateFuelTypeDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateFuelTypeDto: UpdateFuelTypeDto) {
+  //   return this.fuelTypeService.update(+id, updateFuelTypeDto);
+  // }
 
-  @Delete(':id')
+  @Delete('/remove/:id')
   remove(@Param('id') id: string) {
     return this.fuelTypeService.remove(+id);
   }
