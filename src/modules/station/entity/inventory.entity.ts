@@ -2,6 +2,7 @@ import { EntityName } from "src/common/enums/entity.enum";
 import { FuelTypes } from "src/common/enums/fuelType.enum";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { StationEntity } from "./station.entity";
+import { FuelTypeEntity } from "src/modules/fuel-type/entities/fuel-type.entity";
 
 @Entity(EntityName.Inventory)
 export class InventoryEntity {
@@ -13,14 +14,17 @@ export class InventoryEntity {
     value: number;
     @Column({type: 'bigint'})
     max: number;
-    @Column({enum: FuelTypes})
-    fuel_type: FuelTypes;
+    @Column({nullable: true})
+    fuel_type: number;
     @Column({ default: true})
     status: boolean
     @Column()
     stationId: number
     @ManyToOne(() => StationEntity, station => station.inventory,{onDelete: "CASCADE"})
     station: StationEntity
+    @ManyToOne(() => FuelTypeEntity,{onDelete: "CASCADE",eager: true})
+    @JoinColumn({name:'fuel_type'})
+    fuels: FuelTypeEntity
     @UpdateDateColumn()
     updated_at: Date
 }

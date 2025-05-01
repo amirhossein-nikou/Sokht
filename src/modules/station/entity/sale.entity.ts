@@ -4,19 +4,22 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn
 import { StationEntity } from "./station.entity";
 import { Transform } from "class-transformer";
 import { IsEnum } from "class-validator";
+import { FuelTypeEntity } from "src/modules/fuel-type/entities/fuel-type.entity";
 @Entity(EntityName.AvgSale)
 export class AverageSaleEntity {
     @PrimaryGeneratedColumn()
     id: number;
     @Column()
     average_sale: number;
-    @Column({ enum: FuelTypes })
-    @Transform(({ value }) => Number(value))
-    fuel_type: FuelTypes;
+    @Column()
+    fuel_type: number;
     @Column({ nullable: true })
     stationId: number
     @ManyToOne(() => StationEntity, station => station.average_sale, { onDelete: "CASCADE" })
     station: StationEntity;
+    @ManyToOne(() => FuelTypeEntity, { onDelete: "CASCADE", eager: true })
+    @JoinColumn({ name: 'fuel_type' })
+    fuels: FuelTypeEntity
     @UpdateDateColumn()
     updated_at: Date
 }

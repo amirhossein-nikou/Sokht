@@ -29,7 +29,7 @@ export class RequestEntity {
     receive_at: ReceiveTimeEnum;
     @CreateDateColumn()
     created_at: Date
-    @ManyToOne(() => DepotEntity, depot => depot.requests, { onDelete: "CASCADE" })
+    @ManyToOne(() => DepotEntity, depot => depot.requests, { onDelete: "CASCADE",eager: true })
     depot: DepotEntity;
     @ManyToOne(() => StationEntity, station => station.requests, { onDelete: "CASCADE" })
     station: StationEntity;

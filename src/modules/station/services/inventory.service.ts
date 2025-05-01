@@ -50,13 +50,20 @@ export class InventoryService {
     }
     async findAll() {
         try {
-            const { id, role } = this.req.user
+            const { id, role, parentId } = this.req.user
             let where: object = {
                 station: {
                     ownerId: id
                 }
             }
-            if (role === UserRole.HeadUser) {
+            if (parentId) {
+                where = {
+                    station: {
+                        ownerId: parentId
+                    }
+                }
+            }
+            if (role !== UserRole.StationUser) {
                 where = {}
             }
             const inventories = await this.inventoryRepository.find({ where })
@@ -70,14 +77,21 @@ export class InventoryService {
     }
     async findOne(id: number) {
         try {
-            const { id: userId, role } = this.req.user
+            const { id: userId, role, parentId } = this.req.user
             let where: object = {
                 id,
                 station: {
                     ownerId: userId
                 }
             }
-            if (role === UserRole.HeadUser) {
+            if (parentId) {
+                where = {
+                    station: {
+                        ownerId: parentId
+                    }
+                }
+            }
+            if (role !== UserRole.StationUser) {
                 where = { id }
             }
             const inventory = await this.inventoryRepository.findOne({ where });

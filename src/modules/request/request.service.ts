@@ -42,11 +42,7 @@ export class RequestService {
             const now = FormatDateTime(new Date());
             //if (now > ReceiveTimeEnum.FOUR_PM || now < ReceiveTimeEnum.SEVEN_AM) throw new BadRequestException(`requests can be created from 07:00 until 16:00`)
             // if (receive_at < now) throw new BadRequestException(`receive_at must be more than ${now}`)
-            const station = await this.stationService.findOneByIdWithRelations(stationId, {
-                inventory: true,
-                average_sale: true,
-                requests: true
-            })
+            const station = await this.stationService.findOneById(stationId)
             //check fuel type
             if (!station.fuels.find(item => item.id == Number(fuel_type)))
                 throw new BadRequestException("you don't have this fuel in this station")
