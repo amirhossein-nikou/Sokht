@@ -20,8 +20,6 @@ export class DepotService {
 	) { }
 	async create(createDepotDto: CreateDepotDto) {
 		try {
-			//const user = await this.userService.findOneById(this.req.user.id)
-			//check user role to be head-boss then allow create new depot
 			const { locationId, name, ownerId } = createDepotDto
 			await this.userService.findOneById(ownerId)
 			await this.locationService.getOneById(locationId)
@@ -30,9 +28,7 @@ export class DepotService {
 			await this.depotRepository.save(depot)
 			return {
 				statusCode: HttpStatus.CREATED,
-
 				message: DepotMessages.Create
-
 			}
 		} catch (error) {
 			throw error
@@ -41,9 +37,7 @@ export class DepotService {
 	//may need auth
 	async findAll() {
 		try {
-			const { id } = this.req.user
 			const depots = await this.depotRepository.find({
-				where: { ownerId: id },
 				relations: { location: true, owner: true }
 			})
 			return {
@@ -58,7 +52,7 @@ export class DepotService {
 	async findOne(id: number) {
 		try {
 			const { id: ownerId } = this.req.user
-			const depot = await this.depotRepository.findOne({ where: { ownerId, id }, relations: { location: true, owner: true } })
+			const depot = await this.depotRepository.findOne({ where: { id }, relations: { location: true, owner: true } })
 			if (!depot) throw new NotFoundException(DepotMessages.Notfound)
 			return {
 				statusCode: HttpStatus.OK,
@@ -68,13 +62,29 @@ export class DepotService {
 			throw error
 		}
 	}
-
+	async myDepot(id: number) {
+		try {
+			const { id: ownerId, parentId } = this.req.user
+			const depot = await this.depotRepository.findOne({
+				where: {
+					ownerId: parentId ?? ownerId,
+					id
+				}, relations: { location: true, owner: true, requests: true, tankers: true }
+			})
+			if (!depot) throw new NotFoundException(DepotMessages.Notfound)
+			return {
+				statusCode: HttpStatus.OK,
+				data: depot
+			}
+		} catch (error) {
+			throw error
+		}
+	}
 	async update(id: number, updateDepotDto: UpdateDepotDto) {
 		try {
-			//check user role to be head-boss then allow update depot
 			const { locationId, name, ownerId } = updateDepotDto
 			const updateObject = RemoveNullProperty({ locationId, name, ownerId })
-			const depot = await this.findOneById(id)
+			await this.findOneById(id)
 			if (ownerId && ownerId.toString() !== "0") await this.userService.findOneById(ownerId)
 			if (locationId && locationId.toString() !== "0") {
 				await this.locationService.getOneById(locationId)

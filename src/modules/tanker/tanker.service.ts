@@ -2,15 +2,15 @@ import { ConflictException, HttpStatus, Inject, Injectable, NotFoundException, S
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
+import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { Repository } from 'typeorm';
+import { CargoService } from '../cargo/cargo.service';
 import { DepotService } from '../depot/depot.service';
 import { UserService } from '../user/user.service';
 import { CreateTankerDto } from './dto/create-tanker.dto';
 import { UpdateTankerDto } from './dto/update-tanker.dto';
 import { TankerEntity } from './entities/tanker.entity';
 import { TankerMessages } from './enum/message.enum';
-import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { CargoService } from '../cargo/cargo.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TankerService {
@@ -43,7 +43,7 @@ export class TankerService {
 
     async findAll() {
         try {
-            const tankers = await this.tankerRepository.find()
+            const tankers = await this.tankerRepository.find({relations: {cargo: true}})
             return {
                 statusCode: HttpStatus.OK,
                 data: tankers
@@ -56,7 +56,7 @@ export class TankerService {
     async driverTankerInfo() {
         try {
             const { id } = this.req.user
-            const tanker = await this.tankerRepository.findOne({ where: { driverId: id } })
+            const tanker = await this.tankerRepository.findOne({ where: { driverId: id },relations: {cargo: true} })
             if (!tanker) throw new NotFoundException(TankerMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
@@ -69,7 +69,7 @@ export class TankerService {
 
     async findOne(id: number) {
         try {
-            const tanker = await this.tankerRepository.findOneBy({ id })
+            const tanker = await this.tankerRepository.findOne({ where: {id},relations: {cargo: true} })
             if (!tanker) throw new NotFoundException(TankerMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
