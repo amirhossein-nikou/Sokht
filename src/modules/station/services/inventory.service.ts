@@ -11,30 +11,26 @@ import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
 import { UserService } from "src/modules/user/user.service";
 import { StationEntity } from "../entity/station.entity";
+import { FuelTypeService } from "src/modules/fuel-type/fuel-type.service";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
         @InjectRepository(InventoryEntity) private inventoryRepository: Repository<InventoryEntity>,
         private stationService: StationService,
         private userService: UserService,
+        private fuelTypeService: FuelTypeService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createInventoryDto: CreateInventoryDto) {
         try {
-            const { fuel_type, value, stationId, max, name } = createInventoryDto
+            const { fuel_type, stationId, max, name } = createInventoryDto
             const { id, role } = this.req.user
-            let station: StationEntity;
-            if (role === UserRole.HeadUser) {
-                station = await this.stationService.findOneById(stationId)
-            } else {
-                station = await this.stationService.findByUserStation(id, stationId)
-            }
-            if (!station.fuels.find(item => item.id == fuel_type))
-                throw new BadRequestException("you don't have this fuel in this station")
+            const station = await this.stationService.findOneById(stationId)
+            await this.fuelTypeService.getById(fuel_type)
+            await this.stationService.checkExistsFuelType(station.id, fuel_type)
             let inventory = this.inventoryRepository.create({
                 name,
                 fuel_type,
-                value,
                 stationId,
                 max
             })
@@ -52,14 +48,7 @@ export class InventoryService {
             const { id, role, parentId } = this.req.user
             let where: object = {
                 station: {
-                    ownerId: id
-                }
-            }
-            if (parentId) {
-                where = {
-                    station: {
-                        ownerId: parentId
-                    }
+                    ownerId: parentId ?? id
                 }
             }
             if (role !== UserRole.StationUser) {
@@ -80,14 +69,7 @@ export class InventoryService {
             let where: object = {
                 id,
                 station: {
-                    ownerId: userId
-                }
-            }
-            if (parentId) {
-                where = {
-                    station: {
-                        ownerId: parentId
-                    }
+                    ownerId: parentId ?? userId
                 }
             }
             if (role !== UserRole.StationUser) {
@@ -105,11 +87,16 @@ export class InventoryService {
     }
     async update(id: number, updateInventoryDto: UpdateInventoryDto) {
         try {
-            const { fuel_type, value, stationId, max } = updateInventoryDto;
+            const { fuel_type, stationId, max } = updateInventoryDto;
             const { id: userId } = this.req.user;
-            if (stationId) await this.stationService.findByUserStation(id, stationId)
-            const obj = RemoveNullProperty(updateInventoryDto)
             const inventory = await this.findOneById(id, userId);
+            if (inventory.status == false) throw new BadRequestException('inventory is deActive')
+            if (stationId) await this.stationService.findOneById(stationId)
+            if (fuel_type) {
+                await this.fuelTypeService.getById(fuel_type)
+            }
+            if (fuel_type && stationId) await this.stationService.checkExistsFuelType(stationId, fuel_type)
+            const obj = RemoveNullProperty(updateInventoryDto)
             await this.inventoryRepository.update({ id: inventory.id }, obj)
             return {
                 status: HttpStatus.OK,
@@ -157,10 +144,10 @@ export class InventoryService {
             let message = ''
             if (inventory.status) {
                 inventory.status = false
-                message = 'inventory status change to false'
+                message = 'inventory Deactivated.'
             } else {
                 inventory.status = true
-                message = 'inventory status change to true'
+                message = 'inventory Got activated.'
             }
             await this.inventoryRepository.save(inventory)
             return {

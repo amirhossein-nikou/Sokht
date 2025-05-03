@@ -7,7 +7,7 @@ import { StringToBoolean } from 'src/common/utils/boolean.utils';
 import { StringToArray } from 'src/common/utils/stringToArray.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { FuelTypeService } from 'src/modules/fuel-type/fuel-type.service';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { LocationService } from '../../location/location.service';
 import { UserService } from '../../user/user.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
@@ -146,13 +146,12 @@ export class StationService {
     async myStation() {
         try {
             const { id, parentId } = this.req.user
-            const station = await this.stationRepository.findOne({
+            const station = await this.stationRepository.find({
                 where: { ownerId: parentId ?? id },
                 relations: {
                     requests: {
                         cargo: true
                     },
-                    average_sale: true,
                     inventory: true,
                     location: true
                 },
@@ -190,7 +189,7 @@ export class StationService {
         return station
     }
     async findByUserStation(userId: number, id: number) {
-        const station = await this.stationRepository.findOne({ where: { ownerId: userId, id },relations:{fuels: true} })
+        const station = await this.stationRepository.findOne({ where: { ownerId: userId, id }, relations: { fuels: true } })
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
@@ -212,5 +211,13 @@ export class StationService {
             }
         })
         return fuelIdList
+    }
+    async checkExistsFuelType(stationId: number, fuel_type: number) {
+        const fuels = await this.fuelTypeService.getById(fuel_type)
+        const station = await this.stationRepository.findOne({
+            where: {id:stationId,fuels}
+        })
+        if (!station)
+            throw new BadRequestException("you don't have this fuel in this station")
     }
 }

@@ -46,11 +46,6 @@ export class RequestController {
     update(@Param('id', ParseIntPipe) id: number, @Body() updateRequestDto: UpdateRequestDto) {
         return this.requestService.update(id, updateRequestDto);
     }
-    @Patch('/approve/:id')
-    @CanAccess(UserRole.OilDepotUser)
-    approved(@Param('id', ParseIntPipe) id: number) {
-        return this.requestService.approvedRequest(id);
-    }
     @Patch('/license/:id')
     @CanAccess(UserRole.OilDepotUser)
     license(@Param('id', ParseIntPipe) id: number) {

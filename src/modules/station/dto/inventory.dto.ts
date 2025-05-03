@@ -5,9 +5,6 @@ export class CreateInventoryDto {
     @ApiProperty()
     @IsString()
     name: string;
-    @ApiPropertyOptional()
-    @IsNumberString({ no_symbols: true })
-    value: number;
     @ApiProperty()
     @IsNumberString({ no_symbols: true })
     max: number;
@@ -24,5 +21,5 @@ export class UpdateValue {
     value: number;
 }
 export class UpdateInventoryDto extends PartialType(PickType(CreateInventoryDto,
-    ['max','name','stationId',"value"]
+    ['max','name','stationId']
 )) { }

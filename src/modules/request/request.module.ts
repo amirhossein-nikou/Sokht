@@ -11,13 +11,14 @@ import { InventoryModule } from '../station/modules/inventory.module';
 import { UserModule } from '../user/user.module';
 import { StatusEntity } from './entities/status.entity';
 import { SaleService } from '../station/services/sale.service';
+import { FuelTypeModule } from '../fuel-type/fuel-type.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RequestEntity,StatusEntity]),
-   AuthModule, StationModule,InventoryModule,UserModule,DepotModule],
+  imports: [TypeOrmModule.forFeature([RequestEntity, StatusEntity]),
+    AuthModule, StationModule, InventoryModule, UserModule, DepotModule, FuelTypeModule],
   controllers: [RequestController],
-  providers: [RequestService,InventoryService],
-  exports: [RequestService,TypeOrmModule]
+  providers: [RequestService, InventoryService],
+  exports: [RequestService, TypeOrmModule]
 })
 
 export class RequestModule { }

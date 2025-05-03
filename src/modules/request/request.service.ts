@@ -18,6 +18,8 @@ import { RequestEntity } from './entities/request.entity';
 import { StatusEntity } from './entities/status.entity';
 import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
+import { ReceiveTimeEnum } from './enums/time.enum';
+import { FuelTypeService } from '../fuel-type/fuel-type.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -40,8 +42,8 @@ export class RequestService {
             // if (receive_at < now) throw new BadRequestException(`receive_at must be more than ${now}`)
             const station = await this.stationService.findOneById(stationId)
             //check fuel type
-            if (!station.fuels.find(item => item.id == Number(fuel_type)))
-                throw new BadRequestException("you don't have this fuel in this station")
+            await this.stationService.checkExistsFuelType(station.id, fuel_type)
+            await this.manageReceivedAt(station.id, receive_at, fuel_type)
             //
             await this.filterRequestValue(station.id, fuel_type, value)
             // limit send requests just 4 time in day
@@ -74,14 +76,7 @@ export class RequestService {
             const { id: userId, role, parentId } = this.req.user
             let where: object = {
                 station: {
-                    ownerId: userId
-                }
-            }
-            if (parentId) {
-                where = {
-                    station: {
-                        ownerId: parentId
-                    }
+                    ownerId: parentId ?? userId
                 }
             }
             if (role !== UserRole.StationUser) {
@@ -113,15 +108,7 @@ export class RequestService {
             let where: object = {
                 id,
                 station: {
-                    ownerId: userId
-                }
-            }
-            if (parentId) {
-                where = {
-                    id,
-                    station: {
-                        ownerId: parentId
-                    }
+                    ownerId: parentId ?? userId
                 }
             }
             if (role !== UserRole.StationUser) {
@@ -151,15 +138,7 @@ export class RequestService {
             let where: object = {
                 created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
                 station: {
-                    ownerId: userId
-                }
-            }
-            if (parentId) {
-                where = {
-                    created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
-                    station: {
-                        ownerId: parentId
-                    }
+                    ownerId: parentId ?? userId
                 }
             }
             if (role !== UserRole.StationUser) {
@@ -207,11 +186,7 @@ export class RequestService {
             const request = await this.getOneByIdForUpdateAndRemove(id)
             const updateObject = RemoveNullProperty({ receive_at, value, })
             //calculate priority => 
-            const station = await this.stationService.findOneByIdWithRelations(request.stationId, {
-                inventory: true,
-                average_sale: true,
-                requests: true
-            })
+            const station = await this.stationService.findOneById(request.stationId)
             const priority = await this.detectPriority(station.id, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
                 statusId: StatusEnum.Posted,
@@ -246,19 +221,15 @@ export class RequestService {
     }
 
     async approvedRequest(id: number) {
-        try {
-            const request = await this.getOneById(id)
-            if ([StatusEnum.Approved, StatusEnum.Licensing].includes(request.statusId)) {
-                throw new BadRequestException(RequestMessages.Approved)
-            }
+        const request = await this.getOneById(id)
+        if ([StatusEnum.Approved, StatusEnum.Licensing].includes(request.statusId)) {
+            throw new BadRequestException(RequestMessages.Approved)
+        }
 
-            await this.requestRepository.update(id, { statusId: StatusEnum.Approved })
-            return {
-                statusCode: HttpStatus.OK,
-                message: RequestMessages.ApprovedSuccess
-            }
-        } catch (error) {
-            throw error
+        await this.requestRepository.update(id, { statusId: StatusEnum.Approved })
+        return {
+            statusCode: HttpStatus.OK,
+            message: RequestMessages.ApprovedSuccess
         }
     }
     async licenseRequest(id: number) {
@@ -372,5 +343,13 @@ export class RequestService {
     async getSumValueForSale(stationId: number, fuel_type) {
         const sales = await this.saleService.findByStationIdAndFuel(stationId, fuel_type)
         return sales.average_sale
+    }
+    async manageReceivedAt(stationId: number, receive_at: ReceiveTimeEnum, fuel_type: number) {
+        const start = new Date(new Date().toISOString().split('T')[0])
+        const end = new Date(start.getTime() + (1 * 1000 * 60 * 60 * 24));
+        const request = await this.requestRepository.findOne({
+            where: { stationId, receive_at, fuel_type, created_at: Between(start, end) }
+        })
+        if (request) throw new BadRequestException('this received Time is already used for this fuel')
     }
 }
