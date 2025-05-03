@@ -1,9 +1,6 @@
 import { EntityName } from "src/common/enums/entity.enum";
-import { FuelTypes } from "src/common/enums/fuelType.enum";
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { StationEntity } from "./station.entity";
-import { Transform } from "class-transformer";
-import { IsEnum } from "class-validator";
 import { FuelTypeEntity } from "src/modules/fuel-type/entities/fuel-type.entity";
 @Entity(EntityName.AvgSale)
 export class AverageSaleEntity {

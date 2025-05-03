@@ -8,7 +8,6 @@ import { CreateSaleDto, UpdateSaleDto } from '../dto/sale.dto';
 import { AverageSaleEntity } from '../entity/sale.entity';
 import { SaleMessages } from '../enum/message.enum';
 import { StationService } from './station.service';
-import { FuelTypes } from 'src/common/enums/fuelType.enum';
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -120,7 +119,7 @@ export class SaleService {
 		if (averageSale) throw new ConflictException(SaleMessages.AlreadyExists)
 		return false
 	}
-	async findByStationIdAndFuel(stationId: number, fuelType: FuelTypes) {
+	async findByStationIdAndFuel(stationId: number, fuelType: number) {
 		const sale = await this.averageSaleRepository.findOne({
 			where: {
 				stationId,

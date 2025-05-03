@@ -1,8 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNumber, IsNumberString, IsString } from "class-validator";
-import { FuelTypes } from "src/common/enums/fuelType.enum";
+import { IsEnum, IsNumberString, IsString } from "class-validator";
 import { ReceiveTimeEnum } from "../enums/time.enum";
-import { Transform } from "class-transformer";
 
 export class CreateRequestDto {
     @ApiProperty()

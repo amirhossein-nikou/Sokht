@@ -9,7 +9,6 @@ import { CreateInventoryDto, UpdateInventoryDto, UpdateValue } from "../dto/inve
 import { InventoryEntity } from "../entity/inventory.entity";
 import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
-import { FuelTypes } from "src/common/enums/fuelType.enum";
 import { UserService } from "src/modules/user/user.service";
 import { StationEntity } from "../entity/station.entity";
 @Injectable({ scope: Scope.REQUEST })
@@ -191,7 +190,7 @@ export class InventoryService {
         if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
         return inventory
     }
-    async findByStationIdAndFuel(stationId: number, fuelType: FuelTypes) {
+    async findByStationIdAndFuel(stationId: number, fuelType: number) {
         const inventory = await this.inventoryRepository.find({
             where: {
                 stationId,

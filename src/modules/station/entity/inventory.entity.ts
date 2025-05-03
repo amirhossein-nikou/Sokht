@@ -1,8 +1,7 @@
 import { EntityName } from "src/common/enums/entity.enum";
-import { FuelTypes } from "src/common/enums/fuelType.enum";
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { StationEntity } from "./station.entity";
 import { FuelTypeEntity } from "src/modules/fuel-type/entities/fuel-type.entity";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { StationEntity } from "./station.entity";
 
 @Entity(EntityName.Inventory)
 export class InventoryEntity {

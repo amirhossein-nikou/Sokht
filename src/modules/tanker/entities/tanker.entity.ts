@@ -1,5 +1,4 @@
 import { EntityName } from "src/common/enums/entity.enum";
-import { FuelTypes } from "src/common/enums/fuelType.enum";
 import { CargoEntity } from "src/modules/cargo/entities/cargo.entity";
 import { DepotEntity } from "src/modules/depot/entity/depot.entity";
 import { UserEntity } from "src/modules/user/entity/user.entity";

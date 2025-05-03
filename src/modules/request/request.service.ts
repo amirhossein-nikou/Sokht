@@ -1,27 +1,23 @@
 import { BadRequestException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
-import { CreateRequestDto } from './dto/create-request.dto';
-import { UpdateRequestDto } from './dto/update-request.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { RequestEntity } from './entities/request.entity';
-import { And, Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
-import { StationService } from '../station/services/station.service';
-import { PriorityEnum } from './enums/priority.enum';
-import { RequestMessages } from './enums/message.enum';
-import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { StatusEnum } from 'src/common/enums/status.enum';
-import { DepotService } from '../depot/depot.service';
-import { StationEntity } from '../station/entity/station.entity';
-import { FormatDateTime } from 'src/common/utils/formatDate.utils';
-import { ReceiveTimeEnum } from './enums/time.enum';
-import e, { Request } from 'express';
 import { REQUEST } from '@nestjs/core';
-import { FuelTypes } from 'src/common/enums/fuelType.enum';
-import { UserRole } from '../user/enum/role.enum';
-import { SearchDto } from './dto/search.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Request } from 'express';
+import { StatusEnum } from 'src/common/enums/status.enum';
+import { FormatDateTime } from 'src/common/utils/formatDate.utils';
+import { RemoveNullProperty } from 'src/common/utils/update.utils';
+import { And, Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { DepotService } from '../depot/depot.service';
 import { InventoryService } from '../station/services/inventory.service';
-import { UserService } from '../user/user.service';
-import { StatusEntity } from './entities/status.entity';
 import { SaleService } from '../station/services/sale.service';
+import { StationService } from '../station/services/station.service';
+import { UserRole } from '../user/enum/role.enum';
+import { CreateRequestDto } from './dto/create-request.dto';
+import { SearchDto } from './dto/search.dto';
+import { UpdateRequestDto } from './dto/update-request.dto';
+import { RequestEntity } from './entities/request.entity';
+import { StatusEntity } from './entities/status.entity';
+import { RequestMessages } from './enums/message.enum';
+import { PriorityEnum } from './enums/priority.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -296,7 +292,7 @@ export class RequestService {
     }
 
     // utils
-    async detectPriority(stationId: number, fuel_type: FuelTypes,): Promise<PriorityEnum> {
+    async detectPriority(stationId: number, fuel_type: number,): Promise<PriorityEnum> {
         const inventories = await this.getSumValueForInventory(stationId, fuel_type)
         const average_sale = await this.getSumValueForSale(stationId, fuel_type)
         if (!inventories)
@@ -308,7 +304,7 @@ export class RequestService {
         else if (priorityNumber < 100 && priorityNumber >= 30) return PriorityEnum.High
         else if (priorityNumber < 30) return PriorityEnum.Critical
     }
-    async filterRequestValue(stationId: number, fuel_type: FuelTypes, value: number) {
+    async filterRequestValue(stationId: number, fuel_type: number, value: number) {
         const inventoryValueSum = await this.getSumValueForInventory(stationId, fuel_type)
         const maxCap = await this.getMacInventoryCapacity(stationId, fuel_type)
         if ((inventoryValueSum + Number(value)) > maxCap)

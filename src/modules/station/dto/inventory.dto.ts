@@ -1,7 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType, PickType } from "@nestjs/swagger";
-import { Transform } from "class-transformer";
-import { IsEnum, IsNumberString, IsString } from "class-validator";
-import { FuelTypes } from "src/common/enums/fuelType.enum";
+import { IsNumberString, IsString } from "class-validator";
 
 export class CreateInventoryDto {
     @ApiProperty()

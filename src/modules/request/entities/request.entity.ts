@@ -1,7 +1,6 @@
 import { EntityName } from "src/common/enums/entity.enum"
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm"
 import { PriorityEnum } from "../enums/priority.enum"
-import { FuelTypes } from "src/common/enums/fuelType.enum"
 import { StatusEnum } from "src/common/enums/status.enum"
 import { ReceiveTimeEnum } from "../enums/time.enum"
 import { DepotEntity } from "src/modules/depot/entity/depot.entity"
@@ -21,8 +20,8 @@ export class RequestEntity {
     value: number;
     @Column()
     depotId: number;
-    @Column({ enum: FuelTypes })
-    fuel_type: FuelTypes;
+    @Column()
+    fuel_type: number;
     @Column({ enum: StatusEnum, default: StatusEnum.Posted })
     statusId: StatusEnum;
     @Column({ enum: ReceiveTimeEnum })
