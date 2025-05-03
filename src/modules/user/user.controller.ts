@@ -9,11 +9,11 @@ import { UserRole } from './enum/role.enum';
 import { UserService } from './user.service';
 
 @Controller('user')
+@UserAuthGuard()
 export class UserController {
     constructor(private readonly userService: UserService) { }
 
     @Post('/create')
-    @UserAuthGuard()
     @CanAccess(PremiumRoles.Boss, PremiumRoles.Head)
     @MyApiConsumes()
     create(@Body() createUserDto: CreateUserDto) {
@@ -21,13 +21,11 @@ export class UserController {
     }
     @Post('/sub-user')
     @MyApiConsumes()
-    @UserAuthGuard()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     addSubUser(@Body() addSubUserDto: AddSubUserDto) {
         return this.userService.addSubUsers(addSubUserDto);
     }
     @Post('/driver')
-    @UserAuthGuard()
     @CanAccess(UserRole.OilDepotUser)
     @MyApiConsumes()
     addDriver(@Body() createUserDto: AddSubUserDto) {
@@ -36,7 +34,6 @@ export class UserController {
 
     @Get('/list')
     @MyApiConsumes()
-    @UserAuthGuard()
     @CanAccess(PremiumRoles.Boss, PremiumRoles.Admin)
     findAll() {
         return this.userService.findAll();
@@ -56,34 +53,29 @@ export class UserController {
     }
     @Get('/profile')
     @MyApiConsumes()
-    @UserAuthGuard()
     profile() {
         return this.userService.profile();
     }
     @Patch('/subUser-phone/:id')
     @MyApiConsumes()
-    @UserAuthGuard()
     updateSubUserMobile(@Param('id', ParseIntPipe) id: number, @Body() updateMobileDto: UpdateMobileDto) {
         return this.userService.updateSubUserMobile(id, updateMobileDto);
     }
 
     @Patch('/mobile')
     @MyApiConsumes()
-    @UserAuthGuard()
     updateMyMobile(@Body() updateMobileDto: UpdateMobileDto) {
         return this.userService.updateMyPhone(updateMobileDto);
     }
 
     @Delete('/remove/:id')
     @MyApiConsumes()
-    @UserAuthGuard()
     @CanAccess(PremiumRoles.Boss) // main admin
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.userService.remove(id);
     }
     @Delete('/removeSub/:id')
     @MyApiConsumes()
-    @UserAuthGuard()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     removeSubUser(@Param('id', ParseIntPipe) id: number) {
         return this.userService.removeSubUser(id);
