@@ -222,13 +222,16 @@ export class UserService {
 				relations,
 				where: { id },
 				select: {
-					parent: {first_name: true,last_name: true , mobile: true,national_code: true},
-					child: {first_name: true,last_name: true , mobile: true,national_code: true}
+					parent: { first_name: true, last_name: true, mobile: true, national_code: true },
+					child: { first_name: true, last_name: true, mobile: true, national_code: true }
 				}
 
 			})
 			if (!user) throw new NotFoundException(UserMessages.NotFound)
-			return user
+			return {
+				statusCode: HttpStatus.OK,
+				data: user
+			}
 		} catch (error) {
 			throw error
 		}
