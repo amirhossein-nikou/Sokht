@@ -18,7 +18,7 @@ export class DepotEntity{
     @OneToOne(() => UserEntity,owner => owner.depot)
     @JoinColumn({name: 'ownerId'})
     owner: UserEntity;
-    @OneToOne(() => LocationEntity, location => location.depot, {onDelete: "CASCADE"})
+    @OneToOne(() => LocationEntity, location => location.depot, {onDelete: "CASCADE",eager: true})
     @JoinColumn({name: 'locationId'})
     location: LocationEntity
     @OneToMany(() => TankerEntity, tanker => tanker.depot)

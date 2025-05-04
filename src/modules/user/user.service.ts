@@ -209,12 +209,23 @@ export class UserService {
 	}
 	async profile() {
 		try {
-			const id = this.req.user.id
-			const user = await this.userRepository.findOne({
-				where: { id },
-				relations: {
-					parent: true, child: true, otp: true, stations: true
+			const { id, parentId } = this.req.user
+			let relations: object = {
+				child: true, stations: true
+			}
+			if (parentId) {
+				relations = {
+					parent: { stations: true }
 				}
+			}
+			const user = await this.userRepository.findOne({
+				relations,
+				where: { id },
+				select: {
+					parent: {first_name: true,last_name: true , mobile: true,national_code: true},
+					child: {first_name: true,last_name: true , mobile: true,national_code: true}
+				}
+
 			})
 			if (!user) throw new NotFoundException(UserMessages.NotFound)
 			return user

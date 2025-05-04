@@ -26,7 +26,7 @@ export class StationEntity {
     // relations
     @ManyToOne(() => UserEntity, user => user.stations)
     owner: UserEntity;
-    @OneToOne(() => LocationEntity, location => location.station)
+    @OneToOne(() => LocationEntity, location => location.station,{eager: true})
     @JoinColumn({ name: "locationId" })
     location: LocationEntity
     @OneToMany(() => AverageSaleEntity, sale => sale.station)
