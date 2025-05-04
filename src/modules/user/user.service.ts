@@ -52,6 +52,8 @@ export class UserService {
 			const { id } = this.req.user
 			const user = await this.findOneById(id)
 			if (user.parent || user.parentId) throw new BadRequestException('this user is not allowed to add sub users')
+			console.log(user.child.length);
+			if (user.child.length >= 3) throw new BadRequestException('you cant have more than 3 sub user')
 			await this.checkExistsMobile(mobile)
 			await this.checkExistsNationalCode(national_code)
 			if (certificateId) await this.checkExistsCertificateId(certificateId)
@@ -239,7 +241,7 @@ export class UserService {
 
 	// utils 
 	async findOneById(id: number) {
-		const user = await this.userRepository.findOne({ where: { id } })
+		const user = await this.userRepository.findOne({ where: { id }, relations: { child: true } })
 		if (!user) throw new NotFoundException(UserMessages.NotFound)
 		return user
 	}
