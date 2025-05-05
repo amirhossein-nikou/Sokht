@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { StatusEnum } from 'src/common/enums/status.enum';
 import { FormatDateTime } from 'src/common/utils/formatDate.utils';
+import { requestOrder } from 'src/common/utils/order-by.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { And, Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { DepotService } from '../depot/depot.service';
@@ -19,7 +20,7 @@ import { StatusEntity } from './entities/status.entity';
 import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
-import { FuelTypeService } from '../fuel-type/fuel-type.service';
+import { PriorityType } from './types/priority.type';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -50,13 +51,15 @@ export class RequestService {
             await this.limitSendRequests(station.id)
             //---
             const priority = await this.detectPriority(station.id, fuel_type)
+            console.log(priority);
             // check exists depot
             await this.depotService.findOneById(depotId)
             const request = this.requestRepository.create({
                 fuel_type,
                 stationId,
                 value,
-                priority,
+                priority: priority.priority,
+                priority_value: priority.priority_value,
                 statusId: StatusEnum.Posted,
                 depotId,
                 receive_at
@@ -87,10 +90,7 @@ export class RequestService {
                 relations: {
                     depot: true,
                 },
-                order: {
-                    receive_at: 'ASC',
-                    priority: 'ASC'
-                }
+                order: requestOrder
             })
 
             return {
@@ -149,10 +149,7 @@ export class RequestService {
                 relations: {
                     depot: true,
                 },
-                order: {
-                    receive_at: 'ASC',
-                    priority: 'ASC'
-                }
+                order: requestOrder
             })
             if (!request) throw new NotFoundException(RequestMessages.Notfound)
             return {
@@ -190,7 +187,8 @@ export class RequestService {
             const priority = await this.detectPriority(station.id, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
                 statusId: StatusEnum.Posted,
-                priority
+                priority: priority.priority,
+                priority_value: priority.priority_value
                 , ...updateObject
             })
             if (!updatedRequest || updatedRequest.affected == 0) throw new BadRequestException(RequestMessages.UpdateFailed)
@@ -263,7 +261,7 @@ export class RequestService {
     }
 
     // utils
-    async detectPriority(stationId: number, fuel_type: number,): Promise<PriorityEnum> {
+    async detectPriority(stationId: number, fuel_type: number,): Promise<PriorityType> {
         const inventories = await this.getSumValueForInventory(stationId, fuel_type)
         const average_sale = await this.getSumValueForSale(stationId, fuel_type)
         if (!inventories)
@@ -271,9 +269,18 @@ export class RequestService {
         if (!average_sale)
             throw new BadRequestException('station average_sale is invalid')
         const priorityNumber: number = (inventories / average_sale) * 100
-        if (priorityNumber >= 100) return PriorityEnum.Normal
-        else if (priorityNumber < 100 && priorityNumber >= 30) return PriorityEnum.High
-        else if (priorityNumber < 30) return PriorityEnum.Critical
+        if (priorityNumber >= 100) {
+            return {
+                priority: PriorityEnum.Normal,
+                priority_value: priorityNumber
+            }
+        }
+        else if (priorityNumber < 100 && priorityNumber >= 30) {
+            return {priority: PriorityEnum.High,priority_value: priorityNumber}
+        }
+        else if (priorityNumber < 30) {
+            return {priority: PriorityEnum.Critical,priority_value: priorityNumber}
+        }
     }
     async filterRequestValue(stationId: number, fuel_type: number, value: number) {
         const inventoryValueSum = await this.getSumValueForInventory(stationId, fuel_type)

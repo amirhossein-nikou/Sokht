@@ -13,6 +13,7 @@ import { UserService } from '../../user/user.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { StationEntity } from '../entity/station.entity';
 import { StationMessages } from '../enum/message.enum';
+import { requestOrder } from 'src/common/utils/order-by.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class StationService {
@@ -156,10 +157,7 @@ export class StationService {
                     location: true
                 },
                 order: {
-                    requests: {
-                        receive_at: 'ASC',
-                        priority: 'ASC'
-                    }
+                    requests: requestOrder
                 }
             })
             if (!station) throw new NotFoundException(StationMessages.NotFound)
