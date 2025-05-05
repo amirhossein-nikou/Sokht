@@ -29,12 +29,12 @@ export class SaleController {
   findOne(@Param('id') id: string) {
     return this.saleService.findOne(+id);
   }
-  @MyApiConsumes()
-  @Patch('/update/:id')
-  @CanAccess(UserRole.HeadUser)
-  update(@Param('id') id: string, @Body() updateSaleDto: UpdateSaleDto) {
-    return this.saleService.update(+id, updateSaleDto);
-  }
+  // @MyApiConsumes()
+  // @Patch('/update/:id')
+  // @CanAccess(UserRole.HeadUser)
+  // update(@Param('id') id: string, @Body() updateSaleDto: UpdateSaleDto) {
+  //   return this.saleService.update(+id, updateSaleDto);
+  // }
 
   @Delete('/remove/:id')
   @CanAccess(UserRole.HeadUser)

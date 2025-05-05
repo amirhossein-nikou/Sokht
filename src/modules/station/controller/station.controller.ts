@@ -56,12 +56,12 @@ export class StationController {
   myStation() {
     return this.stationService.myStation();
   }
-  // @Patch('/update/:id')
-  // @MyApiConsumes()
-  // @CanAccess(UserRole.HeadUser)
-  // update(@Param('id', ParseIntPipe) id: number, @Body() updateStationDto: UpdateStationDto) {
-  //   return this.stationService.update(id, updateStationDto);
-  // }
+  @Patch('/update/:id')
+  @MyApiConsumes()
+  @CanAccess(UserRole.HeadUser)
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateStationDto: UpdateStationDto) {
+    return this.stationService.update(id, updateStationDto);
+  }
 
   @Delete('/remove/:id')
   @CanAccess(UserRole.HeadUser)
