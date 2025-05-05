@@ -29,7 +29,7 @@ export class CargoService {
                 arrival_time, dispatch_time, requestId
             })
             await this.cargoRepository.save(cargo)
-            await this.requestService.approvedRequest(requestId)
+            await this.requestService.licenseRequest(requestId)
             return {
                 statusCode: HttpStatus.CREATED,
                 message: CargoMessages.Create

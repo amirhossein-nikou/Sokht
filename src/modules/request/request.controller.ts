@@ -20,18 +20,18 @@ export class RequestController {
         return this.requestService.create(createRequestDto);
     }
     // head user
-    @CanAccess(UserRole.HeadUser, UserRole.StationUser,UserRole.OilDepotUser)
+    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     @Get('/list')
     findAll() {
         return this.requestService.findAll();
     }
     @Get('/by-id/:id')
-    @CanAccess(UserRole.HeadUser, UserRole.StationUser,UserRole.OilDepotUser)
+    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.requestService.findOne(id);
     }
     @Get('/by-date')
-    @CanAccess(UserRole.HeadUser, UserRole.StationUser,UserRole.OilDepotUser)
+    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     findByDate(@Query('end') end: Date, @Query('start') start?: Date) {
         const search: SearchDto = {
             start: start ? new Date(start) : new Date(),
@@ -46,10 +46,10 @@ export class RequestController {
     update(@Param('id', ParseIntPipe) id: number, @Body() updateRequestDto: UpdateRequestDto) {
         return this.requestService.update(id, updateRequestDto);
     }
-    @Patch('/license/:id')
+    @Patch('/approved/:id')
     @CanAccess(UserRole.OilDepotUser)
     license(@Param('id', ParseIntPipe) id: number) {
-        return this.requestService.licenseRequest(id);
+        return this.requestService.approvedRequest(id);
     }
     @Patch('/received/:id')
     @CanAccess(UserRole.StationUser)
