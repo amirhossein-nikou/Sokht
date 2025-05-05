@@ -77,20 +77,20 @@ export class SaleService {
 		}
 	}
 
-	async update(id: number, updateSaleDto: UpdateSaleDto) {
-		try {
-			if (updateSaleDto.stationId) await this.checkExists(updateSaleDto.stationId)
-			const updateObj = RemoveNullProperty(updateSaleDto)
-			await this.getOne(id)
-			await this.averageSaleRepository.update({ id }, updateObj)
-			return {
-				statusCode: HttpStatus.CREATED,
-				message: SaleMessages.Update
-			}
-		} catch (error) {
-			throw error
-		}
-	}
+	// async update(id: number, updateSaleDto: UpdateSaleDto) {
+	// 	try {
+	// 		if (updateSaleDto.stationId) await this.checkExists(updateSaleDto.stationId)
+	// 		const updateObj = RemoveNullProperty(updateSaleDto)
+	// 		await this.getOne(id)
+	// 		await this.averageSaleRepository.update({ id }, updateObj)
+	// 		return {
+	// 			statusCode: HttpStatus.CREATED,
+	// 			message: SaleMessages.Update
+	// 		}
+	// 	} catch (error) {
+	// 		throw error
+	// 	}
+	// }
 
 	async remove(id: number) {
 		try {
