@@ -206,10 +206,9 @@ export class StationService {
         StringToArray(fuel_types).map(async (item) => {
             if (isNumberString(item)) {
                 fuelIdList.push(Number(item))
-            } else {
-                throw new BadRequestException('fuel_types must be number')
             }
         })
+        if(fuelIdList.length < fuel_types.length) throw new BadRequestException('fuel_types must be number')
         return fuelIdList
     }
     async checkExistsFuelType(stationId: number, fuel_type: number) {

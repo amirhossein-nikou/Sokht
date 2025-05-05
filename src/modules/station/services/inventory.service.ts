@@ -111,6 +111,7 @@ export class InventoryService {
             const { value } = updateValue;
             const { id: userId } = this.req.user;
             const inventory = await this.findById(id);
+            if(value > inventory.max) throw new BadRequestException('value cant be more than max capacity')
             if (inventory.status == false) throw new BadRequestException('inventory is deActive')
             const obj = RemoveNullProperty(updateValue)
             await this.inventoryRepository.update({ id: inventory.id }, obj)
