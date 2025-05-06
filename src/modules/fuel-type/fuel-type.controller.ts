@@ -5,6 +5,7 @@ import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserRole } from '../user/enum/role.enum';
+import { PremiumRoles } from 'src/common/enums/otherRole.enum';
 
 @Controller('fuel-type')
 @UserAuthGuard()
@@ -12,7 +13,7 @@ export class FuelTypeController {
   constructor(private readonly fuelTypeService: FuelTypeService) { }
 
   @Post('/create')
-  @CanAccess(UserRole.HeadUser)
+  @CanAccess(PremiumRoles.Boss)
   @MyApiConsumes()
   create(@Body() createFuelTypeDto: CreateFuelTypeDto) {
     return this.fuelTypeService.create(createFuelTypeDto);
@@ -36,7 +37,7 @@ export class FuelTypeController {
   // }
 
   @Delete('/remove/:id')
-  @CanAccess(UserRole.HeadUser)
+  @CanAccess(PremiumRoles.Boss)
   remove(@Param('id') id: string) {
     return this.fuelTypeService.remove(+id);
   }
