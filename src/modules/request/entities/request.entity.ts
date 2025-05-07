@@ -7,6 +7,7 @@ import { DepotEntity } from "src/modules/depot/entity/depot.entity"
 import { CargoEntity } from "src/modules/cargo/entities/cargo.entity"
 import { StationEntity } from "src/modules/station/entity/station.entity"
 import { StatusEntity } from "./status.entity"
+import { FuelTypeEntity } from "src/modules/fuel-type/entities/fuel-type.entity"
 
 @Entity(EntityName.Request)
 export class RequestEntity {
@@ -32,6 +33,9 @@ export class RequestEntity {
     priority_value: number
     @ManyToOne(() => DepotEntity, depot => depot.requests, { onDelete: "CASCADE"})
     depot: DepotEntity;
+    @ManyToOne(() => FuelTypeEntity, { eager: true})
+    @JoinColumn({name: 'fuel_type'})
+    fuel: FuelTypeEntity;
     @ManyToOne(() => StationEntity, station => station.requests, { onDelete: "CASCADE" })
     station: StationEntity;
     @ManyToOne(() => StatusEntity,{eager: true})

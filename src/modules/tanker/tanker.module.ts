@@ -9,8 +9,9 @@ import { AuthModule } from '../auth/auth.module';
 import { CargoModule } from '../cargo/cargo.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TankerEntity]),UserModule,DepotModule,AuthModule,CargoModule],
+  imports: [TypeOrmModule.forFeature([TankerEntity]),UserModule,DepotModule,AuthModule],
   controllers: [TankerController],
   providers: [TankerService],
+  exports: [TankerService,TypeOrmModule]
 })
 export class TankerModule {}

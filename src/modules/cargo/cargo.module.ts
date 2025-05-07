@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CargoEntity } from './entities/cargo.entity';
 import { RequestModule } from '../request/request.module';
 import { AuthModule } from '../auth/auth.module';
+import { TankerModule } from '../tanker/tanker.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CargoEntity]),RequestModule,AuthModule],
+  imports: [TypeOrmModule.forFeature([CargoEntity]),RequestModule,AuthModule,TankerModule],
   controllers: [CargoController],
   providers: [CargoService],
   exports: [CargoService,TypeOrmModule]

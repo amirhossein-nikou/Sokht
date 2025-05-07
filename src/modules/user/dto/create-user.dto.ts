@@ -48,6 +48,6 @@ export class AddSubUserDto {
     @ApiPropertyOptional()
     @IsNumberString()
     @IsOptional()
-    @Length(2, 6)
+    @Length(1, 10)
     certificateId: number
 }

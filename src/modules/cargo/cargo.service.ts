@@ -8,25 +8,31 @@ import { RequestService } from '../request/request.service';
 import { CargoMessages } from './enums/message.enum';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { StatusEnum } from 'src/common/enums/status.enum';
+import { getIdList } from 'src/common/utils/id.utils';
+import { StringToArray } from 'src/common/utils/stringToArray.utils';
+import { TankerService } from '../tanker/tanker.service';
 
 @Injectable()
 export class CargoService {
     constructor(
         @InjectRepository(CargoEntity) private cargoRepository: Repository<CargoEntity>,
+        private tankerService: TankerService,
         private requestService: RequestService
     ) { }
     async create(createCargoDto: CreateCargoDto) {
-        const { arrival_time, dispatch_time, requestId } = createCargoDto
+        const { arrival_time, dispatch_time, requestId, tankerId } = createCargoDto
         try {
             const now = new Date().toISOString()
             if (arrival_time.toString() <= now) throw new BadRequestException('arrival_time is less than current time')
             if (dispatch_time.toString() <= now) throw new BadRequestException('dispatch_time is less than current time')
+            const tankerIdList = getIdList(StringToArray(tankerId))
+            const tankers = await this.tankerService.getByIdList(tankerIdList)
             const request = await this.requestService.getOneById(requestId)
             if (request.statusId !== StatusEnum.Approved)
                 throw new BadRequestException('you can create cargo for approved requests')
             await this.checkExistsRequestId(requestId)
             const cargo = this.cargoRepository.create({
-                arrival_time, dispatch_time, requestId
+                arrival_time, dispatch_time, requestId, tankers, tankerId: tankerIdList
             })
             await this.cargoRepository.save(cargo)
             await this.requestService.licenseRequest(requestId)
@@ -128,6 +134,7 @@ export class CargoService {
     }
     async findCargoWithDetails() {
         const cargo = await this.cargoRepository.find({
+            where: {inProgress: true},
             relations: {
                 request: true,
                 tankers: {
@@ -139,7 +146,7 @@ export class CargoService {
                 tankers: {
                     id: true,
                     depot: { name: true, id: true },
-                    driver: { first_name: true, last_name: true, mobile: true }
+                    driver: { id: true, first_name: true, last_name: true, mobile: true }
                 }
             }
         })

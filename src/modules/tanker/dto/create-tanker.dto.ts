@@ -15,7 +15,4 @@ export class CreateTankerDto {
     @ApiProperty()
     @IsNumberString()
     depotId: number;
-    @ApiPropertyOptional()
-    @IsNumberString()
-    cargoId: number;
 }

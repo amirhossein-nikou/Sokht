@@ -262,7 +262,7 @@ export class UserService {
 	}
 	async checkExistsCertificateId(certificateId: number) {
 		const user = await this.userRepository.findOne({ where: { certificateId } })
-		if (user) throw new ConflictException('national code unavailable')
+		if (user) throw new ConflictException('CertificateId unavailable')
 		return false
 	}
 	async checkIfParent(id: number) {

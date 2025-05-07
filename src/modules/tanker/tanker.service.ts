@@ -1,16 +1,16 @@
-import { ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { Repository } from 'typeorm';
-import { CargoService } from '../cargo/cargo.service';
+import { In, Repository } from 'typeorm';
 import { DepotService } from '../depot/depot.service';
 import { UserService } from '../user/user.service';
 import { CreateTankerDto } from './dto/create-tanker.dto';
 import { UpdateTankerDto } from './dto/update-tanker.dto';
 import { TankerEntity } from './entities/tanker.entity';
 import { TankerMessages } from './enum/message.enum';
+import { UserRole } from '../user/enum/role.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TankerService {
@@ -18,19 +18,18 @@ export class TankerService {
         @InjectRepository(TankerEntity) private tankerRepository: Repository<TankerEntity>,
         private userService: UserService,
         private depotService: DepotService,
-        private cargoService: CargoService,
         @Inject(REQUEST) private req: Request
     ) { }
 
     async create(createTankerDto: CreateTankerDto) {
         try {
-            const { capacity, depotId, driverId, number, cargoId } = createTankerDto
-            await this.checkExistsDriver(depotId)
+            const { capacity, depotId, driverId, number } = createTankerDto
+            await this.checkExistsDriver(driverId)
             await this.checkExistsTankerNumber(number)
-            await this.userService.findOneById(driverId);
+            const driver = await this.userService.findOneById(driverId);
+            if (driver.role !== UserRole.Driver) throw new BadRequestException('this user not identify as driver')
             await this.depotService.findOneById(depotId);
-            if (cargoId) await this.cargoService.getOneById(cargoId);
-            const tanker = this.tankerRepository.create({ capacity, depotId, driverId, number, cargoId })
+            const tanker = this.tankerRepository.create({ capacity, depotId, driverId, number })
             await this.tankerRepository.save(tanker)
             return {
                 statusCode: HttpStatus.CREATED,
@@ -43,7 +42,7 @@ export class TankerService {
 
     async findAll() {
         try {
-            const tankers = await this.tankerRepository.find({relations: {cargo: true}})
+            const tankers = await this.tankerRepository.find({ relations: { cargo: true }, select: { cargo: { tankerId: false } } })
             return {
                 statusCode: HttpStatus.OK,
                 data: tankers
@@ -56,7 +55,7 @@ export class TankerService {
     async driverTankerInfo() {
         try {
             const { id } = this.req.user
-            const tanker = await this.tankerRepository.findOne({ where: { driverId: id },relations: {cargo: true} })
+            const tanker = await this.tankerRepository.findOne({ where: { driverId: id }, relations: { cargo: true }, select: { cargo: { tankerId: false } } })
             if (!tanker) throw new NotFoundException(TankerMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
@@ -69,7 +68,7 @@ export class TankerService {
 
     async findOne(id: number) {
         try {
-            const tanker = await this.tankerRepository.findOne({ where: {id},relations: {cargo: true} })
+            const tanker = await this.tankerRepository.findOne({ where: { id }, relations: { cargo: true }, select: { cargo: { tankerId: false } } })
             if (!tanker) throw new NotFoundException(TankerMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
@@ -81,7 +80,10 @@ export class TankerService {
     }
     async findOneByDriverId(driverId: number) {
         try {
-            const tanker = await this.tankerRepository.findOneBy({ driverId })
+            const tanker = await this.tankerRepository.findOne({
+                where: { driverId },
+                relations: { cargo: true }, select: { cargo: { tankerId: false } }
+            })
             if (!tanker) throw new NotFoundException(TankerMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
@@ -93,16 +95,15 @@ export class TankerService {
     }
     async update(id: number, updateTankerDto: UpdateTankerDto) {
         try {
-            const { capacity, depotId, driverId, number, cargoId } = updateTankerDto
+            const { capacity, depotId, driverId, number } = updateTankerDto
             await this.getTankerById(id)
             if (driverId && driverId > 0) {
                 await this.checkExistsDriver(depotId)
                 await this.userService.findOneById(driverId);
             }
             if (depotId && depotId > 0) await this.depotService.findOneById(depotId);
-            if (cargoId && cargoId > 0) await this.cargoService.getOneById(cargoId);
-            if(number && number > 0) await this.checkExistsTankerNumber(number)
-            const updateObject = RemoveNullProperty({ capacity, depotId, driverId, number, cargoId })
+            if (number && number > 0) await this.checkExistsTankerNumber(number)
+            const updateObject = RemoveNullProperty({ capacity, depotId, driverId, number })
             this.tankerRepository.update(id, updateObject)
             return {
                 statusCode: HttpStatus.OK,
@@ -143,5 +144,10 @@ export class TankerService {
         const tanker = await this.tankerRepository.findOne({ where: { number } })
         if (tanker) throw new ConflictException('this driver is already own a tanker')
         return true
+    }
+    async getByIdList(ids: number[]) {
+        const tanker = await this.tankerRepository.find({ where: { id: In(ids) } })
+        if (tanker.length < ids.length) throw new NotFoundException('tanker not found')
+        return tanker
     }
 }

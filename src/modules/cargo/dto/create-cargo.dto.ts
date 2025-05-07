@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDate, IsDateString, IsNumberString } from "class-validator";
+import {IsDateString, IsNumberString } from "class-validator";
 
 export class CreateCargoDto {
     @ApiProperty()
@@ -11,4 +11,6 @@ export class CreateCargoDto {
     @ApiProperty()
     @IsDateString()
     arrival_time: Date;
+    @ApiProperty({type: 'array'})
+    tankerId: number[]
 }

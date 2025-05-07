@@ -14,8 +14,8 @@ export class HomeService {
 
     ) { }
     async dashboard() {
-        const { id } = this.req.user
-        const inventory = await this.inventoryService.findAllUserInventories(id)
+        const { id , parentId} = this.req.user
+        const inventory = await this.inventoryService.findAllUserInventories(parentId ?? id)
         const cargo = await this.cargoService.findCargoWithDetails()
         return {
             statusCode: HttpStatus.OK,

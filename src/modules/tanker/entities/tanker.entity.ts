@@ -2,7 +2,7 @@ import { EntityName } from "src/common/enums/entity.enum";
 import { CargoEntity } from "src/modules/cargo/entities/cargo.entity";
 import { DepotEntity } from "src/modules/depot/entity/depot.entity";
 import { UserEntity } from "src/modules/user/entity/user.entity";
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity(EntityName.Tanker)
 export class TankerEntity {
@@ -16,14 +16,12 @@ export class TankerEntity {
     number: number;
     @Column()
     depotId: number;
-    @Column({nullable: true})
-    cargoId: number;
     @OneToOne(() => UserEntity, user => user.tanker, {onDelete: 'CASCADE'})
     @JoinColumn({name: 'driverId'})
     driver: UserEntity;
     @ManyToOne(() => DepotEntity, depot =>depot.tankers, {onDelete: "CASCADE"})
     depot: DepotEntity
-    @ManyToOne(() => CargoEntity, cargo =>cargo.tankers, {onDelete: "CASCADE"})
+    @ManyToMany(() => CargoEntity, cargo =>cargo.tankers, {onDelete: "CASCADE"})
     cargo: CargoEntity
     
 }

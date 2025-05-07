@@ -14,6 +14,7 @@ import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { StationEntity } from '../entity/station.entity';
 import { StationMessages } from '../enum/message.enum';
 import { requestOrder } from 'src/common/utils/order-by.utils';
+import { getIdList } from 'src/common/utils/id.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class StationService {
@@ -28,7 +29,7 @@ export class StationService {
         try {
             const { isActive, locationId, name, ownerId, fuel_types } = createStationDto
             //check user exist
-            const fuelIdList = this.getIdList(StringToArray(fuel_types))
+            const fuelIdList = getIdList(StringToArray(fuel_types))
             const fuels = await this.fuelTypeService.getByIdList(fuelIdList)
             const user = await this.userService.findOneById(ownerId)
             if (user.parentId) throw new BadRequestException(StationMessages.ParentExists)
@@ -87,7 +88,7 @@ export class StationService {
             const { isActive, locationId, name, ownerId, fuel_types } = updateStationDto
             let fuels
             if (fuel_types) {
-                const fuelIdList = this.getIdList(StringToArray(fuel_types))
+                const fuelIdList = getIdList(StringToArray(fuel_types))
                 fuels = await this.fuelTypeService.getByIdList(fuelIdList)
             }
             const station = await this.findOneById(id)
@@ -199,16 +200,7 @@ export class StationService {
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
-    private getIdList(fuel_types: []) {
-        let fuelIdList = []
-        StringToArray(fuel_types).map(async (item) => {
-            if (isNumberString(item)) {
-                fuelIdList.push(Number(item))
-            }
-        })
-        if(fuelIdList.length < fuel_types.length) throw new BadRequestException('fuel_types must be number')
-        return fuelIdList
-    }
+    
     async checkExistsFuelType(stationId: number, fuel_type: number) {
         const fuels = await this.fuelTypeService.getById(fuel_type)
         const station = await this.stationRepository.findOne({
