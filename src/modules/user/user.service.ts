@@ -224,8 +224,8 @@ export class UserService {
 				relations,
 				where: { id },
 				select: {
-					parent: { first_name: true, last_name: true, mobile: true, national_code: true },
-					child: { first_name: true, last_name: true, mobile: true, national_code: true }
+					parent: { first_name: true, last_name: true, mobile: true, national_code: true},
+					child: { id:true,first_name: true, last_name: true, mobile: true, national_code: true }
 				}
 
 			})
