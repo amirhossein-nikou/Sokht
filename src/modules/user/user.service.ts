@@ -112,7 +112,7 @@ export class UserService {
 				where: { id },
 				relations: {
 					parent: true, child: true, otp: true, stations: true
-				}
+				},
 			})
 			if (!user) throw new NotFoundException(UserMessages.NotFound)
 			return {
@@ -170,17 +170,36 @@ export class UserService {
 	}
 	async updateMyPhone(updateMobileDto: UpdateMobileDto) {
 		try {
-			const { id } = this.req.user
-			const { mobile } = updateMobileDto
-			await this.checkExistsMobile(mobile)
-			await this.userRepository.update(id, { mobile: ModifyMobileNumber(mobile), verify_mobile: false })
-			await this.authService.sendOtp({ mobile })
+			const { id, mobile } = this.req.user
+			const { mobile: newMobile } = updateMobileDto
+			const user = await this.findOneById(id)
+			if (mobile == newMobile) return {
+				statusCode: HttpStatus.OK,
+				message: 'mobile updated.'
+			}
+			await this.checkExistsMobile(newMobile)
+			const code = await this.authService.createOtpForUser(user)
+			await this.userRepository.update(id, {
+				newMobile: ModifyMobileNumber(newMobile), verify_mobile: false
+			})
 			return {
 				statusCode: HttpStatus.OK,
-				message: 'mobile updated. check otp for verify number'
+				message: 'check otp for verify and update new mobile',
+				code
 			}
 		} catch (error) {
 			throw error
+		}
+	}
+	async verifyUpdateMobile(code: string) {
+		const { id,mobile } = this.req.user
+		const user = await this.findOneById(id)
+		if (!user.newMobile) throw new BadRequestException('please update phone first')
+		await this.authService.checkOtp({ mobile, code })
+		await this.userRepository.update(id, { mobile: user.newMobile, newMobile: null })
+		return {
+			statusCode: HttpStatus.OK,
+			message: 'mobile changed'
 		}
 	}
 	async remove(id: number) {
@@ -224,8 +243,8 @@ export class UserService {
 				relations,
 				where: { id },
 				select: {
-					parent: { first_name: true, last_name: true, mobile: true, national_code: true},
-					child: { id:true,first_name: true, last_name: true, mobile: true, national_code: true }
+					parent: { first_name: true, last_name: true, mobile: true, national_code: true },
+					child: { id: true, first_name: true, last_name: true, mobile: true, national_code: true }
 				}
 
 			})

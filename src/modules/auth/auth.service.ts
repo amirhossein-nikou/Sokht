@@ -41,7 +41,7 @@ export class AuthService {
         let otp = await this.otpRepository.findOne({ where: { userId: user.id } });
         if (otp) {
             if (otp.expires_in > new Date()) {
-                throw new HttpException('code not expired', HttpStatus.OK); 
+                throw new HttpException('code not expired', HttpStatus.OK);
             }
             otp.code = code;
             otp.expires_in = expire_in;
@@ -74,7 +74,7 @@ export class AuthService {
             if (otp?.code !== code) throw new UnauthorizedException("Code invalid")
             if (now > expire_in) throw new UnauthorizedException("Code expired")
             if (!user.verify_mobile) {
-                await this.userRepository.update({ id: user.id }, { verify_mobile: true })
+                await this.userRepository.update({ id: user.id }, {verify_mobile: true })
             }
             const { accessToken, refreshToken } = this.generateTokenForUser({ id: user.id, mobile: ModifyMobileNumber(mobile) })
             return {

@@ -80,5 +80,10 @@ export class UserController {
     removeSubUser(@Param('id', ParseIntPipe) id: number) {
         return this.userService.removeSubUser(id);
     }
+    @Get('/verify-change/:code')
+    verifyChangeMobile(@Param('code') code: string) {
+        console.log();
+        return this.userService.verifyUpdateMobile(code);
+    }
 }
 

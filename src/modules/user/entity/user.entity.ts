@@ -29,6 +29,8 @@ export class UserEntity {
     parentId: number
     @Column({ nullable: true })
     otpId: number
+    @Column({nullable: true})
+    newMobile: string
     @ManyToOne(() => UserEntity, user => user.child, { onDelete: 'CASCADE' })
     parent: UserEntity
     @OneToMany(() => UserEntity, user => user.parent)

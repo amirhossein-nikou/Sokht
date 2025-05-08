@@ -180,11 +180,12 @@ export class InventoryService {
     async findByStationIdAndFuel(stationId: number, fuelType: number) {
         const inventory = await this.inventoryRepository.find({
             where: {
+                status: true,
                 stationId,
                 fuel_type: fuelType
             }
         });
-        if (!inventory || inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
+        //if (!inventory || inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
         return inventory
     }
     async findAllUserInventories(ownerId: number) {

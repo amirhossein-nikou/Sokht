@@ -134,7 +134,7 @@ export class CargoService {
     }
     async findCargoWithDetails() {
         const cargo = await this.cargoRepository.find({
-            where: {inProgress: true},
+            where: { inProgress: true },
             relations: {
                 request: true,
                 tankers: {

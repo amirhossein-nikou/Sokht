@@ -21,16 +21,20 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
+import { CargoEntity } from '../cargo/entities/cargo.entity';
+import { FuelTypeService } from '../fuel-type/fuel-type.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
     constructor(
         @InjectRepository(RequestEntity) private requestRepository: Repository<RequestEntity>,
         @InjectRepository(StatusEntity) private statusRepository: Repository<StatusEntity>,
+        @InjectRepository(CargoEntity) private cargoRepository: Repository<CargoEntity>,
         private stationService: StationService,
         private inventoryService: InventoryService,
         private saleService: SaleService,
         private depotService: DepotService,
+        private fuelTypeService: FuelTypeService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createRequestDto: CreateRequestDto) {
@@ -250,6 +254,7 @@ export class RequestService {
             if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
             if (request.statusId == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
             if (request.statusId == StatusEnum.received) throw new BadRequestException(RequestMessages.AlreadyReceived)
+            await this.cargoRepository.update(request.cargo.id, { inProgress: false })
             await this.requestRepository.update(id, { statusId: StatusEnum.received })
             return {
                 statusCode: HttpStatus.OK,
@@ -259,7 +264,33 @@ export class RequestService {
             throw error
         }
     }
-
+    async createRequestDetails() {
+        try {
+            const { id, parentId } = this.req.user
+            const station = await this.stationService.findByUserId(parentId ?? id)
+            const depots = await this.depotService.findAll()
+            const receiveTimes = Object.values(ReceiveTimeEnum);
+            const stationFuels = station.fuels
+            const capacityList = []
+            const promise = stationFuels.map(async item => {
+                const maxCap = await this.getMaxInventoryCapacity(station.id, item.id)
+                if (maxCap) {
+                    capacityList.push({ maxCap: (maxCap * 1.2), fuel_type: item.name })
+                }
+            })
+            await Promise.all(promise)
+            if (capacityList.length == 0) throw new BadRequestException('something went wrong in capacity')
+            return {
+                station,
+                depots,
+                receiveTimes,
+                stationFuels,
+                capacityList
+            }
+        } catch (error) {
+            throw error
+        }
+    }
     // utils
     async detectPriority(stationId: number, fuel_type: number,): Promise<PriorityType> {
         const inventories = await this.getSumValueForInventory(stationId, fuel_type)
@@ -276,16 +307,19 @@ export class RequestService {
             }
         }
         else if (priorityNumber < 100 && priorityNumber >= 30) {
-            return {priority: PriorityEnum.High,priority_value: priorityNumber}
+            return { priority: PriorityEnum.High, priority_value: priorityNumber }
         }
         else if (priorityNumber < 30) {
-            return {priority: PriorityEnum.Critical,priority_value: priorityNumber}
+            return { priority: PriorityEnum.Critical, priority_value: priorityNumber }
         }
     }
     async filterRequestValue(stationId: number, fuel_type: number, value: number) {
         const inventoryValueSum = await this.getSumValueForInventory(stationId, fuel_type)
-        const maxCap = await this.getMacInventoryCapacity(stationId, fuel_type)
-        if ((inventoryValueSum + Number(value)) > maxCap)
+        if (!inventoryValueSum) throw new BadRequestException('inventory is invalid')
+        const maxCap = await this.getMaxInventoryCapacity(stationId, fuel_type)
+        const maxValues = inventoryValueSum + Number(value)
+        if (value < 1000) throw new BadRequestException('request value must be more than 1000')
+        if (maxValues > (maxCap * 1.2))
             throw new BadRequestException('you cant receive more than your max capacity')
         return {
             inventoryValueSum,
@@ -293,7 +327,7 @@ export class RequestService {
         }
     }
     async getOneById(id: number) {
-        const request = await this.requestRepository.findOneBy({ id })
+        const request = await this.requestRepository.findOne({ where: { id }, relations: { cargo: true } })
         if (!request) throw new NotFoundException(RequestMessages.Notfound)
         return request
     }
@@ -342,7 +376,7 @@ export class RequestService {
         const sumValue = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
         return sumValue
     }
-    async getMacInventoryCapacity(stationId: number, fuel_type) {
+    async getMaxInventoryCapacity(stationId: number, fuel_type) {
         const inventories = await this.inventoryService.findByStationIdAndFuel(stationId, fuel_type)
         const sumValue = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
         return sumValue

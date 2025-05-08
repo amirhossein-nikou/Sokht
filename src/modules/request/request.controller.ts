@@ -7,6 +7,7 @@ import { UserRole } from '../user/enum/role.enum';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { SearchDto } from './dto/search.dto';
+import { ReceiveTimeEnum } from './enums/time.enum';
 
 @Controller('request')
 @UserAuthGuard()
@@ -60,5 +61,9 @@ export class RequestController {
     @CanAccess(UserRole.StationUser)
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.requestService.remove(+id);
+    }
+    @Get('/create/details')
+    createRequestDetails() {
+      return this.requestService.createRequestDetails()
     }
 }
