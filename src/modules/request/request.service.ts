@@ -7,6 +7,7 @@ import { FormatDateTime } from 'src/common/utils/formatDate.utils';
 import { requestOrder } from 'src/common/utils/order-by.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { And, Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { CargoEntity } from '../cargo/entities/cargo.entity';
 import { DepotService } from '../depot/depot.service';
 import { InventoryService } from '../station/services/inventory.service';
 import { SaleService } from '../station/services/sale.service';
@@ -21,8 +22,6 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
-import { CargoEntity } from '../cargo/entities/cargo.entity';
-import { FuelTypeService } from '../fuel-type/fuel-type.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -34,7 +33,6 @@ export class RequestService {
         private inventoryService: InventoryService,
         private saleService: SaleService,
         private depotService: DepotService,
-        private fuelTypeService: FuelTypeService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createRequestDto: CreateRequestDto) {
@@ -55,7 +53,6 @@ export class RequestService {
             await this.limitSendRequests(station.id)
             //---
             const priority = await this.detectPriority(station.id, fuel_type)
-            console.log(priority);
             // check exists depot
             await this.depotService.findOneById(depotId)
             const request = this.requestRepository.create({
@@ -268,24 +265,28 @@ export class RequestService {
         try {
             const { id, parentId } = this.req.user
             const station = await this.stationService.findByUserId(parentId ?? id)
-            const depots = await this.depotService.findAll()
+            const depots = await this.depotService.getNameList()
             const receiveTimes = Object.values(ReceiveTimeEnum);
             const stationFuels = station.fuels
             const capacityList = []
             const promise = stationFuels.map(async item => {
+                const contain = await this.getSumValueForInventory(station.id, item.id)
                 const maxCap = await this.getMaxInventoryCapacity(station.id, item.id)
-                if (maxCap) {
-                    capacityList.push({ maxCap: (maxCap * 1.2), fuel_type: item.name })
+                if (contain && maxCap) {
+                    const availableValue = (maxCap - contain) * 1.2
+                    capacityList.push({ availableValue, fuel_type: item.name })
                 }
             })
             await Promise.all(promise)
             if (capacityList.length == 0) throw new BadRequestException('something went wrong in capacity')
             return {
-                station,
-                depots,
-                receiveTimes,
-                stationFuels,
-                capacityList
+                statusCode: HttpStatus.OK,
+                data: {
+                    depots,
+                    receiveTimes,
+                    stationFuels,
+                    capacityList
+                }
             }
         } catch (error) {
             throw error

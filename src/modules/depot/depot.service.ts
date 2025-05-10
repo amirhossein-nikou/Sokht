@@ -131,4 +131,13 @@ export class DepotService {
 		if (!depot) throw new NotFoundException(DepotMessages.Notfound)
 		return depot
 	}
+	async getNameList() {
+		const depots = await this.depotRepository.find({
+			select: {
+				id: true,
+				name: true,
+			}
+		})
+		return depots
+	}
 }
