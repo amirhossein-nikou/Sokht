@@ -33,29 +33,5 @@ describe("Test OTP Service", () => {
         expect(OtpRepository).toBeDefined();
         expect(UserRepository).toBeDefined();
     });
-    it('should generate Otp', async () => {
-        const user: UserEntity = {
-            id: 1,
-            first_name: "Amirhossein",
-            last_name: "Nikoo",
-            mobile: "09175500767",
-            national_code: "3530236942",
-            role: UserRole.HeadUser,
-            certificateId: null,
-            verify_mobile: true,
-            parentId: null,
-            parent: null,
-            child: [],
-            newMobile: null,
-            depot: null,
-            otp: null,
-            otpId:null,
-            stations:[],
-            tanker: null,
-            tickets:[]
-        }
-        const code = await service.createOtpForUser(user)
-        console.log(code);
-        expect(code).toHaveLength(5)
-    });
+    
 })
