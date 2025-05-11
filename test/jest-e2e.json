@@ -1,0 +1,16 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "moduleNameMapper": {
+    "^@/(.*)$": "P:/Programming_Project/VS_Code/Atras/sokht/$1"
+  },
+  "moduleDirectories": ["node_modules", "src"],
+  "modulePaths": [
+      "<rootDir>"
+    ],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  }
+}

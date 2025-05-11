@@ -1,8 +1,8 @@
-import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
+import {ConflictException, HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import { randomInt } from "crypto";
-import { ModifyMobileNumber } from "src/common/utils/mobile.utils";
+import { ModifyMobileNumber } from "../../common/utils/mobile.utils";
 import { Repository } from "typeorm";
 import { UserEntity } from "../user/entity/user.entity";
 import { CheckOtpDto, SendOtpDto } from "./dto/auth.dto";

@@ -2,10 +2,10 @@ import { BadRequestException, HttpStatus, Inject, Injectable, NotFoundException,
 import { REQUEST } from "@nestjs/core";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
-import { RemoveNullProperty } from "src/common/utils/update.utils";
-import { FuelTypeService } from "src/modules/fuel-type/fuel-type.service";
-import { UserRole } from "src/modules/user/enum/role.enum";
-import { UserService } from "src/modules/user/user.service";
+import { RemoveNullProperty } from "../../../common/utils/update.utils";
+import { FuelTypeService } from "../../../modules/fuel-type/fuel-type.service";
+import { UserRole } from "../../../modules/user/enum/role.enum";
+import { UserService } from "../../../modules/user/user.service";
 import { Repository } from "typeorm";
 import { CreateInventoryDto, UpdateInventoryDto, UpdateValue } from "../dto/inventory.dto";
 import { InventoryEntity } from "../entity/inventory.entity";

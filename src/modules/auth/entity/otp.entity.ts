@@ -1,5 +1,5 @@
-import { EntityName } from "src/common/enums/entity.enum";
-import { UserEntity } from "src/modules/user/entity/user.entity";
+import { EntityName } from "../../../common/enums/entity.enum";
+import { UserEntity } from "../../../modules/user/entity/user.entity";
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity(EntityName.Otp)

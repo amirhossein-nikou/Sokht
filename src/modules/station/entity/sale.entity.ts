@@ -1,7 +1,7 @@
-import { EntityName } from "src/common/enums/entity.enum";
+import { EntityName } from "../../../common/enums/entity.enum";
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { StationEntity } from "./station.entity";
-import { FuelTypeEntity } from "src/modules/fuel-type/entities/fuel-type.entity";
+import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity";
 @Entity(EntityName.AvgSale)
 export class AverageSaleEntity {
     @PrimaryGeneratedColumn()

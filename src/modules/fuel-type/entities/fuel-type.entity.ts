@@ -1,4 +1,4 @@
-import { EntityName } from "src/common/enums/entity.enum";
+import { EntityName } from "../../../common/enums/entity.enum";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity(EntityName.FuelType)

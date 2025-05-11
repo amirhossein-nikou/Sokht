@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from 'src/modules/auth/auth.module';
+import { AuthModule } from '../../../modules/auth/auth.module';
 import { LocationModule } from '../../location/location.module';
 import { UserModule } from '../../user/user.module';
 import { SaleController } from '../controller/sale.controller';
@@ -9,7 +9,7 @@ import { StationService } from '../services/station.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StationEntity } from '../entity/station.entity';
 import { AverageSaleEntity } from '../entity/sale.entity';
-import { FuelTypeModule } from 'src/modules/fuel-type/fuel-type.module';
+import { FuelTypeModule } from '../../../modules/fuel-type/fuel-type.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([StationEntity, AverageSaleEntity])

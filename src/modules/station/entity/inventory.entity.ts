@@ -1,5 +1,5 @@
-import { EntityName } from "src/common/enums/entity.enum";
-import { FuelTypeEntity } from "src/modules/fuel-type/entities/fuel-type.entity";
+import { EntityName } from "../../../common/enums/entity.enum";
+import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity";
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { StationEntity } from "./station.entity";
 

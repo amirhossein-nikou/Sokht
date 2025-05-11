@@ -1,8 +1,8 @@
-import { EntityName } from "src/common/enums/entity.enum";
+import { EntityName } from "../../../common/enums/entity.enum";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { TicketTargetEnum } from "../enum/target.enum";
 import { TicketPriorityEnum } from "../enum/ticket-priority.enum";
-import { UserEntity } from "src/modules/user/entity/user.entity";
+import { UserEntity } from "../../../modules/user/entity/user.entity";
 
 @Entity(EntityName.Ticket)
 export class TicketEntity {

@@ -1,6 +1,6 @@
-import { EntityName } from "src/common/enums/entity.enum";
-import { DepotEntity } from "src/modules/depot/entity/depot.entity";
-import { StationEntity } from "src/modules/station/entity/station.entity";
+import { EntityName } from "../../../common/enums/entity.enum";
+import { DepotEntity } from "../../../modules/depot/entity/depot.entity";
+import { StationEntity } from "../../../modules/station/entity/station.entity";
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 

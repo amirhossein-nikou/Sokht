@@ -1,6 +1,6 @@
-import { EntityName } from "src/common/enums/entity.enum";
-import { RequestEntity } from "src/modules/request/entities/request.entity";
-import { TankerEntity } from "src/modules/tanker/entities/tanker.entity";
+import { EntityName } from "../../../common/enums/entity.enum";
+import { RequestEntity } from "../../../modules/request/entities/request.entity";
+import { TankerEntity } from "../../../modules/tanker/entities/tanker.entity";
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity(EntityName.Cargo)

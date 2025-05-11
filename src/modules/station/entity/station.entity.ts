@@ -1,8 +1,8 @@
-import { EntityName } from "src/common/enums/entity.enum";
-import { FuelTypeEntity } from "src/modules/fuel-type/entities/fuel-type.entity";
-import { LocationEntity } from "src/modules/location/entity/location.entity";
-import { RequestEntity } from "src/modules/request/entities/request.entity";
-import { UserEntity } from "src/modules/user/entity/user.entity";
+import { EntityName } from "../../../common/enums/entity.enum";
+import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity";
+import { LocationEntity } from "../../../modules/location/entity/location.entity";
+import { RequestEntity } from "../../../modules/request/entities/request.entity";
+import { UserEntity } from "../../../modules/user/entity/user.entity";
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { InventoryEntity } from "./inventory.entity";
 import { AverageSaleEntity } from "./sale.entity";

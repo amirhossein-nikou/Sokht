@@ -3,18 +3,18 @@ import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isNumberString } from 'class-validator';
 import { Request } from 'express';
-import { StringToBoolean } from 'src/common/utils/boolean.utils';
-import { StringToArray } from 'src/common/utils/stringToArray.utils';
-import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { FuelTypeService } from 'src/modules/fuel-type/fuel-type.service';
+import { StringToBoolean } from '../../../common/utils/boolean.utils';
+import { StringToArray } from '../../../common/utils/stringToArray.utils';
+import { RemoveNullProperty } from '../../../common/utils/update.utils';
+import { FuelTypeService } from '../../../modules/fuel-type/fuel-type.service';
 import { In, Repository } from 'typeorm';
 import { LocationService } from '../../location/location.service';
 import { UserService } from '../../user/user.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { StationEntity } from '../entity/station.entity';
 import { StationMessages } from '../enum/message.enum';
-import { requestOrder } from 'src/common/utils/order-by.utils';
-import { getIdList } from 'src/common/utils/id.utils';
+import { requestOrder } from '../../../common/utils/order-by.utils';
+import { getIdList } from '../../../common/utils/id.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class StationService {

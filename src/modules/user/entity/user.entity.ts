@@ -1,11 +1,11 @@
-import { EntityName } from "src/common/enums/entity.enum";
+import { EntityName } from "../../../common/enums/entity.enum";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { UserRole } from "../enum/role.enum";
-import { OtpEntity } from "src/modules/auth/entity/otp.entity";
-import { StationEntity } from "src/modules/station/entity/station.entity";
-import { DepotEntity } from "src/modules/depot/entity/depot.entity";
-import { TankerEntity } from "src/modules/tanker/entities/tanker.entity";
-import { TicketEntity } from "src/modules/ticket/entities/ticket.entity";
+import { OtpEntity } from "../../../modules/auth/entity/otp.entity";
+import { StationEntity } from "../../../modules/station/entity/station.entity";
+import { DepotEntity } from "../../../modules/depot/entity/depot.entity";
+import { TankerEntity } from "../../../modules/tanker/entities/tanker.entity";
+import { TicketEntity } from "../../../modules/ticket/entities/ticket.entity";
 
 @Entity(EntityName.User)
 export class UserEntity {

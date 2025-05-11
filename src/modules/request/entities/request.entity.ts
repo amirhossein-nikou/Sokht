@@ -1,13 +1,13 @@
-import { EntityName } from "src/common/enums/entity.enum"
+import { EntityName } from "../../../common/enums/entity.enum"
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm"
 import { PriorityEnum } from "../enums/priority.enum"
-import { StatusEnum } from "src/common/enums/status.enum"
+import { StatusEnum } from "../../../common/enums/status.enum"
 import { ReceiveTimeEnum } from "../enums/time.enum"
-import { DepotEntity } from "src/modules/depot/entity/depot.entity"
-import { CargoEntity } from "src/modules/cargo/entities/cargo.entity"
-import { StationEntity } from "src/modules/station/entity/station.entity"
+import { DepotEntity } from "../../../modules/depot/entity/depot.entity"
+import { CargoEntity } from "../../../modules/cargo/entities/cargo.entity"
+import { StationEntity } from "../../../modules/station/entity/station.entity"
 import { StatusEntity } from "./status.entity"
-import { FuelTypeEntity } from "src/modules/fuel-type/entities/fuel-type.entity"
+import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity"
 
 @Entity(EntityName.Request)
 export class RequestEntity {

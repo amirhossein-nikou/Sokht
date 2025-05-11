@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable,
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
-import { RemoveNullProperty } from 'src/common/utils/update.utils';
+import { RemoveNullProperty } from '../../../common/utils/update.utils';
 import { Repository } from 'typeorm';
 import { CreateSaleDto, UpdateSaleDto } from '../dto/sale.dto';
 import { AverageSaleEntity } from '../entity/sale.entity';

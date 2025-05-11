@@ -1,7 +1,7 @@
-import { EntityName } from "src/common/enums/entity.enum";
-import { CargoEntity } from "src/modules/cargo/entities/cargo.entity";
-import { DepotEntity } from "src/modules/depot/entity/depot.entity";
-import { UserEntity } from "src/modules/user/entity/user.entity";
+import { EntityName } from "../../../common/enums/entity.enum";
+import { CargoEntity } from "../../../modules/cargo/entities/cargo.entity";
+import { DepotEntity } from "../../../modules/depot/entity/depot.entity";
+import { UserEntity } from "../../../modules/user/entity/user.entity";
 import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity(EntityName.Tanker)
