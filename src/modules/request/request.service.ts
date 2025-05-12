@@ -6,7 +6,7 @@ import { StatusEnum } from 'src/common/enums/status.enum';
 import { FormatDateTime } from 'src/common/utils/formatDate.utils';
 import { requestOrder } from 'src/common/utils/order-by.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { And, Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { And, Between, In, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { CargoEntity } from '../cargo/entities/cargo.entity';
 import { DepotService } from '../depot/depot.service';
 import { InventoryService } from '../station/services/inventory.service';
@@ -79,12 +79,13 @@ export class RequestService {
         try {
             const { id: userId, role, parentId } = this.req.user
             let where: object = {
+                status: In([0,1,2]),
                 station: {
                     ownerId: parentId ?? userId
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = {}
+                where = {status: In([0,1,2])}
             }
             const requests = await this.requestRepository.find({
                 where,
