@@ -205,11 +205,11 @@ export class StationService {
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
-    
+
     async checkExistsFuelType(stationId: number, fuel_type: number) {
         const fuels = await this.fuelTypeService.getById(fuel_type)
         const station = await this.stationRepository.findOne({
-            where: {id:stationId,fuels}
+            where: { id: stationId, fuels }
         })
         if (!station)
             throw new BadRequestException("you don't have this fuel in this station")

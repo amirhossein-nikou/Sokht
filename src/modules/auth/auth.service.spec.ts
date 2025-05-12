@@ -33,5 +33,5 @@ describe("Test OTP Service", () => {
         expect(OtpRepository).toBeDefined();
         expect(UserRepository).toBeDefined();
     });
-    
+
 })

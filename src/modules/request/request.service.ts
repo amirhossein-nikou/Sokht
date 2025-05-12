@@ -22,6 +22,7 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
+import { UserService } from '../user/user.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -37,13 +38,14 @@ export class RequestService {
     ) { }
     async create(createRequestDto: CreateRequestDto) {
         try {
-            const { fuel_type, stationId, value, depotId, receive_at } = createRequestDto
+            const { fuel_type, value, depotId, receive_at } = createRequestDto
+            const { id: userId, parentId } = this.req.user
             await this.insertStatus()
             // check exists station
             const now = FormatDateTime(new Date());
             //if (now > ReceiveTimeEnum.FOUR_PM || now < ReceiveTimeEnum.SEVEN_AM) throw new BadRequestException(`requests can be created from 07:00 until 16:00`)
             // if (receive_at < now) throw new BadRequestException(`receive_at must be more than ${now}`)
-            const station = await this.stationService.findOneById(stationId)
+            const station = await this.stationService.findByUserId(parentId ?? userId)
             //check fuel type
             await this.stationService.checkExistsFuelType(station.id, fuel_type)
             await this.manageReceivedAt(station.id, receive_at, fuel_type)
@@ -57,7 +59,7 @@ export class RequestService {
             await this.depotService.findOneById(depotId)
             const request = this.requestRepository.create({
                 fuel_type,
-                stationId,
+                stationId: station.id,
                 value,
                 priority: priority.priority,
                 priority_value: priority.priority_value,
@@ -79,13 +81,13 @@ export class RequestService {
         try {
             const { id: userId, role, parentId } = this.req.user
             let where: object = {
-                status: In([0,1,2]),
+                status: In([0, 1, 2]),
                 station: {
                     ownerId: parentId ?? userId
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = {status: In([0,1,2])}
+                where = { status: In([0, 1, 2]) }
             }
             const requests = await this.requestRepository.find({
                 where,

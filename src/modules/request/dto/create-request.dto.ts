@@ -3,9 +3,9 @@ import { IsEnum, IsNumberString, IsString } from "class-validator";
 import { ReceiveTimeEnum } from "../enums/time.enum";
 
 export class CreateRequestDto {
-    @ApiProperty()
-    @IsNumberString()
-    stationId: number;
+    // @ApiProperty()
+    // @IsNumberString()
+    // stationId: number;
     @ApiProperty()
     @IsNumberString()
     fuel_type: number
