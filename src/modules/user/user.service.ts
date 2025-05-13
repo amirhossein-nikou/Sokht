@@ -192,7 +192,7 @@ export class UserService {
 		}
 	}
 	async verifyUpdateMobile(code: string) {
-		const { id,mobile } = this.req.user
+		const { id, mobile } = this.req.user
 		const user = await this.findOneById(id)
 		if (!user.newMobile) throw new BadRequestException('please update phone first')
 		await this.authService.checkOtp({ mobile, code })
@@ -243,8 +243,20 @@ export class UserService {
 				relations,
 				where: { id },
 				select: {
-					parent: { first_name: true, last_name: true, mobile: true, national_code: true },
-					child: { id: true, first_name: true, last_name: true, mobile: true, national_code: true }
+					parent: {
+						first_name: true, last_name: true, mobile: true,
+						national_code: true, certificateId: true
+					},
+					child: {
+						id: true, first_name: true, last_name: true,
+						mobile: true,// national_code: true, certificateId: true
+					},
+					stations: {
+						name: true,
+						isActive: true,
+
+					}
+
 				}
 
 			})
@@ -252,6 +264,25 @@ export class UserService {
 			return {
 				statusCode: HttpStatus.OK,
 				data: user
+			}
+		} catch (error) {
+			throw error
+		}
+	}
+	async mySubUsers() {
+		try {
+			const { id } = this.req.user
+			const subUsers = await this.userRepository.find({
+				where: { parentId: id },
+				select: {
+					first_name: true, last_name: true,
+					mobile: true, national_code: true, certificateId: true
+				}
+			})
+			if (subUsers.length == 0) throw new NotFoundException('we cant find any sub users for you')
+			return {
+				statusCode: HttpStatus.OK,
+				data: subUsers
 			}
 		} catch (error) {
 			throw error

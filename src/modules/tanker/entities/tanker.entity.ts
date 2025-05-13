@@ -10,18 +10,19 @@ export class TankerEntity {
     id: number;
     @Column()
     driverId: number;
-    @Column({type: 'bigint'})
+    @Column({ type: 'bigint' })
     capacity: number;
-    @Column({unique: true})
+    @Column({ unique: true })
     number: number;
+    @Column({ unique: true, nullable: true })
+    plate: string;
     @Column()
     depotId: number;
-    @OneToOne(() => UserEntity, user => user.tanker, {onDelete: 'CASCADE'})
-    @JoinColumn({name: 'driverId'})
+    @OneToOne(() => UserEntity, user => user.tanker, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'driverId' })
     driver: UserEntity;
-    @ManyToOne(() => DepotEntity, depot =>depot.tankers, {onDelete: "CASCADE"})
+    @ManyToOne(() => DepotEntity, depot => depot.tankers, { onDelete: "CASCADE" })
     depot: DepotEntity
-    @ManyToMany(() => CargoEntity, cargo =>cargo.tankers, {onDelete: "CASCADE"})
+    @ManyToMany(() => CargoEntity, cargo => cargo.tankers, { onDelete: "CASCADE" })
     cargo: CargoEntity
-    
 }

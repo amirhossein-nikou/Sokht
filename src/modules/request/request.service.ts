@@ -94,9 +94,20 @@ export class RequestService {
                 relations: {
                     depot: true,
                 },
-                order: requestOrder
+                order: requestOrder,
+                select: {
+                    id: true,
+                    depot: { name: true },
+                    fuel_type: true,
+                    fuel: { name: true },
+                    value: true,
+                    receive_at: true,
+                    status: { status: true },
+                    statusId: true,
+                    stationId: true,
+                    created_at: true
+                }
             })
-
             return {
                 statusCode: HttpStatus.OK,
                 data: requests
@@ -105,7 +116,44 @@ export class RequestService {
             throw error
         }
     }
-
+    async getRequestArchive() {
+        try {
+            const { id: userId, role, parentId } = this.req.user
+            let where: object = {
+                station: {
+                    ownerId: parentId ?? userId
+                }
+            }
+            if (role !== UserRole.StationUser) {
+                where = {}
+            }
+            const requests = await this.requestRepository.find({
+                where,
+                relations: {
+                    depot: true,
+                },
+                order: requestOrder,
+                select: {
+                    id: true,
+                    depot: { name: true },
+                    fuel_type: true,
+                    fuel: { name: true },
+                    value: true,
+                    receive_at: true,
+                    status: { status: true },
+                    statusId: true,
+                    stationId: true,
+                    created_at: true
+                }
+            })
+            return {
+                statusCode: HttpStatus.OK,
+                data: requests
+            }
+        } catch (error) {
+            throw error
+        }
+    }
     async findOne(id: number) {
         try {
             const { id: userId, role, parentId } = this.req.user

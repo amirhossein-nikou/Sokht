@@ -85,5 +85,10 @@ export class UserController {
         console.log();
         return this.userService.verifyUpdateMobile(code);
     }
+    @Get('/sub-users')
+    mySubUsers() {
+        console.log();
+        return this.userService.mySubUsers();
+    }
 }
 

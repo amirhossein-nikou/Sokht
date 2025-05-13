@@ -34,7 +34,7 @@ export class DepotService {
 			throw error
 		}
 	}
-	//may need auth
+	
 	async findAll() {
 		try {
 			const depots = await this.depotRepository.find({

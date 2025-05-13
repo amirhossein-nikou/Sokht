@@ -53,7 +53,20 @@ export class InventoryService {
             if (role !== UserRole.StationUser) {
                 where = {}
             }
-            const inventories = await this.inventoryRepository.find({ where })
+            const inventories = await this.inventoryRepository.find({
+                where,
+                select: {
+                    id: true,
+                    status: true,
+                    name: true,
+                    value: true,
+                    updated_at: true,
+                    fuels: {
+                        name: true,
+                        id: true
+                    }
+                }
+            })
             return {
                 status: HttpStatus.OK,
                 data: inventories
@@ -110,7 +123,7 @@ export class InventoryService {
             const { value } = updateValue;
             const { id: userId } = this.req.user;
             const inventory = await this.findById(id);
-            if(value > inventory.max) throw new BadRequestException('value cant be more than max capacity')
+            if (value > inventory.max) throw new BadRequestException('value cant be more than max capacity')
             if (inventory.status == false) throw new BadRequestException('inventory is deActive')
             const obj = RemoveNullProperty(updateValue)
             await this.inventoryRepository.update({ id: inventory.id }, obj)
