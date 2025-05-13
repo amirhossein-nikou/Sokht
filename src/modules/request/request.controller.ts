@@ -64,6 +64,12 @@ export class RequestController {
     }
     @Get('/create/details')
     createRequestDetails() {
-      return this.requestService.createRequestDetails()
+        return this.requestService.createRequestDetails()
+    }
+
+    @Get('/archive')
+    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
+    getRequestArchive() {
+        return this.requestService.getRequestArchive()
     }
 }
