@@ -181,6 +181,50 @@ export class RequestService {
             throw error
         }
     }
+    async findByFuelType(fuel_type: number, receive_at: ReceiveTimeEnum) {
+        try {
+            const { id: userId, role, parentId } = this.req.user
+            let where: object = {
+                fuel_type,
+                receive_at,
+                station: {
+                    ownerId: parentId ?? userId
+                }
+            }
+            if (role !== UserRole.StationUser) {
+                where = {
+                    fuel_type,
+                    receive_at
+                }
+            }
+            const requests = await this.requestRepository.find({
+                where,
+                relations: {
+                    depot: { location: true },
+                },
+                order: requestOrder,
+                select: {
+                    id: true,
+                    depot: { name: true },
+                    fuel_type: true,
+                    fuel: { name: true },
+                    value: true,
+                    receive_at: true,
+                    status: { status: true },
+                    statusId: true,
+                    stationId: true,
+                    created_at: true
+                }
+            })
+            if(requests.length <= 0) throw new NotFoundException(RequestMessages.Notfound)
+            return {
+                statusCode: HttpStatus.OK,
+                data: requests
+            }
+        } catch (error) {
+            throw error
+        }
+    }
     async findByDate(search: SearchDto) {
         try {
             let { start, end } = search

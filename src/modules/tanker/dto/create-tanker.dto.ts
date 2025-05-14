@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsNumberString } from "class-validator";
+import { IsNumberString, IsString } from "class-validator";
 
 export class CreateTankerDto {
     @ApiProperty()
@@ -13,6 +13,6 @@ export class CreateTankerDto {
     // @Length()
     number: number;
     @ApiProperty()
-    @IsNumberString()
-    depotId: number;
+    @IsString()
+    plate: string;
 }

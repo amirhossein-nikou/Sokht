@@ -131,6 +131,11 @@ export class DepotService {
 		if (!depot) throw new NotFoundException(DepotMessages.Notfound)
 		return depot
 	}
+	async findOneByUserId(ownerId: number) {
+		const depot = await this.depotRepository.findOne({ where: { ownerId } })
+		if (!depot) throw new NotFoundException(DepotMessages.Notfound)
+		return depot
+	}
 	async getNameList() {
 		const depots = await this.depotRepository.find({
 			select: {

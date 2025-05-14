@@ -19,7 +19,7 @@ export class UserEntity {
     mobile: string
     @Column({ unique: true })
     national_code: string
-    @Column({enum: UserRole})
+    @Column({ enum: UserRole })
     role: UserRole
     @Column({ nullable: true, unique: true })
     certificateId: number
@@ -29,14 +29,14 @@ export class UserEntity {
     parentId: number
     @Column({ nullable: true })
     otpId: number
-    @Column({nullable: true})
+    @Column({ nullable: true })
     newMobile: string
     @ManyToOne(() => UserEntity, user => user.child, { onDelete: 'CASCADE' })
     parent: UserEntity
     @OneToMany(() => UserEntity, user => user.parent)
     child: UserEntity[]
     @OneToOne(() => OtpEntity, otp => otp.user)
-    @JoinColumn({name: 'otpId'})
+    @JoinColumn({ name: 'otpId' })
     otp: OtpEntity;
     @OneToMany(() => StationEntity, station => station.owner)
     stations: StationEntity[];
@@ -44,6 +44,6 @@ export class UserEntity {
     tickets: TicketEntity[];
     @OneToOne(() => DepotEntity, depot => depot.owner)
     depot: DepotEntity;
-    @OneToOne(() => TankerEntity, tanker => tanker.driver)
+    @OneToOne(() => TankerEntity, tanker => tanker.driver, { onDelete: "CASCADE" })
     tanker: TankerEntity;
 }

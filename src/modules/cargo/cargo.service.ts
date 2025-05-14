@@ -62,6 +62,40 @@ export class CargoService {
             throw error
         }
     }
+    async findWithFuelType(fuel_type: number) {
+        try {
+            const cargoes = await this.cargoRepository.find({
+                relations: {
+                    request: {
+                        status: true,
+                        station: true
+                    },
+                    tankers: { driver: true }
+                },
+                where: {
+                    request: { fuel_type }
+                },
+                select: {
+                    request: {
+                        id: true,
+                        value: true,
+                        receive_at: true,
+                        station: { name: true, id: true }
+                    },
+                    tankers: {
+                        id: true, number: true,
+                        driver: { id: true, first_name: true, last_name: true,mobile: true,national_code: true, }
+                    }
+                }
+            })
+            return {
+                statusCode: HttpStatus.OK,
+                data: cargoes
+            }
+        } catch (error) {
+            throw error
+        }
+    }
 
     async findOne(id: number) {
         try {

@@ -30,6 +30,12 @@ export class CargoController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.cargoService.findOne(id);
   }
+  @Get('/by-fuel/:fuel_type')
+  @MyApiConsumes()
+  @CanAccess(UserRole.OilDepotUser, UserRole.HeadUser)
+  findWithFuelType(@Param('fuel_type', ParseIntPipe) fuel_type: number) {
+    return this.cargoService.findWithFuelType(fuel_type);
+  }
   @Patch('/update/:id')
   @MyApiConsumes()
   @CanAccess(UserRole.OilDepotUser)

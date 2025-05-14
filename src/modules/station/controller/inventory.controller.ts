@@ -23,6 +23,11 @@ export class InventoryController {
     findAll() {
         return this.inventoryService.findAll();
     }
+    @Get('/list/lastUpdates')
+    @CanAccess(UserRole.StationUser, UserRole.HeadUser)
+    findListOfLastUpdates() {
+        return this.inventoryService.findListOfLastUpdates();
+    }
 
     @Get('/get-one/:id')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)

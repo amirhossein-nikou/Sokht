@@ -8,6 +8,7 @@ import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { SearchDto } from './dto/search.dto';
 import { ReceiveTimeEnum } from './enums/time.enum';
+import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('request')
 @UserAuthGuard()
@@ -23,13 +24,20 @@ export class RequestController {
     // head user
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     @Get('/list')
-    findAll() {
+    findAll(@Query('fuel_type', ParseIntPipe) fuelType?: number, @Query('receive_at') receive_at?: ReceiveTimeEnum) {
+        if(fuelType && receive_at) return this.requestService.findByFuelType(fuelType, receive_at);
         return this.requestService.findAll();
     }
     @Get('/by-id/:id')
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.requestService.findOne(id);
+    }
+    @Get('/list/search')
+    @ApiQuery({type:'enum',enum: ReceiveTimeEnum,name: 'receive_at',required: true})
+    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
+    findByFuel(@Query('fuel_type', ParseIntPipe) fuelType: number, @Query('receive_at') receive_at: ReceiveTimeEnum) {
+        return this.requestService.findByFuelType(fuelType, receive_at);
     }
     @Get('/by-date')
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
