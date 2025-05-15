@@ -46,7 +46,8 @@ export class TankerService {
         try {
             const tankers = await this.tankerRepository.find({
                 relations: { cargo: true },
-                select: { number: true, plate: true, capacity: true, cargo: { tankerId: false } }
+                select: { id: true, number: true, plate: true, capacity: true, cargo: { tankerId: false } },
+                order:{id:'DESC'}
             })
             return {
                 statusCode: HttpStatus.OK,

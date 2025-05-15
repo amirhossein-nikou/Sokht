@@ -11,6 +11,7 @@ import { StatusEnum } from 'src/common/enums/status.enum';
 import { getIdList } from 'src/common/utils/id.utils';
 import { StringToArray } from 'src/common/utils/stringToArray.utils';
 import { TankerService } from '../tanker/tanker.service';
+import { RejectDto } from 'src/common/dto/create-reject.dto';
 
 @Injectable()
 export class CargoService {
@@ -20,19 +21,24 @@ export class CargoService {
         private requestService: RequestService
     ) { }
     async create(createCargoDto: CreateCargoDto) {
-        const { arrival_time, dispatch_time, requestId, tankerId } = createCargoDto
+        const { requestId, tankerId, receive_at, value } = createCargoDto
         try {
             const now = new Date().toISOString()
-            if (arrival_time.toString() <= now) throw new BadRequestException('arrival_time is less than current time')
-            if (dispatch_time.toString() <= now) throw new BadRequestException('dispatch_time is less than current time')
+            //if (dispatch_time.toString() <= now) throw new BadRequestException('dispatch_time is less than current time')
             const tankerIdList = getIdList(StringToArray(tankerId))
             const tankers = await this.tankerService.getByIdList(tankerIdList)
             const request = await this.requestService.getOneById(requestId)
             if (request.statusId !== StatusEnum.Approved)
                 throw new BadRequestException('you can create cargo for approved requests')
+            if (request.receive_at !== receive_at) {
+                await this.requestService.updateOnCreateCargo(request.id, { receive_at })
+            }
+            if (request.value !== value) {
+                await this.requestService.updateOnCreateCargo(request.id, { value })
+            }
             await this.checkExistsRequestId(requestId)
             const cargo = this.cargoRepository.create({
-                arrival_time, dispatch_time, requestId, tankers, tankerId: tankerIdList
+                requestId, tankers, tankerId: tankerIdList
             })
             await this.cargoRepository.save(cargo)
             await this.requestService.licenseRequest(requestId)
@@ -48,6 +54,7 @@ export class CargoService {
     async findAll() {
         try {
             const cargoes = await this.cargoRepository.find({
+                where: { rejectDetails: null },
                 relations: {
                     request: {
                         status: true
@@ -73,6 +80,7 @@ export class CargoService {
                     tankers: { driver: true }
                 },
                 where: {
+                    rejectDetails: null,
                     request: { fuel_type }
                 },
                 select: {
@@ -84,7 +92,7 @@ export class CargoService {
                     },
                     tankers: {
                         id: true, number: true,
-                        driver: { id: true, first_name: true, last_name: true,mobile: true,national_code: true, }
+                        driver: { id: true, first_name: true, last_name: true, mobile: true, national_code: true, }
                     }
                 }
             })
@@ -114,12 +122,12 @@ export class CargoService {
 
     async update(id: number, updateCargoDto: UpdateCargoDto) {
         try {
-            const { arrival_time, dispatch_time, requestId } = updateCargoDto
+            const { requestId } = updateCargoDto
             const now = new Date().toISOString()
-            if (arrival_time && arrival_time.toString() <= now)
-                throw new BadRequestException('arrival_time is less than current time')
-            if (dispatch_time && dispatch_time.toString() <= now)
-                throw new BadRequestException('dispatch_time is less than current time')
+            // if (arrival_time && arrival_time.toString() <= now)
+            //     throw new BadRequestException('arrival_time is less than current time')
+            // if (dispatch_time && dispatch_time.toString() <= now)
+            //     throw new BadRequestException('dispatch_time is less than current time')
             await this.getOneById(id)
             if (requestId) {
                 const request = await this.requestService.getOneById(requestId)
@@ -155,6 +163,22 @@ export class CargoService {
         }
     }
 
+    async rejectCargo(id: number, rejectDto: RejectDto) {
+        try {
+            const { description, title } = rejectDto
+            const cargo = await this.getOneById(id)
+            if (cargo.rejectDetails) throw new BadRequestException("this cargo already rejected")
+            await this.cargoRepository.update(id, {
+                rejectDetails: { title, description }
+            })
+            return {
+                statusCode: HttpStatus.OK,
+                message: "cargo rejected successfully"
+            }
+        } catch (error) {
+            throw error
+        }
+    }
     // utils
     async getOneById(id: number) {
         const cargo = await this.cargoRepository.findOneBy({ id })

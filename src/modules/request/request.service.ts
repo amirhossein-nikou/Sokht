@@ -23,6 +23,7 @@ import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
 import { UserService } from '../user/user.service';
+import { RejectDto } from 'src/common/dto/create-reject.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -82,12 +83,13 @@ export class RequestService {
             const { id: userId, role, parentId } = this.req.user
             let where: object = {
                 status: In([0, 1, 2]),
+                rejectDetails: null,
                 station: {
                     ownerId: parentId ?? userId
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = { status: In([0, 1, 2]) }
+                where = { rejectDetails: null, status: In([0, 1, 2]) }
             }
             const requests = await this.requestRepository.find({
                 where,
@@ -187,6 +189,7 @@ export class RequestService {
             let where: object = {
                 fuel_type,
                 receive_at,
+                rejectDetails: null,
                 station: {
                     ownerId: parentId ?? userId
                 }
@@ -216,7 +219,7 @@ export class RequestService {
                     created_at: true
                 }
             })
-            if(requests.length <= 0) throw new NotFoundException(RequestMessages.Notfound)
+            if (requests.length <= 0) throw new NotFoundException(RequestMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
                 data: requests
@@ -232,13 +235,14 @@ export class RequestService {
             end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
             const { id: userId, role, parentId } = this.req.user
             let where: object = {
+                rejectDetails: null,
                 created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
                 station: {
                     ownerId: parentId ?? userId
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
+                where = { rejectDetails: null, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
             }
             const request = await this.requestRepository.find({
                 where,
@@ -278,11 +282,38 @@ export class RequestService {
             const { value, receive_at } = updateRequestDto
             const request = await this.getOneByIdForUpdateAndRemove(id)
             const updateObject = RemoveNullProperty({ receive_at, value, })
-            //calculate priority => 
             const station = await this.stationService.findOneById(request.stationId)
+            if (receive_at) await this.manageReceivedAt(station.id, receive_at, request.fuel_type)
+            if (value) await this.filterRequestValue(station.id, request.fuel_type, value)
             const priority = await this.detectPriority(station.id, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
                 statusId: StatusEnum.Posted,
+                priority: priority.priority,
+                priority_value: priority.priority_value
+                , ...updateObject
+            })
+            if (!updatedRequest || updatedRequest.affected == 0) throw new BadRequestException(RequestMessages.UpdateFailed)
+            return {
+                statusCode: HttpStatus.OK,
+
+                message: RequestMessages.Update
+
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    async updateOnCreateCargo(id: number, updateRequestDto: UpdateRequestDto) {
+        try {
+            const { value, receive_at } = updateRequestDto
+            const request = await this.getOneById(id)
+            const updateObject = RemoveNullProperty({ receive_at, value, })
+            const station = await this.stationService.findOneById(request.stationId)
+            if (receive_at) await this.manageReceivedAt(station.id, receive_at, request.fuel_type)
+            if (value) await this.filterRequestValue(station.id, request.fuel_type, value)
+            const priority = await this.detectPriority(station.id, request.fuel_type)
+            const updatedRequest = await this.requestRepository.update(id, {
+                //statusId: StatusEnum.Posted,
                 priority: priority.priority,
                 priority_value: priority.priority_value
                 , ...updateObject
@@ -345,9 +376,9 @@ export class RequestService {
             const request = await this.getOneById(id)
             if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
             if (request.statusId == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
-            if (request.statusId == StatusEnum.received) throw new BadRequestException(RequestMessages.AlreadyReceived)
+            if (request.statusId == StatusEnum.Received) throw new BadRequestException(RequestMessages.AlreadyReceived)
             await this.cargoRepository.update(request.cargo.id, { inProgress: false })
-            await this.requestRepository.update(id, { statusId: StatusEnum.received })
+            await this.requestRepository.update(id, { statusId: StatusEnum.Received })
             return {
                 statusCode: HttpStatus.OK,
                 message: RequestMessages.Received
@@ -386,6 +417,25 @@ export class RequestService {
         } catch (error) {
             throw error
         }
+    }
+    async rejectRequest(id: number, rejectDto: RejectDto) {
+        try {
+            const { description, title } = rejectDto
+            const request = await this.getOneById(id)
+            if (request.rejectDetails || request.statusId === StatusEnum.Reject)
+                throw new BadRequestException("this request already rejected")
+            await this.requestRepository.update(id, {
+                statusId: StatusEnum.Reject,
+                rejectDetails: { title, description }
+            })
+            return {
+                statusCode: HttpStatus.OK,
+                message: "request rejected successfully"
+            }
+        } catch (error) {
+            throw error
+        }
+
     }
     // utils
     async detectPriority(stationId: number, fuel_type: number,): Promise<PriorityType> {
@@ -465,7 +515,8 @@ export class RequestService {
         await this.createStatus(StatusEnum.Posted, "در انتظار تایید")
         await this.createStatus(StatusEnum.Licensing, 'صدور پروانه و ارسال نفت کش')
         await this.createStatus(StatusEnum.Approved, "تایید شده")
-        await this.createStatus(StatusEnum.received, "دریافت شده")
+        await this.createStatus(StatusEnum.Received, "دریافت شده")
+        await this.createStatus(StatusEnum.Reject, "رد شده")
     }
     async getSumValueForInventory(stationId: number, fuel_type) {
         const inventories = await this.inventoryService.findByStationIdAndFuel(stationId, fuel_type)

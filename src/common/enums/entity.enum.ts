@@ -13,4 +13,5 @@ export enum EntityName {
     Ticket = "ticket",
     Status = "status",
     FuelType = "fuel-type",
+    Reject = "reject",
 }

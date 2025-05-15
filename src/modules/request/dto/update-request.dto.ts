@@ -5,9 +5,9 @@ import { ReceiveTimeEnum } from "../enums/time.enum";
 export class UpdateRequestDto{
     @ApiPropertyOptional()
     @IsNumberString()
-    value: number;
+    value?: number;
     @ApiPropertyOptional({ enum: ReceiveTimeEnum })
     @IsString()
     @IsEnum(ReceiveTimeEnum)
-    receive_at: ReceiveTimeEnum
+    receive_at?: ReceiveTimeEnum
 }

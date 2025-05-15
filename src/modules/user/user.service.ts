@@ -52,7 +52,6 @@ export class UserService {
 			const { id } = this.req.user
 			const user = await this.findOneById(id)
 			if (user.parent || user.parentId) throw new BadRequestException('this user is not allowed to add sub users')
-			console.log(user.child.length);
 			if (user.child.length >= 3) throw new BadRequestException('you cant have more than 3 sub user')
 			await this.checkExistsMobile(mobile)
 			await this.checkExistsNationalCode(national_code)
@@ -83,13 +82,24 @@ export class UserService {
 			const driver = this.userRepository.create({
 				first_name, last_name,
 				mobile: ModifyMobileNumber(mobile), national_code, certificateId,
-				parentId: user.id,
+				//parentId: user.id,
 				role: UserRole.Driver
 			})
 			await this.userRepository.save(driver)
 			return {
 				statusCode: HttpStatus.CREATED,
 				message: UserMessages.Created
+			}
+		} catch (error) {
+			throw error
+		}
+	}
+	async findAllDrivers() {
+		try {
+			const drivers = await this.userRepository.find({ where: { role: UserRole.Driver } });
+			return {
+				statusCode: HttpStatus.OK,
+				data: drivers
 			}
 		} catch (error) {
 			throw error

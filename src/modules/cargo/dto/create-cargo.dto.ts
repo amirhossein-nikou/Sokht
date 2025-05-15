@@ -1,16 +1,18 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {IsDateString, IsNumberString } from "class-validator";
+import { IsEnum, IsNumberString, IsString } from "class-validator";
+import { ReceiveTimeEnum } from "src/modules/request/enums/time.enum";
 
 export class CreateCargoDto {
     @ApiProperty()
     @IsNumberString()
     requestId: number
     @ApiProperty()
-    @IsDateString()
-    dispatch_time: Date;
-    @ApiProperty()
-    @IsDateString()
-    arrival_time: Date;
-    @ApiProperty({type: 'array'})
+    @IsNumberString()
+    value: number;
+    @ApiProperty({ enum: ReceiveTimeEnum })
+    @IsString()
+    @IsEnum(ReceiveTimeEnum)
+    receive_at: ReceiveTimeEnum
+    @ApiProperty({ type: 'array' })
     tankerId: number[]
 }

@@ -38,6 +38,12 @@ export class UserController {
     findAll() {
         return this.userService.findAll();
     }
+    @Get('/list/drivers')
+    @MyApiConsumes()
+    @CanAccess(UserRole.OilDepotUser)
+    findAllDrivers() {
+        return this.userService.findAllDrivers();
+    }
 
     @Get('/by-id/:id')
     @MyApiConsumes()
