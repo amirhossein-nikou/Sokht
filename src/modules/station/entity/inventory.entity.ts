@@ -3,7 +3,7 @@ import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.en
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { StationEntity } from "./station.entity";
 
-@Entity(EntityName.Inventory)
+@Entity(EntityName.Inventory,{ orderBy: { id: "DESC" } })
 export class InventoryEntity {
     @PrimaryGeneratedColumn()
     id: number;

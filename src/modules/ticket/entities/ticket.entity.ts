@@ -4,7 +4,7 @@ import { TicketTargetEnum } from "../enum/target.enum";
 import { TicketPriorityEnum } from "../enum/ticket-priority.enum";
 import { UserEntity } from "../../../modules/user/entity/user.entity";
 
-@Entity(EntityName.Ticket)
+@Entity(EntityName.Ticket,{ orderBy: { id: "DESC" } })
 export class TicketEntity {
     @PrimaryGeneratedColumn("increment")
     id:number

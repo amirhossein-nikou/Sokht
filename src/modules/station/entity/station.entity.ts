@@ -7,7 +7,7 @@ import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, Ma
 import { InventoryEntity } from "./inventory.entity";
 import { AverageSaleEntity } from "./sale.entity";
 
-@Entity(EntityName.Station)
+@Entity(EntityName.Station,{ orderBy: { id: "DESC" } })
 export class StationEntity {
     @PrimaryGeneratedColumn()
     id: number;

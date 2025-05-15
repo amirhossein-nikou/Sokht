@@ -4,7 +4,7 @@ import { StationEntity } from "../../../modules/station/entity/station.entity";
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 
-@Entity(EntityName.Location)
+@Entity(EntityName.Location,{ orderBy: { id: "DESC" } })
 export class LocationEntity {
     @PrimaryGeneratedColumn()
     id: number;

@@ -7,7 +7,7 @@ import { DepotEntity } from "../../../modules/depot/entity/depot.entity";
 import { TankerEntity } from "../../../modules/tanker/entities/tanker.entity";
 import { TicketEntity } from "../../../modules/ticket/entities/ticket.entity";
 
-@Entity(EntityName.User)
+@Entity(EntityName.User,{ orderBy: { id: "DESC" } })
 export class UserEntity {
     @PrimaryGeneratedColumn()
     id: number

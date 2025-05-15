@@ -4,7 +4,7 @@ import { RequestEntity } from "../../../modules/request/entities/request.entity"
 import { TankerEntity } from "../../../modules/tanker/entities/tanker.entity";
 import { RejectDetails } from "src/common/types/reject-details.type";
 
-@Entity(EntityName.Cargo)
+@Entity(EntityName.Cargo,{ orderBy: { id: "DESC" } })
 export class CargoEntity {
     @PrimaryGeneratedColumn('increment')
     id: number;

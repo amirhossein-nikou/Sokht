@@ -5,7 +5,7 @@ import { TankerEntity } from "../../../modules/tanker/entities/tanker.entity";
 import { UserEntity } from "../../../modules/user/entity/user.entity";
 import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
-@Entity(EntityName.Depot)
+@Entity(EntityName.Depot,{ orderBy: { id: "DESC" } })
 export class DepotEntity{
     @PrimaryGeneratedColumn()
     id: number;

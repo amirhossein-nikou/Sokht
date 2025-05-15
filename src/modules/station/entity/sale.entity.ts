@@ -2,7 +2,7 @@ import { EntityName } from "../../../common/enums/entity.enum";
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { StationEntity } from "./station.entity";
 import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity";
-@Entity(EntityName.AvgSale)
+@Entity(EntityName.AvgSale,{ orderBy: { id: "DESC" } })
 export class AverageSaleEntity {
     @PrimaryGeneratedColumn()
     id: number;
