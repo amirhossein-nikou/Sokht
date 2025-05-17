@@ -66,7 +66,7 @@ export class RequestController {
         return this.requestService.receivedRequest(id);
     }
     @Patch('/reject/:id')
-    @CanAccess(UserRole.StationUser)
+    @CanAccess(UserRole.OilDepotUser)
     reject(@Param('id', ParseIntPipe) id: number, @Body() rejectDto: RejectDto) {
         return this.requestService.rejectRequest(id, rejectDto);
     }
