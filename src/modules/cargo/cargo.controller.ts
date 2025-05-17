@@ -6,6 +6,7 @@ import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserRole } from '../user/enum/role.enum';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
+import { RejectDto } from 'src/common/dto/create-reject.dto';
 
 @Controller('cargo')
 @UserAuthGuard()
@@ -41,6 +42,12 @@ export class CargoController {
   @CanAccess(UserRole.OilDepotUser)
   update(@Param('id', ParseIntPipe) id: number, @Body() updateCargoDto: UpdateCargoDto) {
     return this.cargoService.update(id, updateCargoDto);
+  }
+  @Patch('/reject/:id')
+  @MyApiConsumes()
+  @CanAccess(UserRole.OilDepotUser)
+  reject(@Param('id', ParseIntPipe) id: number, @Body() rejectDto: RejectDto) {
+    return this.cargoService.rejectCargo(id, rejectDto);
   }
 
   @Delete('/remove/:id')

@@ -118,44 +118,44 @@ export class RequestService {
             throw error
         }
     }
-    async getRequestArchive() {
-        try {
-            const { id: userId, role, parentId } = this.req.user
-            let where: object = {
-                station: {
-                    ownerId: parentId ?? userId
-                }
-            }
-            if (role !== UserRole.StationUser) {
-                where = {}
-            }
-            const requests = await this.requestRepository.find({
-                where,
-                relations: {
-                    depot: true,
-                },
-                order: requestOrder,
-                select: {
-                    id: true,
-                    depot: { name: true },
-                    fuel_type: true,
-                    fuel: { name: true },
-                    value: true,
-                    receive_at: true,
-                    status: { status: true },
-                    statusId: true,
-                    stationId: true,
-                    created_at: true
-                }
-            })
-            return {
-                statusCode: HttpStatus.OK,
-                data: requests
-            }
-        } catch (error) {
-            throw error
-        }
-    }
+    // async getRequestArchive() {
+    //     try {
+    //         const { id: userId, role, parentId } = this.req.user
+    //         let where: object = {
+    //             station: {
+    //                 ownerId: parentId ?? userId
+    //             }
+    //         }
+    //         if (role !== UserRole.StationUser) {
+    //             where = {}
+    //         }
+    //         const requests = await this.requestRepository.find({
+    //             where,
+    //             relations: {
+    //                 depot: true,
+    //             },
+    //             order: requestOrder,
+    //             select: {
+    //                 id: true,
+    //                 depot: { name: true },
+    //                 fuel_type: true,
+    //                 fuel: { name: true },
+    //                 value: true,
+    //                 receive_at: true,
+    //                 status: { status: true },
+    //                 statusId: true,
+    //                 stationId: true,
+    //                 created_at: true
+    //             }
+    //         })
+    //         return {
+    //             statusCode: HttpStatus.OK,
+    //             data: requests
+    //         }
+    //     } catch (error) {
+    //         throw error
+    //     }
+    // }
     async findOne(id: number) {
         try {
             const { id: userId, role, parentId } = this.req.user
@@ -235,14 +235,13 @@ export class RequestService {
             end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
             const { id: userId, role, parentId } = this.req.user
             let where: object = {
-                rejectDetails: null,
                 created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
                 station: {
                     ownerId: parentId ?? userId
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = { rejectDetails: null, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
+                where = {created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
             }
             const request = await this.requestRepository.find({
                 where,

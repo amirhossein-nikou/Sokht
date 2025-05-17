@@ -9,6 +9,7 @@ import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { SearchDto } from './dto/search.dto';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { ApiQuery } from '@nestjs/swagger';
+import { RejectDto } from 'src/common/dto/create-reject.dto';
 
 @Controller('request')
 @UserAuthGuard()
@@ -24,8 +25,7 @@ export class RequestController {
     // head user
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     @Get('/list')
-    findAll(@Query('fuel_type', ParseIntPipe) fuelType?: number, @Query('receive_at') receive_at?: ReceiveTimeEnum) {
-        if(fuelType && receive_at) return this.requestService.findByFuelType(fuelType, receive_at);
+    findAll() {
         return this.requestService.findAll();
     }
     @Get('/by-id/:id')
@@ -34,9 +34,9 @@ export class RequestController {
         return this.requestService.findOne(id);
     }
     @Get('/list/search')
-    @ApiQuery({type:'enum',enum: ReceiveTimeEnum,name: 'receive_at',required: true})
+    @ApiQuery({ type: 'enum', enum: ReceiveTimeEnum, name: 'receive_at', required: false })
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
-    findByFuel(@Query('fuel_type', ParseIntPipe) fuelType: number, @Query('receive_at') receive_at: ReceiveTimeEnum) {
+    findByFuel(@Query('fuel_type', ParseIntPipe) fuelType: number, @Query('receive_at') receive_at?: ReceiveTimeEnum) {
         return this.requestService.findByFuelType(fuelType, receive_at);
     }
     @Get('/by-date')
@@ -65,6 +65,11 @@ export class RequestController {
     received(@Param('id', ParseIntPipe) id: number) {
         return this.requestService.receivedRequest(id);
     }
+    @Patch('/reject/:id')
+    @CanAccess(UserRole.StationUser)
+    reject(@Param('id', ParseIntPipe) id: number, @Body() rejectDto: RejectDto) {
+        return this.requestService.rejectRequest(id, rejectDto);
+    }
     @Delete('/remove/:id')
     @CanAccess(UserRole.StationUser)
     remove(@Param('id', ParseIntPipe) id: number) {
@@ -75,9 +80,9 @@ export class RequestController {
         return this.requestService.createRequestDetails()
     }
 
-    @Get('/archive')
-    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
-    getRequestArchive() {
-        return this.requestService.getRequestArchive()
-    }
+    // @Get('/archive')
+    // @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
+    // getRequestArchive() {
+    //     return this.requestService.getRequestArchive()
+    // }
 }
