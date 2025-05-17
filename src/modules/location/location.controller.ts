@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
@@ -6,6 +6,8 @@ import { UserRole } from '../user/enum/role.enum';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationService } from './location.service';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
 
 @Controller('location')
 @UserAuthGuard()
@@ -20,8 +22,9 @@ export class LocationController {
   }
 
   @Get('/list')
-  findAll() {
-    return this.locationService.findAll();
+  @PaginationDec()
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.locationService.findAll(paginationDto);
   }
 
   @Get('/get-one/:id')

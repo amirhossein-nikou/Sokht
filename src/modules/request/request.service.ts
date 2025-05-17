@@ -14,7 +14,7 @@ import { SaleService } from '../station/services/sale.service';
 import { StationService } from '../station/services/station.service';
 import { UserRole } from '../user/enum/role.enum';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { SearchDto } from './dto/search.dto';
+import { SearchDto, SearchWithFuelAndReceiveDto } from './dto/search.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { RequestEntity } from './entities/request.entity';
 import { StatusEntity } from './entities/status.entity';
@@ -24,6 +24,8 @@ import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
 import { UserService } from '../user/user.service';
 import { RejectDto } from 'src/common/dto/create-reject.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -78,8 +80,9 @@ export class RequestService {
         }
     }
 
-    async findAll() {
+    async findAll(paginationDto: PaginationDto) {
         try {
+            const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
             let where: object = {
                 status: In([0, 1, 2]),
@@ -91,12 +94,12 @@ export class RequestService {
             if (role !== UserRole.StationUser) {
                 where = { rejectDetails: null, status: In([0, 1, 2]) }
             }
-            const requests = await this.requestRepository.find({
+            const [requests, count] = await this.requestRepository.findAndCount({
                 where,
+                order: requestOrder,
                 relations: {
                     depot: true,
                 },
-                order: requestOrder,
                 select: {
                     id: true,
                     depot: { name: true },
@@ -108,10 +111,13 @@ export class RequestService {
                     statusId: true,
                     stationId: true,
                     created_at: true
-                }
+                },
+                skip,
+                //take: 10,
             })
             return {
                 statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit, page, count),
                 data: requests
             }
         } catch (error) {
@@ -183,8 +189,10 @@ export class RequestService {
             throw error
         }
     }
-    async findByFuelType(fuel_type: number, receive_at: ReceiveTimeEnum) {
+    async findByFuelType(searchWithFuelAndReceiveDto: SearchWithFuelAndReceiveDto, paginationDto: PaginationDto) {
         try {
+            const { fuel_type, receive_at } = searchWithFuelAndReceiveDto
+            const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
             let where: object = {
                 fuel_type,
@@ -200,7 +208,7 @@ export class RequestService {
                     receive_at
                 }
             }
-            const requests = await this.requestRepository.find({
+            const [requests, count] = await this.requestRepository.findAndCount({
                 where,
                 relations: {
                     depot: { location: true },
@@ -217,19 +225,23 @@ export class RequestService {
                     statusId: true,
                     stationId: true,
                     created_at: true
-                }
+                },
+                //take: limit,
+                skip
             })
             if (requests.length <= 0) throw new NotFoundException(RequestMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit, page, count),
                 data: requests
             }
         } catch (error) {
             throw error
         }
     }
-    async findByDate(search: SearchDto) {
+    async findByDate(search: SearchDto, paginationDto: PaginationDto) {
         try {
+            const { limit, page, skip } = paginationSolver(paginationDto)
             let { start, end } = search
             if (start > end) throw new BadRequestException('start date must be bigger than end date')
             end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
@@ -241,40 +253,43 @@ export class RequestService {
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = {created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
+                where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
             }
-            const request = await this.requestRepository.find({
+            const [request, count] = await this.requestRepository.findAndCount({
                 where,
                 relations: {
                     depot: true,
                 },
-                order: requestOrder
+                order: requestOrder,
+                //take: limit,
+                skip
             })
             if (!request) throw new NotFoundException(RequestMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit, page, count),
                 data: request
             }
         } catch (error) {
             throw error
         }
     }
-    async findStationRequests(stationId: number) {
-        try {
-            const requests = await this.requestRepository.findOne({
-                where: { stationId }, relations: {
-                    depot: true,
-                },
-            })
-            if (!requests) throw new NotFoundException(RequestMessages.Notfound)
-            return {
-                statusCode: HttpStatus.OK,
-                data: requests
-            }
-        } catch (error) {
-            throw error
-        }
-    }
+    // async findStationRequests(stationId: number) {
+    //     try {
+    //         const requests = await this.requestRepository.find({
+    //             where: { stationId }, relations: {
+    //                 depot: true,
+    //             },
+    //         })
+    //         if (!requests) throw new NotFoundException(RequestMessages.Notfound)
+    //         return {
+    //             statusCode: HttpStatus.OK,
+    //             data: requests
+    //         }
+    //     } catch (error) {
+    //         throw error
+    //     }
+    // }
 
     async update(id: number, updateRequestDto: UpdateRequestDto) {
         try {

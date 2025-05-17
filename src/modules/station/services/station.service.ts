@@ -1,20 +1,21 @@
 import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
-import { isNumberString } from 'class-validator';
 import { Request } from 'express';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
+import { Repository } from 'typeorm';
 import { StringToBoolean } from '../../../common/utils/boolean.utils';
+import { getIdList } from '../../../common/utils/id.utils';
+import { requestOrder } from '../../../common/utils/order-by.utils';
 import { StringToArray } from '../../../common/utils/stringToArray.utils';
 import { RemoveNullProperty } from '../../../common/utils/update.utils';
 import { FuelTypeService } from '../../../modules/fuel-type/fuel-type.service';
-import { In, Repository } from 'typeorm';
 import { LocationService } from '../../location/location.service';
 import { UserService } from '../../user/user.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { StationEntity } from '../entity/station.entity';
 import { StationMessages } from '../enum/message.enum';
-import { requestOrder } from '../../../common/utils/order-by.utils';
-import { getIdList } from '../../../common/utils/id.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class StationService {
@@ -52,11 +53,17 @@ export class StationService {
         }
     }
 
-    async findAll() {
+    async findAll(paginationDto: PaginationDto) {
         try {
-            const stations = await this.stationRepository.find({ relations: { location: true } });
+            const { limit, page, skip } = paginationSolver(paginationDto)
+            const [stations, count] = await this.stationRepository.findAndCount({
+                relations: { location: true },
+                take: limit,
+                skip
+            });
             return {
                 status: HttpStatus.OK,
+                pagination: paginationGenerator(limit, page, count),
                 data: stations
             }
         } catch (error) {

@@ -8,6 +8,8 @@ import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { TicketMessages } from './enum/message.enum';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TicketService {
@@ -34,15 +36,19 @@ export class TicketService {
 
 	}
 
-	async findAll() {
+	async findAll(paginationDto: PaginationDto) {
 		try {
+			const { limit, page, skip } = paginationSolver(paginationDto);
 			const { id } = this.req.user
-			const tickets = await this.ticketRepository.find({
+			const [tickets,count] = await this.ticketRepository.findAndCount({
 				where: { userId: id },
-				order: { priority: "ASC" }
+				order: { priority: "ASC" },
+				skip,
+				take: limit
 			})
 			return {
 				statusCode: HttpStatus.OK,
+				pagination: paginationGenerator(limit,page,count),
 				data: tickets
 			}
 		} catch (error) {

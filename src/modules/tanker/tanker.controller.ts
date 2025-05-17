@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
 import { TankerService } from './tanker.service';
 import { CreateTankerDto } from './dto/create-tanker.dto';
 import { UpdateTankerDto } from './dto/update-tanker.dto';
@@ -6,6 +6,8 @@ import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserRole } from '../user/enum/role.enum';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
 
 @Controller('tanker')
 @UserAuthGuard()
@@ -21,8 +23,9 @@ export class TankerController {
 
   @Get('/list')
   @CanAccess(UserRole.OilDepotUser)
-  findAll() {
-    return this.tankerService.findAll();
+  @PaginationDec()
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.tankerService.findAll(paginationDto);
   }
 
   @Get('/by-id/:id')

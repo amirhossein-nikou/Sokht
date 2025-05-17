@@ -12,6 +12,8 @@ import { getIdList } from 'src/common/utils/id.utils';
 import { StringToArray } from 'src/common/utils/stringToArray.utils';
 import { TankerService } from '../tanker/tanker.service';
 import { RejectDto } from 'src/common/dto/create-reject.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 
 @Injectable()
 export class CargoService {
@@ -51,27 +53,32 @@ export class CargoService {
         }
     }
 
-    async findAll() {
+    async findAll(paginationDto: PaginationDto) {
         try {
-            const cargoes = await this.cargoRepository.find({
+            const { limit, page, skip } = paginationSolver(paginationDto)
+            const [cargoes, count] = await this.cargoRepository.findAndCount({
                 where: { rejectDetails: null },
                 relations: {
                     request: {
                         status: true
                     }
-                }
+                },
+                take: limit,
+                skip
             })
             return {
                 statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit,page,count),
                 data: cargoes
             }
         } catch (error) {
             throw error
         }
     }
-    async findWithFuelType(fuel_type: number) {
+    async findWithFuelType(fuel_type: number, paginationDto: PaginationDto) {
         try {
-            const cargoes = await this.cargoRepository.find({
+            const { limit, page, skip } = paginationSolver(paginationDto)
+            const [cargoes, count] = await this.cargoRepository.findAndCount({
                 relations: {
                     request: {
                         status: true,
@@ -94,10 +101,13 @@ export class CargoService {
                         id: true, number: true,
                         driver: { id: true, first_name: true, last_name: true, mobile: true, national_code: true, }
                     }
-                }
+                },
+                take: limit,
+                skip
             })
             return {
                 statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit, page, count),
                 data: cargoes
             }
         } catch (error) {

@@ -11,6 +11,8 @@ import { UpdateMobileDto } from './dto/update-user.dto';
 import { UserEntity } from './entity/user.entity';
 import { UserRole } from './enum/role.enum';
 import { UserMessages } from './enum/user.message';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -94,22 +96,33 @@ export class UserService {
 			throw error
 		}
 	}
-	async findAllDrivers() {
+	async findAllDrivers(paginationDto: PaginationDto) {
 		try {
-			const drivers = await this.userRepository.find({ where: { role: UserRole.Driver } });
+			const { limit, page, skip } = paginationSolver(paginationDto)
+			const [drivers, count] = await this.userRepository.findAndCount({
+				where: { role: UserRole.Driver },
+				take: limit,
+				skip
+			});
 			return {
 				statusCode: HttpStatus.OK,
+				pagination: paginationGenerator(limit,page,count),
 				data: drivers
 			}
 		} catch (error) {
 			throw error
 		}
 	}
-	async findAll() {
+	async findAll(paginationDto: PaginationDto) {
 		try {
-			const users = await this.userRepository.find();
+			const { limit, page, skip } = paginationSolver(paginationDto)
+			const [users, count] = await this.userRepository.findAndCount({
+				take: limit,
+				skip
+			});
 			return {
 				statusCode: HttpStatus.OK,
+				pagination: paginationGenerator(limit,page,count),
 				data: users
 			}
 		} catch (error) {

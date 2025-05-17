@@ -9,6 +9,8 @@ import { UserService } from '../user/user.service';
 import { CreateDepotDto, UpdateDepotDto } from './dto/depot.dto';
 import { DepotEntity } from './entity/depot.entity';
 import { DepotMessages } from './enum/message.enum';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class DepotService {
@@ -35,13 +37,17 @@ export class DepotService {
 		}
 	}
 	
-	async findAll() {
+	async findAll(paginationDto: PaginationDto) {
 		try {
-			const depots = await this.depotRepository.find({
-				relations: { location: true, owner: true }
+			const { limit, page, skip } = paginationSolver(paginationDto)
+			const [depots, count] = await this.depotRepository.findAndCount({
+				relations: { location: true, owner: true },
+				take: limit,
+				skip
 			})
 			return {
 				statusCode: HttpStatus.OK,
+				pagination: paginationGenerator(limit,page,count),
 				data: depots
 			}
 		} catch (error) {

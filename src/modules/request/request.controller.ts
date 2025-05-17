@@ -6,10 +6,12 @@ import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { UserRole } from '../user/enum/role.enum';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
-import { SearchDto } from './dto/search.dto';
+import { SearchDto, SearchWithFuelAndReceiveDto } from './dto/search.dto';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { ApiQuery } from '@nestjs/swagger';
 import { RejectDto } from 'src/common/dto/create-reject.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
 
 @Controller('request')
 @UserAuthGuard()
@@ -25,29 +27,37 @@ export class RequestController {
     // head user
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     @Get('/list')
-    findAll() {
-        return this.requestService.findAll();
+    @PaginationDec()
+    findAll(@Query() paginationDto: PaginationDto) {
+        return this.requestService.findAll(paginationDto);
     }
+
+    @Get('/list/search')
+    @PaginationDec()
+    @ApiQuery({ type: 'number', name: 'fuel_type', required: true })
+    @ApiQuery({ type: 'enum', enum: ReceiveTimeEnum, name: 'receive_at', required: false })
+    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
+    findByFuel(@Query() searchWithFuelAndReceiveDto: SearchWithFuelAndReceiveDto,@Query() paginationDto: PaginationDto) {
+        return this.requestService.findByFuelType(searchWithFuelAndReceiveDto,paginationDto);
+    }
+
+    @Get('/by-date')
+    @PaginationDec()
+    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
+    findByDate(@Query() paginationDto: PaginationDto, @Query('end') end: Date, @Query('start') start?: Date) {
+        const search: SearchDto = {
+            start: start ? new Date(start) : new Date(),
+            end: new Date(end)
+        }
+        return this.requestService.findByDate(search, paginationDto);
+    }
+
     @Get('/by-id/:id')
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.requestService.findOne(id);
     }
-    @Get('/list/search')
-    @ApiQuery({ type: 'enum', enum: ReceiveTimeEnum, name: 'receive_at', required: false })
-    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
-    findByFuel(@Query('fuel_type', ParseIntPipe) fuelType: number, @Query('receive_at') receive_at?: ReceiveTimeEnum) {
-        return this.requestService.findByFuelType(fuelType, receive_at);
-    }
-    @Get('/by-date')
-    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
-    findByDate(@Query('end') end: Date, @Query('start') start?: Date) {
-        const search: SearchDto = {
-            start: start ? new Date(start) : new Date(),
-            end: new Date(end)
-        }
-        return this.requestService.findByDate(search);
-    }
+
 
     @Patch('/update/:id')
     @CanAccess(UserRole.StationUser)

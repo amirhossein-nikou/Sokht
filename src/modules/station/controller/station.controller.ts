@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpStatus, Query } from '@nestjs/common';
 import { StationService } from './../services/station.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
@@ -8,6 +8,8 @@ import { StationMessages } from '../enum/message.enum';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserRole } from 'src/modules/user/enum/role.enum';
+import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('station')
 @UserAuthGuard()
@@ -42,8 +44,9 @@ export class StationController {
     }
   })
   @CanAccess(UserRole.HeadUser,UserRole.OilDepotUser)
-  findAll() {
-    return this.stationService.findAll();
+  @PaginationDec()
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.stationService.findAll(paginationDto);
   }
 
   @Get('/get-one/:id')

@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
 import { DepotService } from './depot.service';
 import { CreateDepotDto, UpdateDepotDto } from './dto/depot.dto';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserRole } from '../user/enum/role.enum';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
+import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('depot')
 @UserAuthGuard()
@@ -18,8 +20,9 @@ export class DepotController {
   }
   @Get('/list')
   @CanAccess(UserRole.StationUser, UserRole.HeadUser)
-  findAll() {
-    return this.depotService.findAll();
+  @PaginationDec()
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.depotService.findAll(paginationDto);
   }
 
   @Get('/get-one/:id')

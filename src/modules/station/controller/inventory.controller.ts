@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { MyApiConsumes } from "src/common/decorators/api-consume.dec";
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
@@ -6,6 +6,8 @@ import { CreateInventoryDto, UpdateInventoryDto, UpdateValue } from "../dto/inve
 import { InventoryService } from "../services/inventory.service";
 import { UserRole } from 'src/modules/user/enum/role.enum';
 import { CanAccess } from 'src/common/decorators/role.decorator';
+import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 @ApiTags('Inventory')
 @Controller('/station/inventory')
 @UserAuthGuard()
@@ -20,13 +22,15 @@ export class InventoryController {
 
     @Get('/list')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)
-    findAll() {
-        return this.inventoryService.findAll();
+    @PaginationDec()
+    findAll(@Query() paginationDto: PaginationDto) {
+        return this.inventoryService.findAll(paginationDto);
     }
     @Get('/list/lastUpdates')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)
-    findListOfLastUpdates() {
-        return this.inventoryService.findListOfLastUpdates();
+    @PaginationDec()
+    findListOfLastUpdates(@Query() paginationDto: PaginationDto) {
+        return this.inventoryService.findListOfLastUpdates(paginationDto);
     }
 
     @Get('/get-one/:id')
@@ -50,7 +54,7 @@ export class InventoryController {
         return this.inventoryService.updateValue(id, updateValue);
     }
     @Get('/status-toggle/:id')
-    @CanAccess(UserRole.StationUser,UserRole.HeadUser)
+    @CanAccess(UserRole.StationUser, UserRole.HeadUser)
     statusToggle(@Param('id', ParseIntPipe) id: number) {
         return this.inventoryService.statusToggle(id);
     }

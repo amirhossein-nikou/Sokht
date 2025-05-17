@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { SaleService } from '../services/sale.service';
 import { CreateSaleDto, UpdateSaleDto } from '../dto/sale.dto';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserRole } from 'src/modules/user/enum/role.enum';
+import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 
 @Controller('station/sale')
@@ -20,8 +22,9 @@ export class SaleController {
 
   @Get('/list')
   @CanAccess(UserRole.HeadUser)
-  findAll() {
-    return this.saleService.findAll();
+  @PaginationDec()
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.saleService.findAll(paginationDto);
   }
 
   @Get('/get-one/:id')

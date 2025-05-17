@@ -8,6 +8,8 @@ import { CreateSaleDto, UpdateSaleDto } from '../dto/sale.dto';
 import { AverageSaleEntity } from '../entity/sale.entity';
 import { SaleMessages } from '../enum/message.enum';
 import { StationService } from './station.service';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -45,13 +47,17 @@ export class SaleService {
 		}
 	}
 
-	async findAll() {
+	async findAll(paginationDto: PaginationDto) {
 		try {
-			const averageSales = await this.averageSaleRepository.find({
+			const { limit, page, skip } = paginationSolver(paginationDto)
+			const [averageSales,count] = await this.averageSaleRepository.findAndCount({
 				relations: { station: true },
+				take: limit,
+				skip
 			});
 			return {
 				statusCode: HttpStatus.CREATED,
+				pagination: paginationGenerator(limit,page,count),
 				data: averageSales
 			}
 		} catch (error) {

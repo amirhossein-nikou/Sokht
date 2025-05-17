@@ -6,6 +6,8 @@ import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationEntity } from './entity/location.entity';
 import { LocationMessages } from './enums/message.enum';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 
 @Injectable()
 export class LocationService {
@@ -14,23 +16,28 @@ export class LocationService {
 	) { }
 	async create(createLocationDto: CreateLocationDto) {
 		try {
-			const { lat, lon,address } = createLocationDto;
-			const location = this.locationRepository.create({ lat, lon,address })
+			const { lat, lon, address } = createLocationDto;
+			const location = this.locationRepository.create({ lat, lon, address })
 			await this.locationRepository.save(location)
 			return {
 				statusCode: HttpStatus.CREATED,
-				message: LocationMessages.Create 
+				message: LocationMessages.Create
 			}
 		} catch (error) {
 			throw error
 		}
 	}
 
-	async findAll() {
+	async findAll(paginationDto: PaginationDto) {
 		try {
-			const locations = await this.locationRepository.find()
+			const { limit, page, skip } = paginationSolver(paginationDto)
+			const [locations, count] = await this.locationRepository.findAndCount({
+				take: limit,
+				skip
+			})
 			return {
 				statusCode: HttpStatus.OK,
+				pagination: paginationGenerator(limit, page, count),
 				data: locations
 			}
 		} catch (error) {

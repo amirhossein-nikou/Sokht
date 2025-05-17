@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
@@ -7,6 +7,8 @@ import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
 import { UpdateMobileDto } from './dto/update-user.dto';
 import { UserRole } from './enum/role.enum';
 import { UserService } from './user.service';
+import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('user')
 @UserAuthGuard()
@@ -34,15 +36,17 @@ export class UserController {
 
     @Get('/list')
     @MyApiConsumes()
+    @PaginationDec()
     @CanAccess(PremiumRoles.Boss, PremiumRoles.Admin)
-    findAll() {
-        return this.userService.findAll();
+    findAll(@Query() paginationDto: PaginationDto) {
+        return this.userService.findAll(paginationDto);
     }
     @Get('/list/drivers')
     @MyApiConsumes()
+    @PaginationDec()
     @CanAccess(UserRole.OilDepotUser)
-    findAllDrivers() {
-        return this.userService.findAllDrivers();
+    findAllDrivers(@Query() paginationDto: PaginationDto) {
+        return this.userService.findAllDrivers(paginationDto);
     }
 
     @Get('/by-id/:id')

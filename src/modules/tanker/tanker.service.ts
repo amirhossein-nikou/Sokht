@@ -11,6 +11,8 @@ import { UpdateTankerDto } from './dto/update-tanker.dto';
 import { TankerEntity } from './entities/tanker.entity';
 import { TankerMessages } from './enum/message.enum';
 import { UserRole } from '../user/enum/role.enum';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TankerService {
@@ -42,15 +44,19 @@ export class TankerService {
         }
     }
 
-    async findAll() {
+    async findAll(paginationDto: PaginationDto) {
         try {
-            const tankers = await this.tankerRepository.find({
+            const { limit, page, skip } = paginationSolver(paginationDto)
+            const [tankers,count] = await this.tankerRepository.findAndCount({
                 relations: { cargo: true },
                 select: { id: true, number: true, plate: true, capacity: true, cargo: { tankerId: false } },
-                order:{id:'DESC'}
+                order:{id:'DESC'},
+                take: limit,
+				skip
             })
             return {
                 statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit,page,count),
                 data: tankers
             }
         } catch (error) {

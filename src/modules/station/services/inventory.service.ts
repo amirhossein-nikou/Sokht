@@ -11,6 +11,8 @@ import { CreateInventoryDto, UpdateInventoryDto, UpdateValue } from "../dto/inve
 import { InventoryEntity } from "../entity/inventory.entity";
 import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
+import { PaginationDto } from "src/common/dto/pagination.dto";
+import { paginationGenerator, paginationSolver } from "src/common/utils/pagination.utils";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
@@ -42,8 +44,9 @@ export class InventoryService {
             throw error
         }
     }
-    async findAll() {
+    async findAll(paginationDto: PaginationDto) {
         try {
+            const { limit, page, skip } = paginationSolver(paginationDto)
             const { id, role, parentId } = this.req.user
             let where: object = {
                 station: {
@@ -53,8 +56,10 @@ export class InventoryService {
             if (role !== UserRole.StationUser) {
                 where = {}
             }
-            const inventories = await this.inventoryRepository.find({
+            const [inventories,count] = await this.inventoryRepository.findAndCount({
                 where,
+                take: limit,
+				skip,
                 select: {
                     id: true,
                     status: true,
@@ -69,14 +74,16 @@ export class InventoryService {
             })
             return {
                 status: HttpStatus.OK,
+                pagination: paginationGenerator(limit,page,count),
                 data: inventories
             }
         } catch (error) {
             throw error
         }
     }
-    async findListOfLastUpdates() {
+    async findListOfLastUpdates(paginationDto: PaginationDto) {
         try {
+            const { limit, page, skip } = paginationSolver(paginationDto)
             const filterTime = new Date(Date.now() - 1000 * 60 * 60 * 4) //last 4 hours
             const { id, role, parentId } = this.req.user
             let where: object = {
@@ -88,8 +95,10 @@ export class InventoryService {
             if (role !== UserRole.StationUser) {
                 where = { updated_at: MoreThanOrEqual(filterTime) }
             }
-            const inventories = await this.inventoryRepository.find({
+            const [inventories,count] = await this.inventoryRepository.findAndCount({
                 where,
+                take: limit,
+				skip,
                 select: {
                     id: true,
                     status: true,
@@ -104,6 +113,7 @@ export class InventoryService {
             })
             return {
                 status: HttpStatus.OK,
+                pagination: paginationGenerator(limit,page,count),
                 data: inventories
             }
         } catch (error) {
