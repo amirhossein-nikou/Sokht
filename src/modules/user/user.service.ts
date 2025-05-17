@@ -228,7 +228,7 @@ export class UserService {
 		try {
 			const parentId = this.req.user.id
 			const user = await this.findOneById(id)
-			if (user.id !== parentId) throw new BadRequestException('you just can remove your sub users')
+			if (user.parentId !== parentId) throw new BadRequestException('you just can remove your sub users')
 			await this.userRepository.remove(user)
 			return {
 				statusCode: 200,
