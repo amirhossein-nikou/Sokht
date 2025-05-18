@@ -6,7 +6,7 @@ import { RemoveNullProperty } from "../../../common/utils/update.utils";
 import { FuelTypeService } from "../../../modules/fuel-type/fuel-type.service";
 import { UserRole } from "../../../modules/user/enum/role.enum";
 import { UserService } from "../../../modules/user/user.service";
-import { MoreThanOrEqual, Repository } from "typeorm";
+import { LessThanOrEqual, MoreThanOrEqual, Repository } from "typeorm";
 import { CreateInventoryDto, UpdateInventoryDto, UpdateValue } from "../dto/inventory.dto";
 import { InventoryEntity } from "../entity/inventory.entity";
 import { InventoryMessages } from "../enum/message.enum";
@@ -87,13 +87,13 @@ export class InventoryService {
             const filterTime = new Date(Date.now() - 1000 * 60 * 60 * 4) //last 4 hours
             const { id, role, parentId } = this.req.user
             let where: object = {
-                updated_at: MoreThanOrEqual(filterTime),
+                updated_at: LessThanOrEqual(filterTime),
                 station: {
                     ownerId: parentId ?? id
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = { updated_at: MoreThanOrEqual(filterTime) }
+                where = { updated_at: LessThanOrEqual(filterTime) }
             }
             const [inventories,count] = await this.inventoryRepository.findAndCount({
                 where,

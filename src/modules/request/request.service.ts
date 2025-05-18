@@ -2,11 +2,13 @@ import { BadRequestException, HttpStatus, Inject, Injectable, NotFoundException,
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
+import { RejectDto } from 'src/common/dto/create-reject.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { StatusEnum } from 'src/common/enums/status.enum';
 import { FormatDateTime } from 'src/common/utils/formatDate.utils';
-import { requestOrder } from 'src/common/utils/order-by.utils';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { And, Between, In, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { CargoEntity } from '../cargo/entities/cargo.entity';
 import { DepotService } from '../depot/depot.service';
 import { InventoryService } from '../station/services/inventory.service';
@@ -22,10 +24,6 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
-import { UserService } from '../user/user.service';
-import { RejectDto } from 'src/common/dto/create-reject.dto';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -84,37 +82,56 @@ export class RequestService {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
-            let where: object = {
-                status: In([0, 1, 2]),
-                rejectDetails: null,
-                station: {
-                    ownerId: parentId ?? userId
-                }
-            }
+            let whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
+            // let where: object = {
+            //     status: In([0, 1, 2]),
+            //     rejectDetails: null,
+            //     station: {
+            //         ownerId: parentId ?? userId
+            //     }
+            // }
             if (role !== UserRole.StationUser) {
-                where = { rejectDetails: null, status: In([0, 1, 2]) }
+                whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL)`
+                //where = { rejectDetails: null, status: In([0, 1, 2]) }
             }
-            const [requests, count] = await this.requestRepository.findAndCount({
-                where,
-                order: requestOrder,
-                relations: {
-                    depot: true,
-                },
-                select: {
-                    id: true,
-                    depot: { name: true },
-                    fuel_type: true,
-                    fuel: { name: true },
-                    value: true,
-                    receive_at: true,
-                    status: { status: true },
-                    statusId: true,
-                    stationId: true,
-                    created_at: true
-                },
-                skip,
-                //take: 10,
-            })
+            const [requests, count] = await this.requestRepository.createQueryBuilder('request')
+                .leftJoinAndSelect('request.depot', 'depot')
+                .leftJoinAndSelect('request.status', 'status')
+                .leftJoinAndSelect('request.station', 'station')
+                .leftJoinAndSelect('request.fuel', 'fuel')
+                .select([
+                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name',
+                    'request.value', 'request.receive_at', 'request.priority', 'status.status',
+                    'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
+                ])
+                .where(whereQuery, { ownerId: parentId ?? userId })
+                .orderBy('request.receive_at', 'ASC')
+                .addOrderBy('request.priority_value', 'ASC')
+                .offset(skip)
+                .limit(limit)
+                .getManyAndCount()
+            // await this.requestRepository.findAndCount({
+            //     //where,
+            //     order: requestOrder,
+            //     relations: {
+            //         depot: true,
+            //     },
+            //     select: {
+            //         id: true,
+            //         priority: true,
+            //         depot: { name: true },
+            //         fuel_type: true,
+            //         fuel: { name: true },
+            //         value: true,
+            //         receive_at: true,
+            //         status: { status: true },
+            //         statusId: true,
+            //         stationId: true,
+            //         created_at: true
+            //     },
+            //     skip,
+            //     //take: 10,
+            // })
             return {
                 statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),
@@ -194,42 +211,60 @@ export class RequestService {
             const { fuel_type, receive_at } = searchWithFuelAndReceiveDto
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
-            let where: object = {
-                fuel_type,
-                receive_at,
-                rejectDetails: null,
-                station: {
-                    ownerId: parentId ?? userId
-                }
-            }
+            let whereQuery = `(request.fuel_type = :fuel_type AND request.rejectDetails IS NULL AND station.ownerId = :ownerId AND request.receive_at = :receive_at)`
+            // let where: object = {
+            //     fuel_type,
+            //     receive_at,
+            //     rejectDetails: null,
+            //     station: {
+            //         ownerId: parentId ?? userId
+            //     }
+            // }
             if (role !== UserRole.StationUser) {
-                where = {
-                    fuel_type,
-                    receive_at
-                }
+                whereQuery = `(request.fuel_type = :fuel_type AND request.rejectDetails IS NULL AND request.receive_at = :receive_at)`
+                // where = {
+                //     fuel_type,
+                //     receive_at
+                // }
             }
-            const [requests, count] = await this.requestRepository.findAndCount({
-                where,
-                relations: {
-                    depot: { location: true },
-                },
-                order: requestOrder,
-                select: {
-                    id: true,
-                    depot: { name: true },
-                    fuel_type: true,
-                    fuel: { name: true },
-                    value: true,
-                    receive_at: true,
-                    status: { status: true },
-                    statusId: true,
-                    stationId: true,
-                    created_at: true
-                },
-                //take: limit,
-                skip
-            })
-            if (requests.length <= 0) throw new NotFoundException(RequestMessages.Notfound)
+            const [requests, count] = await this.requestRepository.createQueryBuilder('request')
+                .leftJoinAndSelect('request.depot', 'depot')
+                .leftJoinAndSelect('request.status', 'status')
+                .leftJoinAndSelect('request.station', 'station')
+                .leftJoinAndSelect('request.fuel', 'fuel')
+                .select([
+                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name',
+                    'request.value', 'request.receive_at', 'request.priority', 'status.status',
+                    'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
+                ])
+                .where(whereQuery, { ownerId: parentId ?? userId, fuel_type, receive_at })
+                .orderBy('request.receive_at', 'ASC')
+                .addOrderBy('request.priority_value', 'ASC')
+                .offset(skip)
+                .limit(limit)
+                .getManyAndCount()
+            // const [requests, count] = await this.requestRepository.findAndCount({
+            //     where,
+            //     relations: {
+            //         depot: { location: true },
+            //     },
+            //     order: requestOrder,
+            //     select: {
+            //         id: true,
+            //         depot: { name: true },
+            //         fuel_type: true,
+            //         fuel: { name: true },
+            //         value: true,
+            //         receive_at: true,
+            //         status: { status: true },
+            //         statusId: true,
+            //         stationId: true,
+            //         created_at: true
+            //     },
+            //     //take: limit,
+            //     skip
+            // })
+            //if (requests.length <= 0) throw new NotFoundException(RequestMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),
@@ -242,33 +277,52 @@ export class RequestService {
     async findByDate(search: SearchDto, paginationDto: PaginationDto) {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
-            let { start, end } = search
+            let { start, end,fuel_type } = search
             if (start > end) throw new BadRequestException('start date must be bigger than end date')
             end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
             const { id: userId, role, parentId } = this.req.user
-            let where: object = {
-                created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
-                station: {
-                    ownerId: parentId ?? userId
-                }
-            }
+            let whereQuery = `(request.created_at BETWEEN :start AND :end AND station.ownerId = :ownerId)`
+            // let where: object = {
+            //     created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
+            //     station: {
+            //         ownerId: parentId ?? userId
+            //     }
+            // }
             if (role !== UserRole.StationUser) {
-                where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
+                //where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
+                whereQuery = `(request.created_at BETWEEN :start AND :end)`
             }
-            const [request, count] = await this.requestRepository.findAndCount({
-                where,
-                relations: {
-                    depot: true,
-                },
-                order: requestOrder,
-                //take: limit,
-                skip
-            })
-            if (!request) throw new NotFoundException(RequestMessages.Notfound)
+            if(fuel_type) whereQuery += 'AND request.fuel_type = :fuel_type'
+            const [requests, count] = await this.requestRepository.createQueryBuilder('request')
+                .leftJoinAndSelect('request.depot', 'depot')
+                .leftJoinAndSelect('request.status', 'status')
+                .leftJoinAndSelect('request.station', 'station')
+                .leftJoinAndSelect('request.fuel', 'fuel')
+                .select([
+                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name',
+                    'request.value', 'request.receive_at', 'request.priority', 'status.status',
+                    'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
+                ])
+                .where(whereQuery, { ownerId: parentId ?? userId, start, end, fuel_type })
+                .orderBy('request.receive_at', 'ASC')
+                .addOrderBy('request.priority_value', 'ASC')
+                .offset(skip)
+                .limit(limit)
+                .getManyAndCount()
+            // const [request, count] = await this.requestRepository.findAndCount({
+            //     where,
+            //     relations: {
+            //         depot: true,
+            //     },
+            //     order: requestOrder,
+            //     //take: limit,
+            //     skip
+            // })
+            //if (!request) throw new NotFoundException(RequestMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),
-                data: request
+                data: requests
             }
         } catch (error) {
             throw error
@@ -438,6 +492,7 @@ export class RequestService {
             const request = await this.getOneById(id)
             if (request.rejectDetails || request.statusId === StatusEnum.Reject)
                 throw new BadRequestException("this request already rejected")
+            if (request.statusId === StatusEnum.Received) throw new BadRequestException('we cant reject Received requests')
             await this.requestRepository.update(id, {
                 statusId: StatusEnum.Reject,
                 rejectDetails: { title, description }

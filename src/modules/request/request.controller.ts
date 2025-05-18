@@ -37,17 +37,22 @@ export class RequestController {
     @ApiQuery({ type: 'number', name: 'fuel_type', required: true })
     @ApiQuery({ type: 'enum', enum: ReceiveTimeEnum, name: 'receive_at', required: false })
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
-    findByFuel(@Query() searchWithFuelAndReceiveDto: SearchWithFuelAndReceiveDto,@Query() paginationDto: PaginationDto) {
-        return this.requestService.findByFuelType(searchWithFuelAndReceiveDto,paginationDto);
+    findByFuel(@Query() searchWithFuelAndReceiveDto: SearchWithFuelAndReceiveDto, @Query() paginationDto: PaginationDto) {
+        return this.requestService.findByFuelType(searchWithFuelAndReceiveDto, paginationDto);
     }
 
     @Get('/by-date')
     @PaginationDec()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
-    findByDate(@Query() paginationDto: PaginationDto, @Query('end') end: Date, @Query('start') start?: Date) {
+    @ApiQuery({name: 'end', required: false })
+    @ApiQuery({name: 'start', required: true })
+    @ApiQuery({ type: 'number', name: 'fuel_type', required: false })
+    findByDate(@Query() paginationDto: PaginationDto, @Query() searchDto: SearchDto) {
+        const { end, start, fuel_type } = searchDto
         const search: SearchDto = {
-            start: start ? new Date(start) : new Date(),
-            end: new Date(end)
+            start: new Date(start),
+            end: end ? new Date(end) : new Date(),
+            fuel_type
         }
         return this.requestService.findByDate(search, paginationDto);
     }

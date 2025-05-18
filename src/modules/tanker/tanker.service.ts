@@ -47,16 +47,20 @@ export class TankerService {
     async findAll(paginationDto: PaginationDto) {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
-            const [tankers,count] = await this.tankerRepository.findAndCount({
-                relations: { cargo: true },
-                select: { id: true, number: true, plate: true, capacity: true, cargo: { tankerId: false } },
-                order:{id:'DESC'},
+            const [tankers, count] = await this.tankerRepository.findAndCount({
+                relations: { cargo: true, driver: true },
+                select: {
+                    id: true, number: true, plate: true, capacity: true,
+                    cargo: { tankerId: false },
+                    driver: { first_name: true, id: true, last_name: true, mobile: true,national_code: true }
+                },
+                order: { id: 'DESC' },
                 take: limit,
-				skip
+                skip
             })
             return {
                 statusCode: HttpStatus.OK,
-                pagination: paginationGenerator(limit,page,count),
+                pagination: paginationGenerator(limit, page, count),
                 data: tankers
             }
         } catch (error) {
@@ -67,7 +71,10 @@ export class TankerService {
     async driverTankerInfo() {
         try {
             const { id } = this.req.user
-            const tanker = await this.tankerRepository.findOne({ where: { driverId: id }, relations: { cargo: true }, select: { cargo: { tankerId: false } } })
+            const tanker = await this.tankerRepository.findOne({
+                where: { driverId: id },
+                relations: { cargo: true }, select: { cargo: { tankerId: false } }
+            })
             if (!tanker) throw new NotFoundException(TankerMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,

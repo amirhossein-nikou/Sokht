@@ -2,14 +2,18 @@ import { IsDateString, IsEnum, IsNumberString, IsOptional } from "class-validato
 import { ReceiveTimeEnum } from "../enums/time.enum";
 
 export class SearchDto {
+    @IsNumberString()
+    @IsOptional()
+    fuel_type?: number
     @IsDateString()
     start: Date
     @IsDateString()
-    end: Date
+    @IsOptional()
+    end?: Date
 }
 export class SearchWithFuelAndReceiveDto {
     @IsNumberString()
-    fuel_type: Date
+    fuel_type: number
     @IsOptional()
     @IsEnum(ReceiveTimeEnum)
     receive_at?: ReceiveTimeEnum
