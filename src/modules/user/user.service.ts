@@ -106,7 +106,7 @@ export class UserService {
 			});
 			return {
 				statusCode: HttpStatus.OK,
-				pagination: paginationGenerator(limit,page,count),
+				pagination: paginationGenerator(limit, page, count),
 				data: drivers
 			}
 		} catch (error) {
@@ -122,7 +122,7 @@ export class UserService {
 			});
 			return {
 				statusCode: HttpStatus.OK,
-				pagination: paginationGenerator(limit,page,count),
+				pagination: paginationGenerator(limit, page, count),
 				data: users
 			}
 		} catch (error) {
@@ -298,7 +298,7 @@ export class UserService {
 			const subUsers = await this.userRepository.find({
 				where: { parentId: id },
 				select: {
-					first_name: true, last_name: true,
+					id: true, first_name: true, last_name: true,
 					mobile: true, national_code: true, certificateId: true
 				}
 			})
