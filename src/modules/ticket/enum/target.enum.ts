@@ -1,1 +1,3 @@
-export enum TicketTargetEnum {}
+export enum TicketTargetEnum {
+    depot = "depot"
+}

@@ -26,7 +26,7 @@ export class StationEntity {
     // relations
     @ManyToOne(() => UserEntity, user => user.stations)
     owner: UserEntity;
-    @OneToOne(() => LocationEntity, location => location.station,{eager: true})
+    @OneToOne(() => LocationEntity, location => location.station)
     @JoinColumn({ name: "locationId" })
     location: LocationEntity
     @OneToMany(() => AverageSaleEntity, sale => sale.station)
@@ -35,7 +35,7 @@ export class StationEntity {
     inventory: InventoryEntity[]
     @OneToMany(() => RequestEntity, request => request.station)
     requests: RequestEntity[]
-    @ManyToMany(() => FuelTypeEntity,{onDelete: 'CASCADE',eager: true})
+    @ManyToMany(() => FuelTypeEntity,{onDelete: 'CASCADE'})
     @JoinTable()
     fuels: FuelTypeEntity[]
 }

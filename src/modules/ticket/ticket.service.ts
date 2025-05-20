@@ -10,6 +10,9 @@ import { TicketMessages } from './enum/message.enum';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
+import { multerFile } from 'src/common/utils/multer.utils';
+import { removeFile } from 'src/common/utils/removeFile.utils';
+import { getImagePath } from 'src/common/utils/file-path.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TicketService {
@@ -17,12 +20,13 @@ export class TicketService {
 		@InjectRepository(TicketEntity) private ticketRepository: Repository<TicketEntity>,
 		@Inject(REQUEST) private req: Request
 	) { }
-	async create(createTicketDto: CreateTicketDto) {
+	async create(createTicketDto: CreateTicketDto, file: multerFile) {
 		try {
 			const { id } = this.req.user
-			const { content, priority, subject, target, title } = createTicketDto
+			const filePath = getImagePath(file, file.path)
+			const { content, priority, target, title } = createTicketDto
 			const ticket = this.ticketRepository.create({
-				content, priority, subject, target, title,
+				content, priority, target, title, file: filePath,
 				userId: id
 			})
 			await this.ticketRepository.save(ticket)
@@ -40,15 +44,22 @@ export class TicketService {
 		try {
 			const { limit, page, skip } = paginationSolver(paginationDto);
 			const { id } = this.req.user
-			const [tickets,count] = await this.ticketRepository.findAndCount({
+			const [tickets, count] = await this.ticketRepository.findAndCount({
 				where: { userId: id },
 				order: { priority: "ASC" },
+				relations: { user: { stations: true } },
+				select: {
+					user: {
+						id: true, first_name: true, last_name: true, mobile: true,
+						stations: { id: true, name: true }
+					}
+				},
 				skip,
 				take: limit
 			})
 			return {
 				statusCode: HttpStatus.OK,
-				pagination: paginationGenerator(limit,page,count),
+				pagination: paginationGenerator(limit, page, count),
 				data: tickets
 			}
 		} catch (error) {

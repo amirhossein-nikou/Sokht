@@ -9,9 +9,9 @@ export class TicketEntity {
     @PrimaryGeneratedColumn("increment")
     id:number
     @Column()
-    subject: string;
-    @Column()
     title: string;
+    @Column({nullable: true})
+    file: string;
     @Column()
     content: string;
     @Column({ enum: TicketTargetEnum })

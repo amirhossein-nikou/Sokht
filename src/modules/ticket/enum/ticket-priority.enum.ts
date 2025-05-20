@@ -1,5 +1,5 @@
 export enum TicketPriorityEnum {
-    Low = 'low',
-    Normal = 'normal',
-    High = "high"
+    Low = 'کم',
+    Normal = 'متوسط',
+    High = "زیاد"
 }
