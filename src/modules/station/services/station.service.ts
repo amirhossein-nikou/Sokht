@@ -57,7 +57,7 @@ export class StationService {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
             const [stations, count] = await this.stationRepository.findAndCount({
-                relations: { location: true },
+                relations: { location: true, fuels: true },
                 take: limit,
                 skip
             });
@@ -77,7 +77,8 @@ export class StationService {
                 where: { id },
                 relations: {
                     location: true,
-                    average_sale: true
+                    average_sale: true,
+                    fuels: true
                 }
             })
             if (!station) throw new NotFoundException(StationMessages.NotFound)
