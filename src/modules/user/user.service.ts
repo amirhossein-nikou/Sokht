@@ -255,11 +255,11 @@ export class UserService {
 		try {
 			const { id, parentId } = this.req.user
 			let relations: object = {
-				child: true, stations: true
+				child: true, stations: {location: true,fuels: true},
 			}
 			if (parentId) {
 				relations = {
-					parent: { stations: true }
+					parent: { stations: {location: true,fuels: true}, }
 				}
 			}
 			const user = await this.userRepository.findOne({
