@@ -250,7 +250,8 @@ export class InventoryService {
         const inventory = await this.inventoryRepository.find({
             where: {
                 station: { ownerId }
-            }
+            },
+            relations: {station: {fuels: true}}
         });
         if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
         return inventory
