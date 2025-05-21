@@ -16,7 +16,7 @@ import { TankerService } from "../tanker/tanker.service";
 import { UpdateMobileDtoAndroid } from "../user/dto/update-user.dto";
 import { UserRole } from "../user/enum/role.enum";
 import { UserServiceAndroid } from "../user/user.android.service";
-import { AddSubUserDto, AddSubUserDtoAndroid } from "../user/dto/create-user.dto";
+import { AddSubUserDtoAndroid } from "../user/dto/create-user.dto";
 
 @Controller()
 @UserAuthGuard()
