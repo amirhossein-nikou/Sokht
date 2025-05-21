@@ -2,17 +2,17 @@ import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable,
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { In, Repository } from 'typeorm';
 import { DepotService } from '../depot/depot.service';
+import { UserRole } from '../user/enum/role.enum';
 import { UserService } from '../user/user.service';
 import { CreateTankerDto } from './dto/create-tanker.dto';
 import { UpdateTankerDto } from './dto/update-tanker.dto';
 import { TankerEntity } from './entities/tanker.entity';
 import { TankerMessages } from './enum/message.enum';
-import { UserRole } from '../user/enum/role.enum';
-import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TankerService {
@@ -52,7 +52,7 @@ export class TankerService {
                 select: {
                     id: true, number: true, plate: true, capacity: true,
                     cargo: { tankerId: false },
-                    driver: { first_name: true, id: true, last_name: true, mobile: true,national_code: true }
+                    driver: { first_name: true, id: true, last_name: true, mobile: true, national_code: true }
                 },
                 order: { id: 'DESC' },
                 take: limit,
@@ -104,6 +104,22 @@ export class TankerService {
                 relations: { cargo: true }, select: { cargo: { tankerId: false } }
             })
             if (!tanker) throw new NotFoundException(TankerMessages.Notfound)
+            return {
+                statusCode: HttpStatus.OK,
+                data: tanker
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async findByRequestIdAndroid(requestId: number) {
+        try {
+            const tanker = await this.tankerRepository.find({
+                where: { cargo: { requestId } },
+                relations: { cargo: true }, select: { cargo: { tankerId: false } }
+            })
+            if (!tanker || tanker.length == 0) throw new NotFoundException(TankerMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
                 data: tanker

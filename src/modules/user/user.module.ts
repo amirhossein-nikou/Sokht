@@ -4,11 +4,12 @@ import { UserService } from './user.service';
 import { AuthModule } from '../auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './entity/user.entity';
+import { UserServiceAndroid } from './user.android.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity]),AuthModule],
+  imports: [TypeOrmModule.forFeature([UserEntity]), AuthModule],
   controllers: [UserController],
-  providers: [UserService],
-  exports: [UserService]
+  providers: [UserService,UserServiceAndroid],
+  exports: [UserService, UserServiceAndroid]
 })
-export class UserModule {}
+export class UserModule { }

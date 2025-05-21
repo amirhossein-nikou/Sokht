@@ -6,6 +6,11 @@ export class UpdateMobileDto {
     @IsMobilePhone('fa-IR')
     mobile: string
 }
+export class UpdateMobileDtoAndroid{
+    @ApiProperty()
+    @IsMobilePhone('fa-IR')
+    mobile: string
+}
 export class VerifyMobileDto {
     @ApiProperty()
     @IsMobilePhone('fa-IR')

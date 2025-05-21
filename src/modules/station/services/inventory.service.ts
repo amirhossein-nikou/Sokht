@@ -163,7 +163,26 @@ export class InventoryService {
             throw error
         }
     }
+    // main
     async updateValue(id: number, updateValue: UpdateValue) {
+        try {
+            const { value } = updateValue;
+            const { id: userId } = this.req.user;
+            const inventory = await this.findById(id);
+            if (value > inventory.max) throw new BadRequestException('value cant be more than max capacity')
+            if (inventory.status == false) throw new BadRequestException('inventory is deActive')
+            const obj = RemoveNullProperty(updateValue)
+            await this.inventoryRepository.update({ id: inventory.id }, obj)
+            return {
+                status: HttpStatus.OK,
+                message: InventoryMessages.Update
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    // android
+    async updateValueAndroid(id: number, updateValue: UpdateValue) {
         try {
             const { value } = updateValue;
             const { id: userId } = this.req.user;
@@ -195,6 +214,28 @@ export class InventoryService {
         }
     }
     async statusToggle(id: number) {
+        try {
+            const userId = this.req.user.id
+            await this.userService.checkIfParent(userId)
+            const inventory = await this.findById(id)
+            let message = ''
+            if (inventory.status) {
+                inventory.status = false
+                message = 'inventory Deactivated.'
+            } else {
+                inventory.status = true
+                message = 'inventory Got activated.'
+            }
+            await this.inventoryRepository.save(inventory)
+            return {
+                statusCode: HttpStatus.OK,
+                message
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    async statusToggleAndroid(id: number) {
         try {
             const userId = this.req.user.id
             await this.userService.checkIfParent(userId)

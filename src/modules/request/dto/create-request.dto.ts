@@ -20,3 +20,21 @@ export class CreateRequestDto {
     @IsEnum(ReceiveTimeEnum)
     receive_at: ReceiveTimeEnum
 }
+export class CreateRequestDtoAndroid {
+    // @ApiProperty()
+    // @IsNumberString()
+    // stationId: number;
+    @ApiProperty()
+    @IsNumberString()
+    fuel_type: number
+    @ApiProperty()
+    @IsNumberString()
+    value: number;
+    @ApiProperty()
+    @IsNumberString()
+    depotId: number;
+    @ApiProperty({ enum: ReceiveTimeEnum })
+    @IsString()
+    @IsEnum(ReceiveTimeEnum)
+    receive_at: ReceiveTimeEnum
+}

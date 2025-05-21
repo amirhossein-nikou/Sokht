@@ -11,3 +11,12 @@ export class UpdateRequestDto{
     @IsEnum(ReceiveTimeEnum)
     receive_at?: ReceiveTimeEnum
 }
+export class UpdateRequestDtoAndroid{
+    @ApiPropertyOptional()
+    @IsNumberString()
+    value?: number;
+    @ApiPropertyOptional({ enum: ReceiveTimeEnum })
+    @IsString()
+    @IsEnum(ReceiveTimeEnum)
+    receive_at?: ReceiveTimeEnum
+}

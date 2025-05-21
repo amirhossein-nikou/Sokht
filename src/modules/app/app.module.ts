@@ -10,12 +10,13 @@ import { InventoryModule } from '../station/modules/inventory.module';
 import { HomeModule } from '../home/home.module';
 import { TicketModule } from '../ticket/ticket.module';
 import { FuelTypeModule } from '../fuel-type/fuel-type.module';
+import { AndroidModule } from '../android/android.module';
 
 @Module({
   imports: [
     CustomModule, HomeModule,UserModule, AuthModule,
     StationModule, InventoryModule, LocationModule,
-    DepotModule, TankerModule,TicketModule,FuelTypeModule
+    DepotModule, TankerModule,TicketModule,FuelTypeModule,AndroidModule
   ],
   controllers: [],
   providers: [],

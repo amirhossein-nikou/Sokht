@@ -20,6 +20,11 @@ export class UpdateValue {
     @IsNumberString({ no_symbols: true })
     value: number;
 }
+export class UpdateValueAndroid {
+    @ApiProperty()
+    @IsNumberString({ no_symbols: true })
+    value: number;
+}
 export class UpdateInventoryDto extends PartialType(PickType(CreateInventoryDto,
     ['max','name','stationId']
 )) { }
