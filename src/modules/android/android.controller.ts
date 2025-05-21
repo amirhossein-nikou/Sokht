@@ -9,42 +9,38 @@ import { CreateRequestDtoAndroid } from "../request/dto/create-request.dto";
 import { SearchDto, SearchDtoAndroid, SearchWithFuelAndReceiveDtoAndroid } from "../request/dto/search.dto";
 import { UpdateRequestDtoAndroid } from "../request/dto/update-request.dto";
 import { ReceiveTimeEnum } from "../request/enums/time.enum";
-import { RequestServiceAndroid } from "../request/request.android.service";
 import { UpdateValueAndroid } from "../station/dto/inventory.dto";
-import { InventoryService } from "../station/services/inventory.service";
-import { TankerService } from "../tanker/tanker.service";
+
 import { UpdateMobileDtoAndroid } from "../user/dto/update-user.dto";
 import { UserRole } from "../user/enum/role.enum";
-import { UserServiceAndroid } from "../user/user.android.service";
 import { AddSubUserDtoAndroid } from "../user/dto/create-user.dto";
+import { AndroidService } from "./android.service";
 
 @Controller()
 @UserAuthGuard()
 export class AndroidController {
     constructor(
-        private readonly userService: UserServiceAndroid,
-        private readonly inventoryService: InventoryService,
-        private readonly requestService: RequestServiceAndroid,
-        private readonly tankerService: TankerService,
+        private readonly androidService: AndroidService
     ) { }
 
     @MyApiConsumes()
     @CanAccess(UserRole.StationUser)
     @Patch('/android/inventory/update/value/:id')
     updateValue(@Param('id', ParseIntPipe) id: number, @Body() updateValue: UpdateValueAndroid) {
-        return this.inventoryService.updateValueAndroid(id, updateValue);
+        console.log(updateValue);
+        return this.androidService.updateValueAndroid(id, updateValue);
     }
     @Post('/android/request/create')
     @MyApiConsumes()
     @CanAccess(UserRole.StationUser)
     create(@Body() createRequestDto: CreateRequestDtoAndroid) {
-        return this.requestService.create(createRequestDto);
+        return this.androidService.createNewRequest(createRequestDto);
     }
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     @Get('/android/request/list')
     @PaginationDec()
     findAllRequests(@Query() paginationDto: PaginationDto) {
-        return this.requestService.findAll(paginationDto);
+        return this.androidService.findAllRequests(paginationDto);
     }
 
     @Get('/android/request/list/search')
@@ -53,7 +49,7 @@ export class AndroidController {
     @ApiQuery({ type: 'enum', enum: ReceiveTimeEnum, name: 'receive_at', required: false })
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     findByFuel(@Query() searchWithFuelAndReceiveDto: SearchWithFuelAndReceiveDtoAndroid, @Query() paginationDto: PaginationDto) {
-        return this.requestService.findByFuelType(searchWithFuelAndReceiveDto, paginationDto);
+        return this.androidService.findByFuelType(searchWithFuelAndReceiveDto, paginationDto);
     }
 
     @Get('/android/request/by-date')
@@ -69,63 +65,63 @@ export class AndroidController {
             end: end ? new Date(end) : new Date(),
             fuel_type
         }
-        return this.requestService.findByDate(search, paginationDto);
+        return this.androidService.findByDate(paginationDto,search);
     }
     @Patch('/android/request/update/:id')
     @CanAccess(UserRole.StationUser)
     @MyApiConsumes()
     update(@Param('id', ParseIntPipe) id: number, @Body() updateRequestDto: UpdateRequestDtoAndroid) {
-        return this.requestService.update(id, updateRequestDto);
+        return this.androidService.update(id, updateRequestDto);
     }
     @Patch('/android/request/received/:id')
     @CanAccess(UserRole.StationUser)
     received(@Param('id', ParseIntPipe) id: number) {
-        return this.requestService.receivedRequest(id);
+        return this.androidService.receivedRequest(id);
     }
     @Get('/android/request/create/details')
     createRequestDetails() {
-        return this.requestService.createRequestDetails()
+        return this.androidService.createRequestDetails()
     }
     @Get('/android/request/tanker/info/:id')
     getRequestTankerInfo(@Param('id', ParseIntPipe) id: number) {
-        return this.tankerService.findByRequestIdAndroid(id)
+        return this.androidService.getRequestTankerInfo(id)
     }
     // user routes
     @Post('android/user/sub-user')
     @MyApiConsumes()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     addSubUser(@Body() addSubUserDto: AddSubUserDtoAndroid) {
-        return this.userService.addSubUsers(addSubUserDto);
+        return this.androidService.addSubUser(addSubUserDto);
     }
     @Get('android/user/profile')
     @MyApiConsumes()
     profile() {
-        return this.userService.profile();
+        return this.androidService.profile();
     }
     @Patch('android/user/subUser-phone/:id')
     @MyApiConsumes()
     updateSubUserMobile(@Param('id', ParseIntPipe) id: number, @Body() updateMobileDto: UpdateMobileDtoAndroid) {
-        return this.userService.updateSubUserMobile(id, updateMobileDto);
+        return this.androidService.updateSubUserMobile(id, updateMobileDto);
     }
     @Patch('android/user/mobile')
     @MyApiConsumes()
     updateMyMobile(@Body() updateMobileDto: UpdateMobileDtoAndroid) {
-        return this.userService.updateMyPhone(updateMobileDto);
+        return this.androidService.updateMyPhone(updateMobileDto);
     }
     @Delete('android/user/removeSub/:id')
     @MyApiConsumes()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     removeSubUser(@Param('id', ParseIntPipe) id: number) {
-        return this.userService.removeSubUser(id);
+        return this.androidService.removeSubUser(id);
     }
     @Get('android/user/verify-change/:code')
     verifyChangeMobile(@Param('code') code: string) {
         console.log();
-        return this.userService.verifyUpdateMobile(code);
+        return this.androidService.verifyUpdateMobile(code);
     }
     @Get('android/user/sub-users')
     mySubUsers() {
         console.log();
-        return this.userService.mySubUsers();
+        return this.androidService.mySubUsers();
     }
 }

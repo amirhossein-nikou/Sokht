@@ -22,7 +22,7 @@ export class UpdateValue {
 }
 export class UpdateValueAndroid {
     @ApiProperty()
-    @IsNumberString({ no_symbols: true })
+    //@IsNumberString()
     value: number;
 }
 export class UpdateInventoryDto extends PartialType(PickType(CreateInventoryDto,
