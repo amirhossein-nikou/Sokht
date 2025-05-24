@@ -11,7 +11,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         isGlobal: true
     }),
     TypeOrmModule.forRoot(SequelizeConfig())
-
   ],
   controllers: [],
   providers: [],

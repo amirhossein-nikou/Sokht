@@ -9,6 +9,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule,{
     bodyParser: false
   });
+  app.enableCors();
   SwaggerConfig(app)
   app.useGlobalPipes(new ValidationPipe)
   app.use(json({ limit: '50mb' }));
