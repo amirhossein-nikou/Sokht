@@ -51,7 +51,7 @@ export class RequestServiceAndroid {
             await this.stationService.checkExistsFuelType(station.id, fuel_type)
             await this.manageReceivedAt(station.id, receive_at, fuel_type)
             //
-            await this.filterRequestValue(station.id, fuel_type, value)
+            //await this.filterRequestValue(station.id, fuel_type, value)
             // limit send requests just 4 time in day
             await this.limitSendRequests(station.id)
             //---

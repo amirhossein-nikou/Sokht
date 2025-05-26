@@ -2,17 +2,17 @@ import { BadRequestException, HttpStatus, Inject, Injectable, NotFoundException,
 import { REQUEST } from "@nestjs/core";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
+import { PaginationDto } from "src/common/dto/pagination.dto";
+import { paginationGenerator, paginationSolver } from "src/common/utils/pagination.utils";
+import { LessThanOrEqual, Repository } from "typeorm";
 import { RemoveNullProperty } from "../../../common/utils/update.utils";
 import { FuelTypeService } from "../../../modules/fuel-type/fuel-type.service";
 import { UserRole } from "../../../modules/user/enum/role.enum";
 import { UserService } from "../../../modules/user/user.service";
-import { LessThanOrEqual, MoreThanOrEqual, Repository } from "typeorm";
 import { CreateInventoryDto, UpdateInventoryDto, UpdateValue } from "../dto/inventory.dto";
 import { InventoryEntity } from "../entity/inventory.entity";
 import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
-import { PaginationDto } from "src/common/dto/pagination.dto";
-import { paginationGenerator, paginationSolver } from "src/common/utils/pagination.utils";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
@@ -93,7 +93,46 @@ export class InventoryService {
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = { updated_at: LessThanOrEqual(filterTime) }
+                where = { updated_at: LessThanOrEqual(filterTime)}
+            }
+            const [inventories,count] = await this.inventoryRepository.findAndCount({
+                where,
+                take: limit,
+				skip,
+                select: {
+                    id: true,
+                    status: true,
+                    name: true,
+                    value: true,
+                    updated_at: true,
+                    fuels: {
+                        name: true,
+                        id: true
+                    }
+                }
+            })
+            return {
+                status: HttpStatus.OK,
+                pagination: paginationGenerator(limit,page,count),
+                data: inventories
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    async findListOfLastUpdatesAndroid(paginationDto: PaginationDto) {
+        try {
+            const { limit, page, skip } = paginationSolver(paginationDto)
+            const filterTime = new Date(Date.now() - 1000 * 60 * 60 * 4) //last 4 hours
+            const { id, role, parentId } = this.req.user
+            let where: object = {
+                updated_at: LessThanOrEqual(filterTime),
+                station: {
+                    ownerId: parentId ?? id
+                }
+            }
+            if (role !== UserRole.StationUser) {
+                where = { updated_at: LessThanOrEqual(filterTime)}
             }
             const [inventories,count] = await this.inventoryRepository.findAndCount({
                 where,

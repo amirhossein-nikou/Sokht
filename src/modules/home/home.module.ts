@@ -14,5 +14,6 @@ import { StationModule } from '../station/modules/station.module';
   ],
   controllers: [HomeController],
   providers: [HomeService],
+  exports: [HomeService]
 })
 export class HomeModule { }

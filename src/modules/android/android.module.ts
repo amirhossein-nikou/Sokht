@@ -6,11 +6,12 @@ import { TankerModule } from '../tanker/tanker.module';
 import { UserModule } from '../user/user.module';
 import { AndroidController } from './android.controller';
 import { AndroidService } from './android.service';
+import { HomeModule } from '../home/home.module';
 
 
 @Module({
     imports: [
-        AuthModule, InventoryModule, RequestModule, UserModule,TankerModule
+        AuthModule, InventoryModule, RequestModule, UserModule,TankerModule,HomeModule
     ],
     controllers: [AndroidController],
     providers: [AndroidService],

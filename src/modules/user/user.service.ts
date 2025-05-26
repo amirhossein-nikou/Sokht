@@ -47,7 +47,7 @@ export class UserService {
 			throw error
 		}
 	}
-
+	
 	async addSubUsers(addSubUserDto: AddSubUserDto) {
 		try {
 			const { first_name, last_name, mobile, national_code, certificateId } = addSubUserDto

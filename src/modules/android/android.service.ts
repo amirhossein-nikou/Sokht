@@ -10,6 +10,7 @@ import { AddSubUserDtoAndroid } from "../user/dto/create-user.dto";
 import { UpdateMobileDtoAndroid } from "../user/dto/update-user.dto";
 import { UserServiceAndroid } from "../user/user.android.service";
 import { Injectable } from "@nestjs/common";
+import { HomeService } from "../home/home.service";
 
 @Injectable()
 export class AndroidService {
@@ -18,14 +19,24 @@ export class AndroidService {
         private inventoryService: InventoryService,
         private requestService: RequestServiceAndroid,
         private tankerService: TankerService,
+        private homeService: HomeService,
     ) { }
-
-
+    showDashboard() {
+        return this.homeService.dashboard()
+    }
     updateValueAndroid(id: number, updateValue: UpdateValueAndroid) {
         console.log(updateValue);
         return this.inventoryService.updateValueAndroid(id, updateValue);
     }
-
+    findAllInventories(paginationDto: PaginationDto) {
+        return this.inventoryService.findAll(paginationDto)
+    }
+    changeInventoryStatus(inventoryId: number) {
+        return this.inventoryService.statusToggle(inventoryId)
+    }
+    inventoryLastUpdate(paginationDto: PaginationDto) {
+        return this.inventoryService.findListOfLastUpdatesAndroid(paginationDto)
+    }
     createNewRequest(createRequestDto: CreateRequestDtoAndroid) {
         return this.requestService.create(createRequestDto);
     }

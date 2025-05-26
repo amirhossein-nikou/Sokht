@@ -11,9 +11,9 @@ import { UpdateRequestDtoAndroid } from "../request/dto/update-request.dto";
 import { ReceiveTimeEnum } from "../request/enums/time.enum";
 import { UpdateValueAndroid } from "../station/dto/inventory.dto";
 
+import { AddSubUserDtoAndroid } from "../user/dto/create-user.dto";
 import { UpdateMobileDtoAndroid } from "../user/dto/update-user.dto";
 import { UserRole } from "../user/enum/role.enum";
-import { AddSubUserDtoAndroid } from "../user/dto/create-user.dto";
 import { AndroidService } from "./android.service";
 
 @Controller()
@@ -29,6 +29,23 @@ export class AndroidController {
     updateValue(@Param('id', ParseIntPipe) id: number, @Body() updateValue: UpdateValueAndroid) {
         console.log(updateValue);
         return this.androidService.updateValueAndroid(id, updateValue);
+    }
+    @Get('/android/inventory/list')
+    @CanAccess(UserRole.StationUser, UserRole.HeadUser)
+    @PaginationDec()
+    findAll(@Query() paginationDto: PaginationDto) {
+        return this.androidService.findAllInventories(paginationDto);
+    }
+    @Get('/android/inventory/status-toggle/:id')
+    @CanAccess(UserRole.StationUser, UserRole.HeadUser)
+    statusToggle(@Param('id', ParseIntPipe) id: number) {
+        return this.androidService.changeInventoryStatus(id);
+    }
+    @Get('/android/inventory/list/lastUpdates')
+    @CanAccess(UserRole.StationUser, UserRole.HeadUser)
+    @PaginationDec()
+    findListOfLastUpdates(@Query() paginationDto: PaginationDto) {
+        return this.androidService.inventoryLastUpdate(paginationDto);
     }
     @Post('/android/request/create')
     @MyApiConsumes()
@@ -65,7 +82,7 @@ export class AndroidController {
             end: end ? new Date(end) : new Date(),
             fuel_type
         }
-        return this.androidService.findByDate(paginationDto,search);
+        return this.androidService.findByDate(paginationDto, search);
     }
     @Patch('/android/request/update/:id')
     @CanAccess(UserRole.StationUser)

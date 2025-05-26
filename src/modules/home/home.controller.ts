@@ -2,7 +2,8 @@ import { Controller, Get} from "@nestjs/common";
 import { UserAuthGuard } from "src/common/decorators/auth.decorator";
 import { CanAccess } from "src/common/decorators/role.decorator";
 import { HomeService } from "./home.service";
-
+import { ApiTags } from "@nestjs/swagger";
+@ApiTags('Android')
 @Controller()
 @UserAuthGuard()
 export class HomeController {
