@@ -27,7 +27,6 @@ export class AndroidController {
     @CanAccess(UserRole.StationUser)
     @Patch('/android/inventory/update/value/:id')
     updateValue(@Param('id', ParseIntPipe) id: number, @Body() updateValue: UpdateValueAndroid) {
-        console.log(updateValue);
         return this.androidService.updateValueAndroid(id, updateValue);
     }
     @Get('/android/inventory/list')
