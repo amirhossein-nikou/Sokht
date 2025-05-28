@@ -1,16 +1,17 @@
 import { EntityName } from "../../../common/enums/entity.enum";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { TicketTargetEnum } from "../enum/target.enum";
 import { TicketPriorityEnum } from "../enum/ticket-priority.enum";
 import { UserEntity } from "../../../modules/user/entity/user.entity";
+import * as moment from 'jalali-moment'
 
-@Entity(EntityName.Ticket,{ orderBy: { id: "DESC" } })
+@Entity(EntityName.Ticket, { orderBy: { id: "DESC" } })
 export class TicketEntity {
     @PrimaryGeneratedColumn("increment")
-    id:number
+    id: number
     @Column()
     title: string;
-    @Column({nullable: true})
+    @Column({ nullable: true })
     file: string;
     @Column()
     content: string;
@@ -20,6 +21,17 @@ export class TicketEntity {
     priority: TicketPriorityEnum
     @Column()
     userId: number
+    @CreateDateColumn({
+        transformer: {
+            to(value) { return value },
+            from(value) {
+                if(value){
+                    return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
+                }
+            }
+        }
+    })
+    created_at: Date
     // relations 
     @ManyToOne(() => UserEntity, user => user.tickets, { onDelete: "CASCADE" })
     user: UserEntity

@@ -8,6 +8,7 @@ import { UserEntity } from "../user/entity/user.entity";
 import { CheckOtpDto, SendOtpDto } from "./dto/auth.dto";
 import { OtpEntity } from "./entity/otp.entity";
 import { payloadType } from "./types/payload";
+import { NotificationGateway } from "../socket/notification.gateway";
 
 @Injectable()
 export class AuthService {
@@ -15,6 +16,7 @@ export class AuthService {
         @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
         @InjectRepository(OtpEntity) private otpRepository: Repository<OtpEntity>,
         private jwtService: JwtService,
+        private notificationGateway: NotificationGateway,
     ) { }
 
     async sendOtp(sendOtpDto: SendOtpDto) {

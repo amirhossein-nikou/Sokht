@@ -4,7 +4,7 @@ import { StationEntity } from "../../../modules/station/entity/station.entity";
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 
-@Entity(EntityName.Location,{ orderBy: { id: "DESC" } })
+@Entity(EntityName.Location, { orderBy: { id: "DESC" } })
 export class LocationEntity {
     @PrimaryGeneratedColumn()
     id: number;
@@ -12,10 +12,10 @@ export class LocationEntity {
     address: string;
     @Column({type: 'numeric'})
     lat: number;
-    @Column({type: 'numeric'})
+    @Column({ type: 'numeric' })
     lon: number;
     @OneToOne(() => StationEntity, (station) => station.location)
     station: StationEntity;
-    @OneToOne(() => DepotEntity,depot => depot.location)
+    @OneToOne(() => DepotEntity, depot => depot.location)
     depot: DepotEntity
 }

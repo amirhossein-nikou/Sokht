@@ -6,6 +6,7 @@ import { UserEntity } from "../../../modules/user/entity/user.entity";
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { InventoryEntity } from "./inventory.entity";
 import { AverageSaleEntity } from "./sale.entity";
+import * as moment from "jalali-moment";
 
 @Entity(EntityName.Station,{ orderBy: { id: "DESC" } })
 export class StationEntity {
@@ -21,7 +22,16 @@ export class StationEntity {
     locationId: number;
     // @Column({type: 'int' ,array: true})
     // fuel_types: number[]
-    @CreateDateColumn()
+    @CreateDateColumn({
+            transformer: {
+                to(value) { return value },
+                from(value) {
+                    if (value) {
+                        return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
+                    }
+                }
+            }
+        })
     created_at: Date
     // relations
     @ManyToOne(() => UserEntity, user => user.stations)

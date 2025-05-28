@@ -3,8 +3,9 @@ import { EntityName } from "../../../common/enums/entity.enum";
 import { RequestEntity } from "../../../modules/request/entities/request.entity";
 import { TankerEntity } from "../../../modules/tanker/entities/tanker.entity";
 import { RejectDetails } from "src/common/types/reject-details.type";
+import * as moment from "jalali-moment";
 
-@Entity(EntityName.Cargo,{ orderBy: { id: "DESC" } })
+@Entity(EntityName.Cargo, { orderBy: { id: "DESC" } })
 export class CargoEntity {
     @PrimaryGeneratedColumn('increment')
     id: number;
@@ -22,7 +23,16 @@ export class CargoEntity {
     @OneToOne(() => RequestEntity, request => request.cargo, { onDelete: "CASCADE" })
     @JoinColumn({ name: "requestId" })
     request: RequestEntity
-    @CreateDateColumn()
+    @CreateDateColumn({
+        transformer: {
+            to(value) { return value },
+            from(value) {
+                if (value) {
+                    return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
+                }
+            }
+        }
+    })
     created_at: Date
     @Column({ nullable: true, type: 'json' })
     rejectDetails: RejectDetails

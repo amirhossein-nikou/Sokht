@@ -9,6 +9,7 @@ import { StationEntity } from "../../../modules/station/entity/station.entity"
 import { StatusEntity } from "./status.entity"
 import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity"
 import { RejectDetails } from "src/common/types/reject-details.type"
+import * as moment from "jalali-moment"
 
 @Entity(EntityName.Request)
 export class RequestEntity {
@@ -28,7 +29,16 @@ export class RequestEntity {
     statusId: StatusEnum;
     @Column({ enum: ReceiveTimeEnum })
     receive_at: ReceiveTimeEnum;
-    @CreateDateColumn()
+    @CreateDateColumn({
+        transformer: {
+            to(value) { return value },
+            from(value) {
+                if (value) {
+                    return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
+                }
+            }
+        }
+    })
     created_at: Date
     @Column({ nullable: true, type: 'numeric' })
     priority_value: number
@@ -44,6 +54,6 @@ export class RequestEntity {
     status: StatusEntity;
     @OneToOne(() => CargoEntity, cargo => cargo.request)
     cargo: CargoEntity
-    @Column({nullable: true,type:'json'})
+    @Column({ nullable: true, type: 'json' })
     rejectDetails: RejectDetails
 }

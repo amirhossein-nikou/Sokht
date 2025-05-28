@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { UserModule } from '../user/user.module';
 import { AuthModule } from '../auth/auth.module';
-import { InventoryModule } from '../station/modules/inventory.module';
 import { CargoModule } from '../cargo/cargo.module';
-import { HomeService } from './home.service';
+import { NotificationGateway } from '../socket/notification.gateway';
+import { InventoryModule } from '../station/modules/inventory.module';
 import { HomeController } from './home.controller';
-import { StationModule } from '../station/modules/station.module';
+import { HomeService } from './home.service';
 
 
 @Module({
@@ -13,7 +12,7 @@ import { StationModule } from '../station/modules/station.module';
     AuthModule,InventoryModule,CargoModule
   ],
   controllers: [HomeController],
-  providers: [HomeService],
+  providers: [HomeService,NotificationGateway],
   exports: [HomeService]
 })
 export class HomeModule { }

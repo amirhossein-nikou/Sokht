@@ -51,7 +51,7 @@ export class LocationService {
 			if (!location) throw new NotFoundException(LocationMessages.Notfound)
 			return {
 				statusCode: HttpStatus.OK,
-				data: location
+				data: location,
 			}
 		} catch (error) {
 			throw error

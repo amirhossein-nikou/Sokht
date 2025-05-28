@@ -11,6 +11,7 @@ import { HomeModule } from '../home/home.module';
 import { TicketModule } from '../ticket/ticket.module';
 import { FuelTypeModule } from '../fuel-type/fuel-type.module';
 import { AndroidModule } from '../android/android.module';
+import { NotificationGateway } from '../socket/notification.gateway';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { AndroidModule } from '../android/android.module';
     DepotModule, TankerModule,TicketModule,FuelTypeModule,AndroidModule
   ],
   controllers: [],
-  providers: [],
+  providers: [NotificationGateway],
 })
 export class AppModule { }
