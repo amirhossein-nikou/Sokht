@@ -16,7 +16,7 @@ import { UpdateMobileDtoAndroid } from "../user/dto/update-user.dto";
 import { UserRole } from "../user/enum/role.enum";
 import { AndroidService } from "./android.service";
 
-@Controller()
+@Controller('/android')
 @UserAuthGuard()
 export class AndroidController {
     constructor(
@@ -25,41 +25,41 @@ export class AndroidController {
 
     @MyApiConsumes()
     @CanAccess(UserRole.StationUser)
-    @Patch('/android/inventory/update/value/:id')
+    @Patch('/inventory/update/value/:id')
     updateValue(@Param('id', ParseIntPipe) id: number, @Body() updateValue: UpdateValueAndroid) {
         return this.androidService.updateValueAndroid(id, updateValue);
     }
-    @Get('/android/inventory/list')
+    @Get('/inventory/list')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)
     @PaginationDec()
     findAll(@Query() paginationDto: PaginationDto) {
         return this.androidService.findAllInventories(paginationDto);
     }
-    @Get('/android/inventory/status-toggle/:id')
+    @Get('/inventory/status-toggle/:id')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)
     statusToggle(@Param('id', ParseIntPipe) id: number) {
         return this.androidService.changeInventoryStatus(id);
     }
-    @Get('/android/inventory/list/lastUpdates')
+    @Get('/inventory/list/lastUpdates')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)
     @PaginationDec()
     findListOfLastUpdates(@Query() paginationDto: PaginationDto) {
         return this.androidService.inventoryLastUpdate(paginationDto);
     }
-    @Post('/android/request/create')
+    @Post('/request/create')
     @MyApiConsumes()
     @CanAccess(UserRole.StationUser)
     create(@Body() createRequestDto: CreateRequestDtoAndroid) {
         return this.androidService.createNewRequest(createRequestDto);
     }
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
-    @Get('/android/request/list')
+    @Get('/request/list')
     @PaginationDec()
     findAllRequests(@Query() paginationDto: PaginationDto) {
         return this.androidService.findAllRequests(paginationDto);
     }
 
-    @Get('/android/request/list/search')
+    @Get('/request/list/search')
     @PaginationDec()
     @ApiQuery({ type: 'number', name: 'fuel_type', required: true })
     @ApiQuery({ type: 'enum', enum: ReceiveTimeEnum, name: 'receive_at', required: false })
@@ -68,7 +68,7 @@ export class AndroidController {
         return this.androidService.findByFuelType(searchWithFuelAndReceiveDto, paginationDto);
     }
 
-    @Get('/android/request/by-date')
+    @Get('/request/by-date')
     @PaginationDec()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     @ApiQuery({ name: 'end', required: false })
@@ -83,61 +83,66 @@ export class AndroidController {
         }
         return this.androidService.findByDate(paginationDto, search);
     }
-    @Patch('/android/request/update/:id')
+    @Patch('/request/update/:id')
     @CanAccess(UserRole.StationUser)
     @MyApiConsumes()
     update(@Param('id', ParseIntPipe) id: number, @Body() updateRequestDto: UpdateRequestDtoAndroid) {
         return this.androidService.update(id, updateRequestDto);
     }
-    @Patch('/android/request/received/:id')
+    @Patch('/request/received/:id')
     @CanAccess(UserRole.StationUser)
     received(@Param('id', ParseIntPipe) id: number) {
         return this.androidService.receivedRequest(id);
     }
-    @Get('/android/request/create/details')
+    @Get('/request/create/details')
     createRequestDetails() {
         return this.androidService.createRequestDetails()
     }
-    @Get('/android/request/tanker/info/:id')
+    @Get('/request/tanker/info/:id')
     getRequestTankerInfo(@Param('id', ParseIntPipe) id: number) {
         return this.androidService.getRequestTankerInfo(id)
     }
     // user routes
-    @Post('android/user/sub-user')
+    @Post('/user/sub-user')
     @MyApiConsumes()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     addSubUser(@Body() addSubUserDto: AddSubUserDtoAndroid) {
         return this.androidService.addSubUser(addSubUserDto);
     }
-    @Get('android/user/profile')
+    @Get('/user/profile')
     @MyApiConsumes()
     profile() {
         return this.androidService.profile();
     }
-    @Patch('android/user/subUser-phone/:id')
+    @Patch('/user/subUser-phone/:id')
     @MyApiConsumes()
     updateSubUserMobile(@Param('id', ParseIntPipe) id: number, @Body() updateMobileDto: UpdateMobileDtoAndroid) {
         return this.androidService.updateSubUserMobile(id, updateMobileDto);
     }
-    @Patch('android/user/mobile')
+    @Patch('/user/mobile')
     @MyApiConsumes()
     updateMyMobile(@Body() updateMobileDto: UpdateMobileDtoAndroid) {
         return this.androidService.updateMyPhone(updateMobileDto);
     }
-    @Delete('android/user/removeSub/:id')
+    @Delete('/user/removeSub/:id')
     @MyApiConsumes()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     removeSubUser(@Param('id', ParseIntPipe) id: number) {
         return this.androidService.removeSubUser(id);
     }
-    @Get('android/user/verify-change/:code')
+    @Get('/user/verify-change/:code')
     verifyChangeMobile(@Param('code') code: string) {
         console.log();
         return this.androidService.verifyUpdateMobile(code);
     }
-    @Get('android/user/sub-users')
+    @Get('/user/sub-users')
     mySubUsers() {
         console.log();
         return this.androidService.mySubUsers();
+    }
+    @Delete('/remove/request/:id')
+    @CanAccess(UserRole.StationUser)
+    remove(@Param('id', ParseIntPipe) id: number) {
+        return this.androidService.receivedRequest(id);
     }
 }

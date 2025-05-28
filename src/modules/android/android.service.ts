@@ -74,6 +74,9 @@ export class AndroidService {
     getRequestTankerInfo(id: number) {
         return this.tankerService.findByRequestIdAndroid(id)
     }
+    removeRequest(requestId: number){
+        return this.requestService.remove(requestId)
+    }
     // user routes
 
     addSubUser(addSubUserDto: AddSubUserDtoAndroid) {
