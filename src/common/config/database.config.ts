@@ -2,7 +2,6 @@ import { TypeOrmModuleOptions } from "@nestjs/typeorm"
 
 export function SequelizeConfig(): TypeOrmModuleOptions {
     const { DB_PORT, DB_DATABASE, DB_HOST, DB_PASSWORD, DB_USERNAME } = process.env
-    console.log(DB_PASSWORD);
     return {
         type: "postgres",
         host: DB_HOST,

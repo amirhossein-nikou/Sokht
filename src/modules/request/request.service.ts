@@ -24,6 +24,7 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
+import { NotificationGateway } from '../socket/notification.gateway';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -35,6 +36,7 @@ export class RequestService {
         private inventoryService: InventoryService,
         private saleService: SaleService,
         private depotService: DepotService,
+        private notification: NotificationGateway,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createRequestDto: CreateRequestDto) {
@@ -277,7 +279,7 @@ export class RequestService {
     async findByDate(search: SearchDto, paginationDto: PaginationDto) {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
-            let { start, end,fuel_type } = search
+            let { start, end, fuel_type } = search
             if (start > end) throw new BadRequestException('start date must be bigger than end date')
             end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
             const { id: userId, role, parentId } = this.req.user
@@ -292,7 +294,7 @@ export class RequestService {
                 //where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
                 whereQuery = `(request.created_at BETWEEN :start AND :end)`
             }
-            if(fuel_type) whereQuery += 'AND request.fuel_type = :fuel_type'
+            if (fuel_type) whereQuery += 'AND request.fuel_type = :fuel_type'
             const [requests, count] = await this.requestRepository.createQueryBuilder('request')
                 .leftJoinAndSelect('request.depot', 'depot')
                 .leftJoinAndSelect('request.status', 'status')
@@ -420,6 +422,7 @@ export class RequestService {
         }
 
         await this.requestRepository.update(id, { statusId: StatusEnum.Approved })
+        this.notification.notificationHandler(`درخواست ${request.value} لیتر ${request.fuel.name} تایید شد`)
         return {
             statusCode: HttpStatus.OK,
             message: RequestMessages.ApprovedSuccess
