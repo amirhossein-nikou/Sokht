@@ -21,11 +21,13 @@ export class TicketEntity {
     priority: TicketPriorityEnum
     @Column()
     userId: number
+    @Column({ default: false })
+    status: boolean
     @CreateDateColumn({
         transformer: {
             to(value) { return value },
             from(value) {
-                if(value){
+                if (value) {
                     return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
                 }
             }

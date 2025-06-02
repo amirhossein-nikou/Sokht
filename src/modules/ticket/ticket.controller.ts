@@ -11,6 +11,7 @@ import { multerFile, multerStorageDisc } from 'src/common/utils/multer.utils';
 import { ApiConsumes } from '@nestjs/swagger';
 import { SwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';
 import { uploadedFilesOptional } from 'src/common/decorators/upload-file.decorator';
+import { UploadImage } from 'src/common/interceptors/multer.interceptor';
 
 @Controller('ticket')
 @UserAuthGuard()
@@ -18,7 +19,7 @@ export class TicketController {
   constructor(private readonly ticketService: TicketService) { }
 
   @Post('/create')
-  @UseInterceptors(FileInterceptor('file', { storage: multerStorageDisc('ticket-file') }))
+  @UseInterceptors(UploadImage('file'))
   @ApiConsumes(SwaggerConsumes.MultiPartData, SwaggerConsumes.Json)
   create(
     @uploadedFilesOptional() file: multerFile,

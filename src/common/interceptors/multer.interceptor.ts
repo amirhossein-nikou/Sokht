@@ -3,6 +3,7 @@ import { multerStorageDisc } from "../utils/multer.utils";
 
 export function UploadImage(fileName: string, folderName: string = 'uploadedFiles') {
     return class UploadUtility extends FileInterceptor(fileName, {
-        storage: multerStorageDisc(folderName)
-    }){}
+        storage: multerStorageDisc(folderName),
+        limits: { fileSize: 1024*1024*10 }
+    }) { }
 }

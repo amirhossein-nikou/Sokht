@@ -21,9 +21,9 @@ export class TicketService {
 		@Inject(REQUEST) private req: Request
 	) { }
 	async create(createTicketDto: CreateTicketDto, file: multerFile) {
+		const filePath = getImagePath(file, file.path)
 		try {
 			const { id } = this.req.user
-			const filePath = getImagePath(file, file.path)
 			const { content, priority, target, title } = createTicketDto
 			const ticket = this.ticketRepository.create({
 				content, priority, target, title, file: filePath,
@@ -35,6 +35,7 @@ export class TicketService {
 				message: TicketMessages.Create
 			}
 		} catch (error) {
+			removeFile(filePath)
 			throw error
 		}
 
