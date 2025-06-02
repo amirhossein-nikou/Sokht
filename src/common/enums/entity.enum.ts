@@ -6,6 +6,7 @@ export enum EntityName {
     Inventory = 'inventory',
     Capacity = 'capacity',
     Location = 'location',
+    Notification = 'notification',
     Depot = 'depot',
     Tanker = 'tanker',
     Request = 'request',

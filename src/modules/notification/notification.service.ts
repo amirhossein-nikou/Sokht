@@ -1,161 +1,107 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { MultipleDeviceNotificationDto, NotificationDto, TopicNotificationDto } from './dto/create-notification.dto';
-import * as admin from "firebase-admin";
+import { HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
+import { Repository } from 'typeorm';
+import { payloadType } from '../auth/types/payload';
+import { UserEntity } from '../user/entity/user.entity';
+import { CreateNotificationDto } from './dto/notification.dto';
+import { NotificationEntity } from './entity/notification.entity';
+import { NotificationMessages } from './enums/message.enum';
+import { DataType } from './types/message.type';
+
 @Injectable()
 export class NotificationService {
-
-    async singleAndroid(notificationDto: NotificationDto) {
+    constructor(
+        @InjectRepository(NotificationEntity) private notificationRepository: Repository<NotificationEntity>,
+        @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
+        private jwtService: JwtService,
+    ) { }
+    async create(createNotificationDto: CreateNotificationDto) {
         try {
-            const { body, icon, title, token } = notificationDto
-            const response = await admin.messaging().send({
-                token,
-                android: {
-                    priority: 'high',
-                    notification: {
-                        title,
-                        body,
-                        icon
-                    }
-                }
+            const { description, title, userId } = createNotificationDto
+            const notification = this.notificationRepository.create({ description, title, userId })
+            await this.notificationRepository.save(notification)
+            return {
+                statusCode: HttpStatus.CREATED,
+                message: NotificationMessages.Create
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async findAll(data: DataType) {
+        try {
+            const { token, pagination } = data
+            const user = await this.validateToken(token)
+            const { limit, page, skip } = paginationSolver(pagination)
+            const [notifications, count] = await this.notificationRepository.findAndCount({
+                where: { userId: user.id },
+                take: limit,
+                skip
             })
-            console.log("Successfully sent message: ", response);
             return {
                 statusCode: HttpStatus.OK,
-                data: {
-                    success: true, message: "Notification notification sent successfully"
-                }
-            };
+                pagination: paginationGenerator(limit, page, count),
+                data: notifications
+            }
         } catch (error) {
-            console.log("failed sent message: ", error);
-            return { success: false, message: "Failed to send notifications" };
-        }
-    }
-    async multiAndroid(multipleNotificationDto: MultipleDeviceNotificationDto) {
-        try {
-            const { title, body, icon, tokens } = multipleNotificationDto
-            const response = await admin.messaging().sendEachForMulticast({
-                android: {
-                    priority: "normal",
-                    notification: {
-                        title,
-                        body,
-                        icon,
-                    },
-                },
-                tokens,
-            });
-            console.log("Successfully sent messages:", response);
-            return {
-                statusCode: HttpStatus.OK,
-                data: {
-                    success: true, message: "Multiple notification sent successfully"
-                }
-            };
-        } catch (error) {
-            console.log("Error sending messages:", error);
-            return { success: false, message: "Failed to send notifications" };
-        }
-    }
-    async sendTopicAndroid(topicNotificationDto: TopicNotificationDto) {
-        try {
-            const { body, icon, title, topic } = topicNotificationDto
-            const response = await admin.messaging().send({
-                topic,
-                android: {
-                    priority: "high",
-                    notification: {
-                        body, icon, title,
-                    }
-                }
-            });
-            console.log("Successfully sent message:", response);
-            return {
-                statusCode: HttpStatus.OK,
-                data: {
-                    success: true, message: "Topic notification sent successfully"
-                }
-            };
-        } catch (error) {
-            console.log("Error sending message:", error);
-            return { success: false, message: "Failed to send topic notification" };
-
+            throw error
         }
     }
 
-    // web
-    async singleWeb(notificationDto: NotificationDto) {
+    async findOne(id: number) {
         try {
-            const { body, icon, title, token } = notificationDto
-            const response = await admin.messaging().send({
-                token,
-                webpush: {
-                    notification: {
-                        title,
-                        body,
-                        icon
-                    }
-                }
+            const notification = await this.notificationRepository.findOneBy({ id })
+            if (!notification) throw new NotFoundException(NotificationMessages.Notfound)
+            return {
+                statusCode: HttpStatus.OK,
+                data: notification,
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async remove(id: number) {
+        try {
+            const notification = await this.getOneById(id)
+            await this.notificationRepository.remove(notification)
+            return {
+                status: HttpStatus.OK,
+                message: NotificationMessages.Remove
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    // utils
+    async getOneById(id: number) {
+        const notification = await this.notificationRepository.findOneBy({ id })
+        if (!notification) throw new NotFoundException(NotificationMessages.Notfound)
+        return notification
+    }
+
+    async validateToken(token: string) {
+        try {
+            const payload = this.jwtService.verify<payloadType>(token, {
+                secret: process.env.ACCESS_TOKEN_SECRET
             })
-            console.log("Successfully sent message: ", response);
-            return {
-                statusCode: HttpStatus.OK,
-                data: {
-                    success: true, message: "Notification notification sent successfully"
+            if (typeof payload === "object" && payload?.id) {
+                const user = await this.userRepository.findOne({ where: { id: payload.id } })
+                if (!user) throw new UnauthorizedException("please login to your account")
+                return {
+                    mobile: user.mobile,
+                    id: user.id,
+                    role: user.role,
+                    parentId: user.parentId
                 }
-            };
+            }
+            throw new UnauthorizedException("please login to your account")
         } catch (error) {
-            console.log("failed sent message: ", error);
-            return { success: false, message: "Failed to send notifications" };
+            throw new UnauthorizedException("please login to your account")
         }
-    }
-    async multiWeb(multipleNotificationDto: MultipleDeviceNotificationDto) {
-        try {
-            const { title, body, icon, tokens } = multipleNotificationDto
-            const response = await admin.messaging().sendEachForMulticast({
-                webpush: {
-                    notification: {
-                        title,
-                        body,
-                        icon,
-                    },
-                },
-                tokens,
-            });
-            console.log("Successfully sent messages:", response);
-            return {
-                statusCode: HttpStatus.OK,
-                data: {
-                    success: true, message: "Multiple notification sent successfully"
-                }
-            };
-        } catch (error) {
-            console.log("Error sending messages:", error);
-            return { success: false, message: "Failed to send notifications" };
-        }
-    }
-    async sendTopicWeb(topicNotificationDto: TopicNotificationDto) {
-        try {
-            const { body, icon, title, topic } = topicNotificationDto
-            const response = await admin.messaging().send({
-                topic,
-                webpush: {
-                    notification: {
-                        body, icon, title,
-                    }
-                }
-            });
-            console.log("Successfully sent message:", response);
-            return {
-                statusCode: HttpStatus.OK,
-                data: {
-                    success: true, message: "Topic notification sent successfully"
-                }
-            };
-        } catch (error) {
-            console.log("Error sending message:", error);
-            return { success: false, message: "Failed to send topic notification" };
 
-        }
     }
-    
 }

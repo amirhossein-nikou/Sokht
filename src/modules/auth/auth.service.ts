@@ -1,4 +1,4 @@
-import {ConflictException, HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import { randomInt } from "crypto";
@@ -8,7 +8,8 @@ import { UserEntity } from "../user/entity/user.entity";
 import { CheckOtpDto, SendOtpDto } from "./dto/auth.dto";
 import { OtpEntity } from "./entity/otp.entity";
 import { payloadType } from "./types/payload";
-import { NotificationGateway } from "../socket/notification.gateway";
+import { NotificationGateway } from "../notification/notification.gateway";
+import * as moment from "jalali-moment";
 
 @Injectable()
 export class AuthService {
@@ -16,7 +17,7 @@ export class AuthService {
         @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
         @InjectRepository(OtpEntity) private otpRepository: Repository<OtpEntity>,
         private jwtService: JwtService,
-        private notificationGateway: NotificationGateway,
+        private notification: NotificationGateway,
     ) { }
 
     async sendOtp(sendOtpDto: SendOtpDto) {
@@ -76,9 +77,14 @@ export class AuthService {
             if (otp?.code !== code) throw new UnauthorizedException("Code invalid")
             if (now > expire_in) throw new UnauthorizedException("Code expired")
             if (!user.verify_mobile) {
-                await this.userRepository.update({ id: user.id }, {verify_mobile: true })
+                await this.userRepository.update({ id: user.id }, { verify_mobile: true })
             }
             const { accessToken, refreshToken } = this.generateTokenForUser({ id: user.id, mobile: ModifyMobileNumber(mobile) })
+            await this.notification.notificationHandler({
+                title: `پرسنل ${user.first_name} ${user.last_name} در ساعت ${moment(Date.now()).locale('fa').format('HH:mm')} و تاریخ ${moment(Date.now()).locale('fa').format('jYYYY-jMM-jDD')} وارد سیستم شد`,
+                description: 'no description',
+                userId: user.parentId ?? user.id
+            })
             return {
                 statusCode: HttpStatus.OK,
                 data: {

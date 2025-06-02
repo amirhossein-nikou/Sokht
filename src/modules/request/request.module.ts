@@ -13,7 +13,7 @@ import { RequestController } from './request.controller';
 import { RequestService } from './request.service';
 import { CargoEntity } from '../cargo/entities/cargo.entity';
 import { RequestServiceAndroid } from './request.android.service';
-import { NotificationGateway } from '../socket/notification.gateway';
+import { NotificationGateway } from '../notification/notification.gateway';
 
 @Module({
   imports: [TypeOrmModule.forFeature([RequestEntity, StatusEntity,CargoEntity]),

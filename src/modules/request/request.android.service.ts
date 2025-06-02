@@ -11,6 +11,7 @@ import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { Between, Repository } from 'typeorm';
 import { CargoEntity } from '../cargo/entities/cargo.entity';
 import { DepotService } from '../depot/depot.service';
+import { NotificationGateway } from '../notification/notification.gateway';
 import { InventoryService } from '../station/services/inventory.service';
 import { SaleService } from '../station/services/sale.service';
 import { StationService } from '../station/services/station.service';
@@ -24,6 +25,7 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
+import { FuelTypeService } from '../fuel-type/fuel-type.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestServiceAndroid {
@@ -35,6 +37,8 @@ export class RequestServiceAndroid {
         private inventoryService: InventoryService,
         private saleService: SaleService,
         private depotService: DepotService,
+        private notification: NotificationGateway,
+        private fuelService: FuelTypeService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createRequestDto: CreateRequestDto) {
@@ -49,9 +53,9 @@ export class RequestServiceAndroid {
             const station = await this.stationService.findByUserId(parentId ?? userId)
             //check fuel type
             await this.stationService.checkExistsFuelType(station.id, fuel_type)
-            await this.manageReceivedAt(station.id, receive_at, fuel_type)
+            //await this.manageReceivedAt(station.id, receive_at, fuel_type)
             //
-            //await this.filterRequestValue(station.id, fuel_type, value)
+            await this.filterRequestValue(station.id, fuel_type, value)
             // limit send requests just 4 time in day
             await this.limitSendRequests(station.id)
             //---
@@ -68,7 +72,13 @@ export class RequestServiceAndroid {
                 depotId,
                 receive_at
             })
+            const fuel = await this.fuelService.getById(fuel_type)
             await this.requestRepository.save(request);
+            await this.notification.notificationHandler({
+                title: `پرسنل ${station.owner.first_name} ${station.owner.last_name} یک درخواست جدید به شماره ${request.id} و به مقدار ${request.value} لیتر سوخت ${fuel.name} ایجاد کرد`,
+                description: 'no description',
+                userId: parentId ?? userId
+            })
             return {
                 statusCode: HttpStatus.CREATED,
                 message: RequestMessages.Create,
@@ -277,7 +287,7 @@ export class RequestServiceAndroid {
     async findByDate(search: SearchDto, paginationDto: PaginationDto) {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
-            let { start, end,fuel_type } = search
+            let { start, end, fuel_type } = search
             if (start > end) throw new BadRequestException('start date must be bigger than end date')
             end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
             const { id: userId, role, parentId } = this.req.user
@@ -292,7 +302,7 @@ export class RequestServiceAndroid {
                 //where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) }
                 whereQuery = `(request.created_at BETWEEN :start AND :end)`
             }
-            if(fuel_type) whereQuery += 'AND request.fuel_type = :fuel_type'
+            if (fuel_type) whereQuery += 'AND request.fuel_type = :fuel_type'
             const [requests, count] = await this.requestRepository.createQueryBuilder('request')
                 .leftJoinAndSelect('request.depot', 'depot')
                 .leftJoinAndSelect('request.status', 'status')
@@ -415,14 +425,25 @@ export class RequestServiceAndroid {
 
     async approvedRequest(id: number) {
         const request = await this.getOneById(id)
-        if ([StatusEnum.Approved, StatusEnum.Licensing].includes(request.statusId)) {
-            throw new BadRequestException(RequestMessages.Approved)
-        }
-
-        await this.requestRepository.update(id, { statusId: StatusEnum.Approved })
-        return {
-            statusCode: HttpStatus.OK,
-            message: RequestMessages.ApprovedSuccess
+        try {
+            if ([StatusEnum.Approved, StatusEnum.Licensing].includes(request.statusId)) {
+                throw new BadRequestException(RequestMessages.Approved)
+            }
+            await this.requestRepository.update(id, { statusId: StatusEnum.Approved })
+            await this.notification.notificationHandler({
+                title: `درخواست ${request.value} لیتر ${request.fuel.name} برای شما به شماره ${request.id} تایید شد`,
+                description: `درخواست ${request.value} لیتر ${request.fuel.name} برای شما به شماره ${request.id} برای ساعت ${request.receive_at} روز ${request.created_at} تایید شد`,
+                userId: request.station.ownerId,
+            })
+            return {
+                statusCode: HttpStatus.OK,
+                message: RequestMessages.ApprovedSuccess
+            }
+        } catch (error) {
+            if (request.statusId == StatusEnum.Approved) {
+                await this.requestRepository.update(id, { statusId: StatusEnum.Posted })
+            }
+            throw error
         }
     }
     async licenseRequest(id: number) {
@@ -487,15 +508,20 @@ export class RequestServiceAndroid {
         }
     }
     async rejectRequest(id: number, rejectDto: RejectDto) {
+        const request = await this.getOneById(id)
         try {
             const { description, title } = rejectDto
-            const request = await this.getOneById(id)
             if (request.rejectDetails || request.statusId === StatusEnum.Reject)
                 throw new BadRequestException("this request already rejected")
             if (request.statusId === StatusEnum.Received) throw new BadRequestException('we cant reject Received requests')
             await this.requestRepository.update(id, {
                 statusId: StatusEnum.Reject,
                 rejectDetails: { title, description }
+            })
+            await this.notification.notificationHandler({
+                title: `درخواست ${request.value} لیتر ${request.fuel.name} برای شما به شماره ${request.id} لغو شد`,
+                description: `${title}:${description}`,
+                userId: request.station.ownerId,
             })
             return {
                 statusCode: HttpStatus.OK,
@@ -510,7 +536,8 @@ export class RequestServiceAndroid {
     async detectPriority(stationId: number, fuel_type: number,): Promise<PriorityType> {
         const inventories = await this.getSumValueForInventory(stationId, fuel_type)
         const average_sale = await this.getSumValueForSale(stationId, fuel_type)
-        if (!inventories)
+        console.log(inventories);
+        if (inventories == undefined)
             throw new BadRequestException('station inventory is invalid')
         if (!average_sale)
             throw new BadRequestException('station average_sale is invalid')
@@ -530,7 +557,7 @@ export class RequestServiceAndroid {
     }
     async filterRequestValue(stationId: number, fuel_type: number, value: number) {
         const inventoryValueSum = await this.getSumValueForInventory(stationId, fuel_type)
-        if (!inventoryValueSum) throw new BadRequestException('inventory is invalid')
+        if (inventoryValueSum == undefined) throw new BadRequestException('inventory is invalid')
         const maxCap = await this.getMaxInventoryCapacity(stationId, fuel_type)
         const maxValues = inventoryValueSum + Number(value)
         if (value < 1000) throw new BadRequestException('request value must be more than 1000')
@@ -542,7 +569,7 @@ export class RequestServiceAndroid {
         }
     }
     async getOneById(id: number) {
-        const request = await this.requestRepository.findOne({ where: { id }, relations: { cargo: true } })
+        const request = await this.requestRepository.findOne({ where: { id }, relations: { cargo: true, station: true } })
         if (!request) throw new NotFoundException(RequestMessages.Notfound)
         return request
     }

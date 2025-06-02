@@ -11,13 +11,14 @@ import { HomeModule } from '../home/home.module';
 import { TicketModule } from '../ticket/ticket.module';
 import { FuelTypeModule } from '../fuel-type/fuel-type.module';
 import { AndroidModule } from '../android/android.module';
-import { NotificationGateway } from '../socket/notification.gateway';
+import { NotificationModule } from '../notification/notification.module';
+import { NotificationGateway } from '../notification/notification.gateway';
 
 @Module({
   imports: [
     CustomModule, HomeModule,UserModule, AuthModule,
     StationModule, InventoryModule, LocationModule,
-    DepotModule, TankerModule,TicketModule,FuelTypeModule,AndroidModule
+    DepotModule, TankerModule,TicketModule,FuelTypeModule,AndroidModule,NotificationModule
   ],
   controllers: [],
   providers: [NotificationGateway],

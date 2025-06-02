@@ -14,13 +14,16 @@ import { TankerService } from '../tanker/tanker.service';
 import { RejectDto } from 'src/common/dto/create-reject.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
+import { NotificationGateway } from '../notification/notification.gateway';
+import * as moment from 'jalali-moment';
 
 @Injectable()
 export class CargoService {
     constructor(
         @InjectRepository(CargoEntity) private cargoRepository: Repository<CargoEntity>,
         private tankerService: TankerService,
-        private requestService: RequestService
+        private requestService: RequestService,
+        private notification: NotificationGateway,
     ) { }
     async create(createCargoDto: CreateCargoDto) {
         const { requestId, tankerId, receive_at, value } = createCargoDto
@@ -44,6 +47,12 @@ export class CargoService {
             })
             await this.cargoRepository.save(cargo)
             await this.requestService.licenseRequest(requestId)
+            await this.notification.notificationHandler({
+                title: `محموله شماره ${cargo.id} حاوی ${value} لیتر ${request.fuel.name} برای شما ارسال شد`,
+                description: `محموله شماره ${cargo.id} حاوی ${request.value} لیتر ${request.fuel.name} در تاریخ ${moment(cargo.created_at).locale('fa').format('jYYYY-jMM-jDD')} ساعت ${moment(cargo.created_at).locale('fa').format('HH:mm')} برای شما ارسال شد.
+                لطفا پس از دریافت، بر روی "دکمه تایید" تحویل در صفحه ی داشبورد کلیک کنید`,
+                userId: request.station.ownerId,
+            })
             return {
                 statusCode: HttpStatus.CREATED,
                 message: CargoMessages.Create
@@ -68,7 +77,7 @@ export class CargoService {
             })
             return {
                 statusCode: HttpStatus.OK,
-                pagination: paginationGenerator(limit,page,count),
+                pagination: paginationGenerator(limit, page, count),
                 data: cargoes
             }
         } catch (error) {
