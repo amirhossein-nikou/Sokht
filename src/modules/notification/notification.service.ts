@@ -22,10 +22,7 @@ export class NotificationService {
             const { description, title, userId } = createNotificationDto
             const notification = this.notificationRepository.create({ description, title, userId })
             await this.notificationRepository.save(notification)
-            return {
-                statusCode: HttpStatus.CREATED,
-                message: NotificationMessages.Create
-            }
+            return notification
         } catch (error) {
             throw error
         }
