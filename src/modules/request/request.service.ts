@@ -77,7 +77,8 @@ export class RequestService {
             await this.notification.notificationHandler({
                 title: `پرسنل ${station.owner.first_name} ${station.owner.last_name} یک درخواست جدید به شماره ${request.id} و به مقدار ${request.value} لیتر سوخت ${fuel.name} ایجاد کرد`,
                 description: 'no description',
-                userId: parentId ?? userId
+                userId: userId,
+                parentId: parentId
             })
             return {
                 statusCode: HttpStatus.CREATED,
@@ -434,6 +435,7 @@ export class RequestService {
                 title: `درخواست ${request.value} لیتر ${request.fuel.name} برای شما به شماره ${request.id} تایید شد`,
                 description: `درخواست ${request.value} لیتر ${request.fuel.name} برای شما به شماره ${request.id} برای ساعت ${request.receive_at} روز ${request.created_at} تایید شد`,
                 userId: request.station.ownerId,
+                parentId: request.station.ownerId,
             })
             return {
                 statusCode: HttpStatus.OK,
@@ -522,6 +524,7 @@ export class RequestService {
                 title: `درخواست ${request.value} لیتر ${request.fuel.name} برای شما به شماره ${request.id} لغو شد`,
                 description: `${title}:${description}`,
                 userId: request.station.ownerId,
+                parentId: request.station.ownerId
             })
             return {
                 statusCode: HttpStatus.OK,

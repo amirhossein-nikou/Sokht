@@ -1,12 +1,10 @@
 import { Global, Module } from '@nestjs/common';
-import { NotificationService } from './notification.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { NotificationEntity } from './entity/notification.entity';
-import { AuthModule } from 'src/modules/auth/auth.module';
-import { NotificationGateway } from './notification.gateway';
-import { AuthService } from '../auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from '../user/entity/user.entity';
+import { NotificationEntity } from './entity/notification.entity';
+import { NotificationGateway } from './notification.gateway';
+import { NotificationService } from './notification.service';
 @Global()
 @Module({
   imports: [TypeOrmModule.forFeature([NotificationEntity,UserEntity])],

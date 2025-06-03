@@ -4,6 +4,6 @@ export function getImagePath(file: multerFile, imagePath: string) {
     if (file) {
         return join(imagePath).replace(/\\/gi, '/')
     } else {
-        return ''
+        return null
     }
 }

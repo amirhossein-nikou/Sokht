@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, NotFoundException, Scope, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
@@ -9,18 +9,22 @@ import { CreateNotificationDto } from './dto/notification.dto';
 import { NotificationEntity } from './entity/notification.entity';
 import { NotificationMessages } from './enums/message.enum';
 import { DataType } from './types/message.type';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class NotificationService {
     constructor(
         @InjectRepository(NotificationEntity) private notificationRepository: Repository<NotificationEntity>,
         @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
+        @Inject(REQUEST) private req: Request,
         private jwtService: JwtService,
     ) { }
     async create(createNotificationDto: CreateNotificationDto) {
         try {
-            const { description, title, userId } = createNotificationDto
-            const notification = this.notificationRepository.create({ description, title, userId })
+            const { description, title, userId, parentId } = createNotificationDto
+            const notification = this.notificationRepository.create({ description, title, userId, parentId })
             await this.notificationRepository.save(notification)
             return notification
         } catch (error) {
@@ -35,6 +39,28 @@ export class NotificationService {
             const { limit, page, skip } = paginationSolver(pagination)
             const [notifications, count] = await this.notificationRepository.findAndCount({
                 where: { userId: user.id },
+                take: limit,
+                skip
+            })
+            return {
+                statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit, page, count),
+                data: notifications
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    async findAllRoute(pagination: PaginationDto) {
+        try {
+            const { id, parentId } = this.req.user
+            const { limit, page, skip } = paginationSolver(pagination)
+            let where: object = { userId: id, parentId }
+            if (!parentId) {
+                where = { parentId: id }
+            }
+            const [notifications, count] = await this.notificationRepository.findAndCount({
+                where,
                 take: limit,
                 skip
             })

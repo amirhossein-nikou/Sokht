@@ -140,6 +140,12 @@ export class AndroidController {
         console.log();
         return this.androidService.mySubUsers();
     }
+    @Get('/notification/list')
+    @PaginationDec()
+    findAllNotifications(@Query() paginationDto: PaginationDto) {
+        return this.androidService.findAllNotifications(paginationDto);
+    }
+    
     @Delete('/remove/request/:id')
     @CanAccess(UserRole.StationUser)
     remove(@Param('id', ParseIntPipe) id: number) {

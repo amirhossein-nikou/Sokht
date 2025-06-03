@@ -1,5 +1,5 @@
 import { PartialType } from "@nestjs/swagger";
-import { IsNumber, IsString } from "class-validator";
+import { IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateNotificationDto {
     @IsString()
@@ -8,6 +8,8 @@ export class CreateNotificationDto {
     description: string
     @IsNumber()
     userId: number
+    @IsNumber()
+    parentId: number
 }
 
 export class UpdateNotificationDto extends PartialType(CreateNotificationDto) { }

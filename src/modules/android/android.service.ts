@@ -11,6 +11,7 @@ import { UpdateMobileDtoAndroid } from "../user/dto/update-user.dto";
 import { UserServiceAndroid } from "../user/user.android.service";
 import { Injectable } from "@nestjs/common";
 import { HomeService } from "../home/home.service";
+import { NotificationService } from "../notification/notification.service";
 
 @Injectable()
 export class AndroidService {
@@ -20,6 +21,7 @@ export class AndroidService {
         private requestService: RequestServiceAndroid,
         private tankerService: TankerService,
         private homeService: HomeService,
+        private notificationService: NotificationService,
     ) { }
     showDashboard() {
         return this.homeService.dashboard()
@@ -74,7 +76,7 @@ export class AndroidService {
     getRequestTankerInfo(id: number) {
         return this.tankerService.findByRequestIdAndroid(id)
     }
-    removeRequest(requestId: number){
+    removeRequest(requestId: number) {
         return this.requestService.remove(requestId)
     }
     // user routes
@@ -108,5 +110,7 @@ export class AndroidService {
         console.log();
         return this.userService.mySubUsers();
     }
-
+    findAllNotifications(paginationDto: PaginationDto) {
+        return this.notificationService.findAllRoute(paginationDto)
+    }
 }

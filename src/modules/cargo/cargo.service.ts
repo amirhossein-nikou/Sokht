@@ -52,6 +52,7 @@ export class CargoService {
                 description: `محموله شماره ${cargo.id} حاوی ${request.value} لیتر ${request.fuel.name} در تاریخ ${moment(cargo.created_at).locale('fa').format('jYYYY-jMM-jDD')} ساعت ${moment(cargo.created_at).locale('fa').format('HH:mm')} برای شما ارسال شد.
                 لطفا پس از دریافت، بر روی "دکمه تایید" تحویل در صفحه ی داشبورد کلیک کنید`,
                 userId: request.station.ownerId,
+                parentId: request.station.ownerId
             })
             return {
                 statusCode: HttpStatus.CREATED,

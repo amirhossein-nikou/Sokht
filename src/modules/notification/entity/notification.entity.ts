@@ -13,6 +13,8 @@ export class NotificationEntity {
     description: string
     @Column()
     userId: number
+    @Column({nullable: true})
+    parentId: number
     @CreateDateColumn({
         transformer: {
             to(value) { return value },

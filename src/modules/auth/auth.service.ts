@@ -83,7 +83,8 @@ export class AuthService {
             await this.notification.notificationHandler({
                 title: `پرسنل ${user.first_name} ${user.last_name} در ساعت ${moment(Date.now()).locale('fa').format('HH:mm')} و تاریخ ${moment(Date.now()).locale('fa').format('jYYYY-jMM-jDD')} وارد سیستم شد`,
                 description: 'no description',
-                userId: user.parentId ?? user.id
+                userId: user.id,
+                parentId: user.parentId ?? null
             })
             return {
                 statusCode: HttpStatus.OK,

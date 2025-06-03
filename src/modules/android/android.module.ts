@@ -7,11 +7,12 @@ import { UserModule } from '../user/user.module';
 import { AndroidController } from './android.controller';
 import { AndroidService } from './android.service';
 import { HomeModule } from '../home/home.module';
+import { NotificationModule } from '../notification/notification.module';
 
 
 @Module({
     imports: [
-        AuthModule, InventoryModule, RequestModule, UserModule,TankerModule,HomeModule
+        AuthModule, InventoryModule, RequestModule, UserModule,TankerModule,HomeModule,NotificationModule
     ],
     controllers: [AndroidController],
     providers: [AndroidService],
