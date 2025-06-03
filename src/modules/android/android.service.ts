@@ -9,19 +9,26 @@ import { TankerService } from "../tanker/tanker.service";
 import { AddSubUserDtoAndroid } from "../user/dto/create-user.dto";
 import { UpdateMobileDtoAndroid } from "../user/dto/update-user.dto";
 import { UserServiceAndroid } from "../user/user.android.service";
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Inject, Injectable, Scope } from "@nestjs/common";
 import { HomeService } from "../home/home.service";
 import { NotificationService } from "../notification/notification.service";
+import { REQUEST } from "@nestjs/core";
+import { NotificationEntity } from "../notification/entity/notification.entity";
+import { Repository } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
+import { paginationGenerator, paginationSolver } from "src/common/utils/pagination.utils";
+import { Request } from "express";
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class AndroidService {
     constructor(
+        @Inject(REQUEST) private req: Request,
         private userService: UserServiceAndroid,
         private inventoryService: InventoryService,
         private requestService: RequestServiceAndroid,
         private tankerService: TankerService,
         private homeService: HomeService,
-        private notificationService: NotificationService,
+        @InjectRepository(NotificationEntity) private notificationRepository: Repository<NotificationEntity>,
     ) { }
     showDashboard() {
         return this.homeService.dashboard()
@@ -110,7 +117,29 @@ export class AndroidService {
         console.log();
         return this.userService.mySubUsers();
     }
-    findAllNotifications(paginationDto: PaginationDto) {
-        return this.notificationService.findAllRoute(paginationDto)
+    async findAllNotifications(paginationDto: PaginationDto) {
+        try {
+            const { id, parentId } = this.req.user
+            const { limit, page, skip } = paginationSolver(paginationDto)
+            let where: object
+            console.log(parentId);
+            if (parentId == null) {
+                where = { parentId: id }
+            }else{ 
+                where ={ userId: id, parentId }
+            }
+            const [notifications, count] = await this.notificationRepository.findAndCount({
+                where,
+                take: limit,
+                skip
+            })
+            return {
+                statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit, page, count),
+                data: notifications
+            }
+        } catch (error) {
+            throw error
+        }
     }
 }

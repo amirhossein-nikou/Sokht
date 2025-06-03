@@ -33,10 +33,10 @@ export class NotificationGateway implements OnGatewayInit {
 
     async notificationHandler(message: CreateNotificationDto) {
         try {
-            this.server?.emit('notification-title', { message: message.title})
+            this.server.emit('notification-title', { message: message.title})
             await this.notificationService.create(message)
         } catch (error) {
-            this.server?.emit('exception', { message: "data is invalid" })
+            this.server.emit('exception', { message: "data is invalid" })
         }
     }
 
