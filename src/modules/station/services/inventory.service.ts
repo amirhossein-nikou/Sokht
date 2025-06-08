@@ -56,10 +56,10 @@ export class InventoryService {
             if (role !== UserRole.StationUser) {
                 where = {}
             }
-            const [inventories,count] = await this.inventoryRepository.findAndCount({
+            const [inventories, count] = await this.inventoryRepository.findAndCount({
                 where,
                 take: limit,
-				skip,
+                skip,
                 select: {
                     id: true,
                     status: true,
@@ -74,7 +74,7 @@ export class InventoryService {
             })
             return {
                 status: HttpStatus.OK,
-                pagination: paginationGenerator(limit,page,count),
+                pagination: paginationGenerator(limit, page, count),
                 data: inventories
             }
         } catch (error) {
@@ -88,17 +88,18 @@ export class InventoryService {
             const { id, role, parentId } = this.req.user
             let where: object = {
                 updated_at: LessThanOrEqual(filterTime),
+                status: true,
                 station: {
                     ownerId: parentId ?? id
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = { updated_at: LessThanOrEqual(filterTime)}
+                where = { updated_at: LessThanOrEqual(filterTime), status: true, }
             }
-            const [inventories,count] = await this.inventoryRepository.findAndCount({
+            const [inventories, count] = await this.inventoryRepository.findAndCount({
                 where,
                 take: limit,
-				skip,
+                skip,
                 select: {
                     id: true,
                     status: true,
@@ -113,7 +114,7 @@ export class InventoryService {
             })
             return {
                 status: HttpStatus.OK,
-                pagination: paginationGenerator(limit,page,count),
+                pagination: paginationGenerator(limit, page, count),
                 data: inventories
             }
         } catch (error) {
@@ -127,17 +128,18 @@ export class InventoryService {
             const { id, role, parentId } = this.req.user
             let where: object = {
                 updated_at: LessThanOrEqual(filterTime),
+                status: true,
                 station: {
                     ownerId: parentId ?? id
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = { updated_at: LessThanOrEqual(filterTime)}
+                where = { updated_at: LessThanOrEqual(filterTime), status: true }
             }
-            const [inventories,count] = await this.inventoryRepository.findAndCount({
+            const [inventories, count] = await this.inventoryRepository.findAndCount({
                 where,
                 take: limit,
-				skip,
+                skip,
                 select: {
                     id: true,
                     status: true,
@@ -152,7 +154,7 @@ export class InventoryService {
             })
             return {
                 status: HttpStatus.OK,
-                pagination: paginationGenerator(limit,page,count),
+                pagination: paginationGenerator(limit, page, count),
                 data: inventories
             }
         } catch (error) {
@@ -330,7 +332,7 @@ export class InventoryService {
             where: {
                 station: { ownerId }
             },
-            relations: {station: {fuels: true}}
+            relations: { station: { fuels: true } }
         });
         if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
         return inventory
