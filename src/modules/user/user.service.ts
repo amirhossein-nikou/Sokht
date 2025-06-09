@@ -237,6 +237,21 @@ export class UserService {
 			throw error
 		}
 	}
+	async removeDriver(id: number) {
+		try {
+			const user = await this.findOneById(id)
+			if(user.role !== UserRole.Driver){
+				throw new ForbiddenException('you just can remove drivers') 
+			}
+			await this.userRepository.remove(user)
+			return {
+				statusCode: 200,
+				message: UserMessages.Delete
+			}
+		} catch (error) {
+			throw error
+		}
+	}
 	async removeSubUser(id: number) {
 		try {
 			const parentId = this.req.user.id

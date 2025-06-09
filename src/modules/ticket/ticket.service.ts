@@ -96,7 +96,9 @@ export class TicketService {
 			const { id: userId } = this.req.user
 			await this.getOne(id, userId)
 			const updateObject = RemoveNullProperty(updateTicketDto)
-			await this.ticketRepository.update(id, updateObject)
+			if (updateObject) {
+				await this.ticketRepository.update(id, updateObject)
+            }
 			return {
 				statusCode: HttpStatus.OK,
 				message: TicketMessages.Update

@@ -31,6 +31,12 @@ export class RequestController {
     findAll(@Query() paginationDto: PaginationDto) {
         return this.requestService.findAll(paginationDto);
     }
+    @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
+    @Get('/list/pending-approve')
+    @PaginationDec()
+    findPendingApprove(@Query() paginationDto: PaginationDto) {
+        return this.requestService.findPendingApprove(paginationDto);
+    }
 
     @Get('/list/search')
     @PaginationDec()

@@ -84,6 +84,12 @@ export class UserController {
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.userService.remove(id);
     }
+    @Delete('/remove/driver/:id')
+    @MyApiConsumes()
+    @CanAccess(UserRole.OilDepotUser) // main admin
+    removeDriver(@Param('id', ParseIntPipe) id: number) {
+        return this.userService.removeDriver(id);
+    }
     @Delete('/removeSub/:id')
     @MyApiConsumes()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)

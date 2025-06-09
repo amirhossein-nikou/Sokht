@@ -222,21 +222,12 @@ export class RequestServiceAndroid {
             const { fuel_type, receive_at } = searchWithFuelAndReceiveDto
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
-            let whereQuery = `(request.fuel_type = :fuel_type AND request.rejectDetails IS NULL AND station.ownerId = :ownerId AND request.receive_at = :receive_at)`
-            // let where: object = {
-            //     fuel_type,
-            //     receive_at,
-            //     rejectDetails: null,
-            //     station: {
-            //         ownerId: parentId ?? userId
-            //     }
-            // }
+            let whereQuery = `(request.fuel_type = :fuel_type AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
             if (role !== UserRole.StationUser) {
-                whereQuery = `(request.fuel_type = :fuel_type AND request.rejectDetails IS NULL AND request.receive_at = :receive_at)`
-                // where = {
-                //     fuel_type,
-                //     receive_at
-                // }
+                whereQuery = `(request.fuel_type = :fuel_type AND request.rejectDetails IS NULL)`
+            }
+            if (receive_at) {
+                whereQuery += ` AND request.receive_at = :receive_at`
             }
             const [requests, count] = await this.requestRepository.createQueryBuilder('request')
                 .leftJoinAndSelect('request.depot', 'depot')

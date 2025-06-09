@@ -138,7 +138,9 @@ export class TankerService {
             if (plate) await this.checkExistsPlate(plate)
             if (number && number > 0) await this.checkExistsTankerNumber(number)
             const updateObject = RemoveNullProperty({ capacity, driverId, number })
-            this.tankerRepository.update(id, updateObject)
+            if (updateObject) {
+                await this.tankerRepository.update(id, updateObject)
+            }
             return {
                 statusCode: HttpStatus.OK,
                 message: TankerMessages.Update
