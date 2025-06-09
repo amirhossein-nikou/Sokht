@@ -88,6 +88,13 @@ export class CargoService {
     async findWithFuelType(fuel_type: number, paginationDto: PaginationDto) {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
+            let where:Object = {rejectDetails: null}
+            if(fuel_type){
+                where = {
+                    rejectDetails: null,
+                    request: { fuel_type }
+                }
+            }
             const [cargoes, count] = await this.cargoRepository.findAndCount({
                 relations: {
                     request: {
@@ -96,10 +103,7 @@ export class CargoService {
                     },
                     tankers: { driver: true }
                 },
-                where: {
-                    rejectDetails: null,
-                    request: { fuel_type }
-                },
+                where,
                 select: {
                     request: {
                         id: true,
@@ -144,10 +148,6 @@ export class CargoService {
         try {
             const { requestId } = updateCargoDto
             const now = new Date().toISOString()
-            // if (arrival_time && arrival_time.toString() <= now)
-            //     throw new BadRequestException('arrival_time is less than current time')
-            // if (dispatch_time && dispatch_time.toString() <= now)
-            //     throw new BadRequestException('dispatch_time is less than current time')
             await this.getOneById(id)
             if (requestId) {
                 const request = await this.requestService.getOneById(requestId)

@@ -8,6 +8,7 @@ import { UserRole } from '../user/enum/role.enum';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('tanker')
 @UserAuthGuard()
@@ -15,6 +16,7 @@ export class TankerController {
   constructor(private readonly tankerService: TankerService) { }
 
   @Post('/create')
+  @ApiTags('web')
   @MyApiConsumes()
   @CanAccess(UserRole.OilDepotUser)
   create(@Body() createTankerDto: CreateTankerDto) {
@@ -22,6 +24,7 @@ export class TankerController {
   }
 
   @Get('/list')
+  @ApiTags('web')
   @CanAccess(UserRole.OilDepotUser)
   @PaginationDec()
   findAll(@Query() paginationDto: PaginationDto) {

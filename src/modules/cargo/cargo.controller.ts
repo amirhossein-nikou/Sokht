@@ -9,6 +9,7 @@ import { UserRole } from '../user/enum/role.enum';
 import { CargoService } from './cargo.service';
 import { CreateCargoDto } from './dto/create-cargo.dto';
 import { UpdateCargoDto } from './dto/update-cargo.dto';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @Controller('cargo')
 @UserAuthGuard()
@@ -16,6 +17,7 @@ export class CargoController {
   constructor(private readonly cargoService: CargoService) { }
   @CanAccess(UserRole.OilDepotUser)
   @MyApiConsumes()
+  @ApiTags('web')
   @Post('/create')
   create(@Body() createCargoDto: CreateCargoDto) {
     return this.cargoService.create(createCargoDto);
@@ -34,11 +36,13 @@ export class CargoController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.cargoService.findOne(id);
   }
-  @Get('/by-fuel/:fuel_type')
+  @Get('/by-fuel')
   @MyApiConsumes()
+  @ApiTags('web')
   @CanAccess(UserRole.OilDepotUser, UserRole.HeadUser)
   @PaginationDec()
-  findWithFuelType(@Param('fuel_type', ParseIntPipe) fuel_type: number, @Query() paginationDto: PaginationDto) {
+  @ApiQuery({name:'fuel_type',required: false,type: 'number'})
+  findWithFuelType(@Query() paginationDto: PaginationDto,@Query('fuel_type') fuel_type?: number) {
     return this.cargoService.findWithFuelType(fuel_type, paginationDto);
   }
   @Patch('/update/:id')
@@ -49,12 +53,14 @@ export class CargoController {
   }
   @Patch('/reject/:id')
   @MyApiConsumes()
+  @ApiTags('web')
   @CanAccess(UserRole.OilDepotUser)
   reject(@Param('id', ParseIntPipe) id: number, @Body() rejectDto: RejectDto) {
     return this.cargoService.rejectCargo(id, rejectDto);
   }
 
   @Delete('/remove/:id')
+  @ApiTags('web')
   @MyApiConsumes()
   @CanAccess(UserRole.OilDepotUser)
   remove(@Param('id', ParseIntPipe) id: number) {

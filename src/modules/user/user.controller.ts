@@ -9,6 +9,7 @@ import { UserRole } from './enum/role.enum';
 import { UserService } from './user.service';
 import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('user')
 @UserAuthGuard()
@@ -27,8 +28,9 @@ export class UserController {
     addSubUser(@Body() addSubUserDto: AddSubUserDto) {
         return this.userService.addSubUsers(addSubUserDto);
     }
-    @Post('/driver')
+    @Post('create/driver')
     @CanAccess(UserRole.OilDepotUser)
+    @ApiTags('web')
     @MyApiConsumes()
     addDriver(@Body() createUserDto: AddSubUserDto) {
         return this.userService.addDriver(createUserDto);
@@ -42,6 +44,7 @@ export class UserController {
         return this.userService.findAll(paginationDto);
     }
     @Get('/list/drivers')
+    @ApiTags('web')
     @MyApiConsumes()
     @PaginationDec()
     @CanAccess(UserRole.OilDepotUser)
@@ -85,6 +88,7 @@ export class UserController {
         return this.userService.remove(id);
     }
     @Delete('/remove/driver/:id')
+    @ApiTags('web')
     @MyApiConsumes()
     @CanAccess(UserRole.OilDepotUser) // main admin
     removeDriver(@Param('id', ParseIntPipe) id: number) {

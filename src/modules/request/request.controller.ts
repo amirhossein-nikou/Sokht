@@ -8,7 +8,7 @@ import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { SearchDto, SearchWithFuelAndReceiveDto } from './dto/search.dto';
 import { ReceiveTimeEnum } from './enums/time.enum';
-import { ApiQuery } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { RejectDto } from 'src/common/dto/create-reject.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
@@ -33,11 +33,19 @@ export class RequestController {
     }
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
     @Get('/list/pending-approve')
+    @ApiTags('web')
     @PaginationDec()
     findPendingApprove(@Query() paginationDto: PaginationDto) {
         return this.requestService.findPendingApprove(paginationDto);
     }
-
+    @Get('list/by/:statusId')
+    @MyApiConsumes()
+    @ApiTags('web')
+    @PaginationDec()
+    @CanAccess(UserRole.OilDepotUser, UserRole.HeadUser)
+    findByStatusId(@Param('statusId', ParseIntPipe) statusId: number, @Query() paginationDto: PaginationDto) {
+        return this.requestService.findByStatus(statusId, paginationDto);
+    }
     @Get('/list/search')
     @PaginationDec()
     @ApiQuery({ type: 'number', name: 'fuel_type', required: true })
@@ -50,8 +58,8 @@ export class RequestController {
     @Get('/by-date')
     @PaginationDec()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
-    @ApiQuery({name: 'end', required: false })
-    @ApiQuery({name: 'start', required: true })
+    @ApiQuery({ name: 'end', required: false })
+    @ApiQuery({ name: 'start', required: true })
     @ApiQuery({ type: 'number', name: 'fuel_type', required: false })
     findByDate(@Query() paginationDto: PaginationDto, @Query() searchDto: SearchDto) {
         const { end, start, fuel_type } = searchDto
@@ -87,6 +95,7 @@ export class RequestController {
         return this.requestService.receivedRequest(id);
     }
     @Patch('/reject/:id')
+    @ApiTags('web')
     @CanAccess(UserRole.OilDepotUser)
     reject(@Param('id', ParseIntPipe) id: number, @Body() rejectDto: RejectDto) {
         return this.requestService.rejectRequest(id, rejectDto);

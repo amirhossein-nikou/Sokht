@@ -185,6 +185,39 @@ export class RequestService {
             throw error
         }
     }
+    async findByStatus(statusId: number, paginationDto: PaginationDto) {
+        try {
+            const { limit, page, skip } = paginationSolver(paginationDto)
+            const { id: userId, role, parentId } = this.req.user
+            let whereQuery = `(request.statusId = :statusId AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
+            if (role !== UserRole.StationUser) {
+                whereQuery = `(request.statusId = :statusId AND request.rejectDetails IS NULL)`
+            }
+            const [requests, count] = await this.requestRepository.createQueryBuilder('request')
+                .leftJoinAndSelect('request.depot', 'depot')
+                .leftJoinAndSelect('request.status', 'status')
+                .leftJoinAndSelect('request.station', 'station')
+                .leftJoinAndSelect('request.fuel', 'fuel')
+                .select([
+                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name',
+                    'request.value', 'request.receive_at', 'request.priority', 'status.status',
+                    'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
+                ])
+                .where(whereQuery, { ownerId: parentId ?? userId, statusId })
+                .orderBy('request.receive_at', 'ASC')
+                .addOrderBy('request.priority_value', 'ASC')
+                .offset(skip)
+                .limit(limit)
+                .getManyAndCount()
+            return {
+                statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit, page, count),
+                data: requests
+            }
+        } catch (error) {
+            throw error
+        }
+    }
     // async getRequestArchive() {
     //     try {
     //         const { id: userId, role, parentId } = this.req.user
@@ -259,8 +292,8 @@ export class RequestService {
             if (role !== UserRole.StationUser) {
                 whereQuery = `(request.fuel_type = :fuel_type AND request.rejectDetails IS NULL)`
             }
-            if(receive_at){
-                whereQuery+= ` AND request.receive_at = :receive_at`
+            if (receive_at) {
+                whereQuery += ` AND request.receive_at = :receive_at`
             }
             const [requests, count] = await this.requestRepository.createQueryBuilder('request')
                 .leftJoinAndSelect('request.depot', 'depot')
