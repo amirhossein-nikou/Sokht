@@ -13,6 +13,8 @@ import { CreateTankerDto } from './dto/create-tanker.dto';
 import { UpdateTankerDto } from './dto/update-tanker.dto';
 import { TankerEntity } from './entities/tanker.entity';
 import { TankerMessages } from './enum/message.enum';
+import { EntityName } from 'src/common/enums/entity.enum';
+import { isNumber } from 'class-validator';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TankerService {
@@ -44,20 +46,31 @@ export class TankerService {
         }
     }
 
-    async findAll(paginationDto: PaginationDto) {
+    async findAll(search: string, paginationDto: PaginationDto) {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
-            const [tankers, count] = await this.tankerRepository.findAndCount({
-                relations: { cargo: true, driver: true },
-                select: {
-                    id: true, number: true, plate: true, capacity: true,
-                    cargo: { tankerId: false },
-                    driver: { first_name: true, id: true, last_name: true, mobile: true, national_code: true }
-                },
-                order: { id: 'DESC' },
-                take: limit,
-                skip
-            })
+            let where: string = ''
+            if (search) {
+                if (isNumber(Number(search))) {
+                    where = 'tanker.number = :search OR tanker.capacity = :search'
+                } else {
+                    search = `%${search}%`
+                    where = 'CONCAT(driver.first_name,driver.last_name) ILIKE :search'
+                }
+            }
+            const [tankers, count] = await this.tankerRepository.createQueryBuilder(EntityName.Tanker)
+                .leftJoin('tanker.cargo', 'cargo')
+                .leftJoin('tanker.driver', 'driver')
+                .select([
+                    'tanker.id', 'tanker.number', 'tanker.plate', 'tanker.capacity',
+                    'cargo.requestId', 'cargo.rejectId', 'cargo.inProgress', 'cargo.created_at', 'cargo.rejectDetails',
+                    'driver.first_name', 'driver.last_name', 'driver.id', 'driver.mobile', 'driver.national_code'
+                ])
+                .where(where, { search })
+                .orderBy('tanker.id', 'DESC')
+                .offset(skip)
+                .limit(limit)
+                .getManyAndCount()
             return {
                 statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),

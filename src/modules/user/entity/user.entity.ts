@@ -7,7 +7,7 @@ import { DepotEntity } from "../../../modules/depot/entity/depot.entity";
 import { TankerEntity } from "../../../modules/tanker/entities/tanker.entity";
 import { TicketEntity } from "../../../modules/ticket/entities/ticket.entity";
 
-@Entity(EntityName.User,{ orderBy: { id: "DESC" } })
+@Entity(EntityName.User, { orderBy: { id: "DESC" } })
 export class UserEntity {
     @PrimaryGeneratedColumn()
     id: number
@@ -40,7 +40,7 @@ export class UserEntity {
     otp: OtpEntity;
     @OneToMany(() => StationEntity, station => station.owner)
     stations: StationEntity[];
-    @OneToMany(() => TicketEntity, ticket => ticket.user)
+    @OneToMany(() => TicketEntity, ticket => ticket.user, { onDelete: "CASCADE" })
     tickets: TicketEntity[];
     @OneToOne(() => DepotEntity, depot => depot.owner)
     depot: DepotEntity;
