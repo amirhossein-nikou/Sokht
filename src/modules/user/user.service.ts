@@ -47,7 +47,7 @@ export class UserService {
 			throw error
 		}
 	}
-	
+
 	async addSubUsers(addSubUserDto: AddSubUserDto) {
 		try {
 			const { first_name, last_name, mobile, national_code, certificateId } = addSubUserDto
@@ -90,6 +90,13 @@ export class UserService {
 			await this.userRepository.save(driver)
 			return {
 				statusCode: HttpStatus.CREATED,
+				data: {
+					first_name: driver.first_name,
+					last_name: driver.last_name,
+					mobile: driver.mobile,
+					national_code: driver.national_code,
+					certificateId: driver.certificateId
+				},
 				message: UserMessages.Created
 			}
 		} catch (error) {
@@ -240,8 +247,8 @@ export class UserService {
 	async removeDriver(id: number) {
 		try {
 			const user = await this.findOneById(id)
-			if(user.role !== UserRole.Driver){
-				throw new ForbiddenException('you just can remove drivers') 
+			if (user.role !== UserRole.Driver) {
+				throw new ForbiddenException('you just can remove drivers')
 			}
 			await this.userRepository.remove(user)
 			return {
@@ -270,11 +277,11 @@ export class UserService {
 		try {
 			const { id, parentId } = this.req.user
 			let relations: object = {
-				child: true, stations: {location: true,fuels: true},
+				child: true, stations: { location: true, fuels: true },
 			}
 			if (parentId) {
 				relations = {
-					parent: { stations: {location: true,fuels: true}, }
+					parent: { stations: { location: true, fuels: true }, }
 				}
 			}
 			const user = await this.userRepository.findOne({
