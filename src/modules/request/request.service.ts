@@ -94,24 +94,17 @@ export class RequestService {
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
             let whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
-            // let where: object = {
-            //     status: In([0, 1, 2]),
-            //     rejectDetails: null,
-            //     station: {
-            //         ownerId: parentId ?? userId
-            //     }
-            // }
             if (role !== UserRole.StationUser) {
                 whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL)`
-                //where = { rejectDetails: null, status: In([0, 1, 2]) }
             }
             const [requests, count] = await this.requestRepository.createQueryBuilder('request')
                 .leftJoinAndSelect('request.depot', 'depot')
                 .leftJoinAndSelect('request.status', 'status')
                 .leftJoinAndSelect('request.station', 'station')
+                .leftJoinAndSelect('depot.tankers', 'tankers')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name',
+                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -164,9 +157,10 @@ export class RequestService {
                 .leftJoinAndSelect('request.depot', 'depot')
                 .leftJoinAndSelect('request.status', 'status')
                 .leftJoinAndSelect('request.station', 'station')
+                .leftJoinAndSelect('depot.tankers', 'tankers')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name',
+                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -197,9 +191,10 @@ export class RequestService {
                 .leftJoinAndSelect('request.depot', 'depot')
                 .leftJoinAndSelect('request.status', 'status')
                 .leftJoinAndSelect('request.station', 'station')
+                .leftJoinAndSelect('depot.tankers', 'tankers')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name',
+                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -636,7 +631,7 @@ export class RequestService {
     private async getOneByIdForUpdateAndRemove(id: number) {
         const request = await this.requestRepository.findOneBy({ id })
         if (!request) throw new NotFoundException(RequestMessages.Notfound)
-        if (request.statusId != 0) throw new BadRequestException('you cant update or remove on this status')
+        if ([1, 2, 3].includes(request.statusId)) throw new BadRequestException('you cant update or remove on this status')
         return request
     }
     async limitSendRequests(stationId: number) {

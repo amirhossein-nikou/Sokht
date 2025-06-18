@@ -88,8 +88,8 @@ export class CargoService {
     async findWithFuelType(fuel_type: number, paginationDto: PaginationDto) {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
-            let where:Object = {rejectDetails: null}
-            if(fuel_type){
+            let where: Object = { rejectDetails: null }
+            if (fuel_type) {
                 where = {
                     rejectDetails: null,
                     request: { fuel_type }
@@ -146,20 +146,20 @@ export class CargoService {
 
     async update(id: number, updateCargoDto: UpdateCargoDto) {
         try {
-            const { requestId } = updateCargoDto
+            const { requestId, receive_at, tankerId, value } = updateCargoDto
             const now = new Date().toISOString()
-            await this.getOneById(id)
+            const cargo = await this.getOneById(id)
             if (requestId) {
                 const request = await this.requestService.getOneById(requestId)
                 if (request.statusId !== StatusEnum.Approved)
                     throw new BadRequestException('this request is not approved yet')
                 await this.checkExistsRequestId(requestId)
             }
-            let updateObject = RemoveNullProperty(updateCargoDto)
-            if (Object.keys(updateObject).length == 0) {
-                throw new BadRequestException('update failed')
+            let updateObject = RemoveNullProperty({tankerId, requestId})
+            if (updateObject) {
+                await this.cargoRepository.update(id, updateObject)
             }
-            await this.cargoRepository.update(id, updateObject)
+            await this.requestService.updateOnCreateCargo(requestId ?? cargo.requestId, { receive_at, value })
             return {
                 statusCode: HttpStatus.OK,
                 message: CargoMessages.Update

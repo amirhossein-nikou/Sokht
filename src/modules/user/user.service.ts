@@ -91,6 +91,7 @@ export class UserService {
 			return {
 				statusCode: HttpStatus.CREATED,
 				data: {
+					id: driver.id,
 					first_name: driver.first_name,
 					last_name: driver.last_name,
 					mobile: driver.mobile,
