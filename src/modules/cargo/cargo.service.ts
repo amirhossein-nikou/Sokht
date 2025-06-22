@@ -45,8 +45,9 @@ export class CargoService {
             const cargo = this.cargoRepository.create({
                 requestId, tankers, tankerId: tankerIdList
             })
-            await this.cargoRepository.save(cargo)
+            const data = await this.cargoRepository.save(cargo)
             await this.requestService.licenseRequest(requestId)
+            const result = await this.getOneById(data.id)
             await this.notification.notificationHandler({
                 title: `محموله شماره ${cargo.id} حاوی ${value} لیتر ${request.fuel.name} برای شما ارسال شد`,
                 description: `محموله شماره ${cargo.id} حاوی ${request.value} لیتر ${request.fuel.name} در تاریخ ${moment(cargo.created_at).locale('fa').format('jYYYY-jMM-jDD')} ساعت ${moment(cargo.created_at).locale('fa').format('HH:mm')} برای شما ارسال شد.
@@ -56,7 +57,8 @@ export class CargoService {
             })
             return {
                 statusCode: HttpStatus.CREATED,
-                message: CargoMessages.Create
+                message: CargoMessages.Create,
+                data: result
             }
         } catch (error) {
             throw error
@@ -160,9 +162,11 @@ export class CargoService {
                 await this.cargoRepository.update(id, updateObject)
             }
             await this.requestService.updateOnCreateCargo(requestId ?? cargo.requestId, { receive_at, value })
+            const result =  await this.getOneById(id)
             return {
                 statusCode: HttpStatus.OK,
-                message: CargoMessages.Update
+                message: CargoMessages.Update,
+                data: result
             }
         } catch (error) {
             throw error
@@ -201,7 +205,7 @@ export class CargoService {
     }
     // utils
     async getOneById(id: number) {
-        const cargo = await this.cargoRepository.findOneBy({ id })
+        const cargo = await this.cargoRepository.findOne({ where: {id},relations: {tankers: true,request: true} })
         if (!cargo) throw new NotFoundException(CargoMessages.Notfound)
         return cargo
     }

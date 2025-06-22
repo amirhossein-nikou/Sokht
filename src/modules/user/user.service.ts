@@ -3,7 +3,9 @@ import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isIdentityCard, isMobilePhone } from 'class-validator';
 import { Request } from 'express';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { ModifyMobileNumber } from 'src/common/utils/mobile.utils';
+import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 import { Repository } from 'typeorm';
 import { AuthService } from '../auth/auth.service';
 import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
@@ -11,8 +13,6 @@ import { UpdateMobileDto } from './dto/update-user.dto';
 import { UserEntity } from './entity/user.entity';
 import { UserRole } from './enum/role.enum';
 import { UserMessages } from './enum/user.message';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -38,9 +38,10 @@ export class UserService {
 				mobile: ModifyMobileNumber(mobile),
 				national_code, certificateId, role
 			})
-			await this.userRepository.save(user)
+			const result = await this.userRepository.save(user)
 			return {
 				statusCode: HttpStatus.CREATED,
+				data: result,
 				message: UserMessages.Created
 			}
 		} catch (error) {
@@ -63,9 +64,10 @@ export class UserService {
 				parentId: user.id,
 				role: user.role
 			})
-			await this.userRepository.save(subUser)
+			const result = await this.userRepository.save(subUser)
 			return {
 				statusCode: HttpStatus.CREATED,
+				data: result,
 				message: UserMessages.Created
 			}
 		} catch (error) {
@@ -154,6 +156,24 @@ export class UserService {
 			throw error
 		}
 	}
+	async findOneDriver(id: number) {
+		try {
+			const user = await this.userRepository.findOne({
+				where: { id },
+				relations: {
+					parent: true, child: true, otp: true, stations: true
+				},
+			})
+			if (!user) throw new NotFoundException(UserMessages.NotFound)
+			if (user.role !== UserRole.Driver) throw new NotFoundException('driver not found')
+			return {
+				statusCode: HttpStatus.OK,
+				data: user
+			}
+		} catch (error) {
+			throw error
+		}
+	}
 	async searchUser(search: string) {
 		try {
 			let where = {}
@@ -191,8 +211,10 @@ export class UserService {
 				throw new BadRequestException('this user is not your sub user')
 			}
 			await this.userRepository.update(id, { mobile: ModifyMobileNumber(mobile), verify_mobile: false })
+			const result = await this.findOneById(id)
 			return {
 				statusCode: HttpStatus.OK,
+				data: result,
 				message: UserMessages.UpdateMobile
 			}
 		} catch (error) {
@@ -228,8 +250,10 @@ export class UserService {
 		if (!user.newMobile) throw new BadRequestException('please update phone first')
 		await this.authService.checkOtp({ mobile, code })
 		await this.userRepository.update(id, { mobile: user.newMobile, newMobile: null })
+		const result = await this.findOneById(id)
 		return {
 			statusCode: HttpStatus.OK,
+			data: result,
 			message: 'mobile changed'
 		}
 	}

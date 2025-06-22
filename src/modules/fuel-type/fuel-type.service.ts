@@ -14,10 +14,11 @@ export class FuelTypeService {
 		try {
 			const { name } = createFuelTypeDto
 			const type = this.fuelTypeRepository.create({ name })
-			await this.fuelTypeRepository.save(type)
+			const result = await this.fuelTypeRepository.save(type)
 			return {
 				statusCode: HttpStatus.CREATED,
-				message: 'new fuel created'
+				message: 'new fuel created',
+				data: result
 			}
 		} catch (error) {
 			throw error
@@ -47,10 +48,6 @@ export class FuelTypeService {
 		} catch (error) {
 			throw error
 		}
-	}
-
-	async update(id: number, updateFuelTypeDto: UpdateFuelTypeDto) {
-		return `This action updates a #${id} fuelType`;
 	}
 
 	async remove(id: number) {

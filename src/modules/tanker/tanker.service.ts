@@ -36,10 +36,11 @@ export class TankerService {
             const driver = await this.userService.findOneById(driverId);
             if (driver.role !== UserRole.Driver) throw new BadRequestException('this user not identify as driver')
             const tanker = this.tankerRepository.create({ capacity, depotId: depot.id, plate, driverId, number })
-            await this.tankerRepository.save(tanker)
+            const result = await this.tankerRepository.save(tanker)
             return {
                 statusCode: HttpStatus.CREATED,
-                message: TankerMessages.Create
+                message: TankerMessages.Create,
+                data: result
             }
         } catch (error) {
             throw error
@@ -149,14 +150,16 @@ export class TankerService {
                 await this.userService.findOneById(driverId);
             }
             if (plate) await this.checkExistsPlate(plate)
-            if (number && number > 0) await this.checkExistsTankerNumber(number)
-            const updateObject = RemoveNullProperty({ capacity, driverId, number })
-            if (updateObject) {
-                await this.tankerRepository.update(id, updateObject)
-            }
+                if (number && number > 0) await this.checkExistsTankerNumber(number)
+                    const updateObject = RemoveNullProperty({ capacity, driverId, number })
+                if (updateObject) {
+                    await this.tankerRepository.update(id, updateObject)
+                }
+            const result = await this.getTankerById(id)
             return {
                 statusCode: HttpStatus.OK,
-                message: TankerMessages.Update
+                message: TankerMessages.Update,
+                data: result
 
             }
         } catch (error) {

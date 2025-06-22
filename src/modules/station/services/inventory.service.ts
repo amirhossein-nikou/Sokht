@@ -35,10 +35,11 @@ export class InventoryService {
                 stationId,
                 max
             })
-            await this.inventoryRepository.save(inventory)
+            const result = await this.inventoryRepository.save(inventory)
             return {
                 status: HttpStatus.CREATED,
-                message: InventoryMessages.Created
+                message: InventoryMessages.Created,
+                data: result
             }
         } catch (error) {
             throw error
@@ -196,9 +197,11 @@ export class InventoryService {
             if (fuel_type && stationId) await this.stationService.checkExistsFuelType(stationId, fuel_type)
             const obj = RemoveNullProperty(updateInventoryDto)
             await this.inventoryRepository.update({ id: inventory.id }, obj)
+            const result = await this.findOneById(id, userId);
             return {
                 status: HttpStatus.OK,
-                message: InventoryMessages.Update
+                message: InventoryMessages.Update,
+                data: result
             }
         } catch (error) {
             throw error
@@ -214,9 +217,11 @@ export class InventoryService {
             if (inventory.status == false) throw new BadRequestException('inventory is deActive')
             const obj = RemoveNullProperty(updateValue)
             await this.inventoryRepository.update({ id: inventory.id }, obj)
+            const result = await this.findById(id);
             return {
                 status: HttpStatus.OK,
-                message: InventoryMessages.Update
+                message: InventoryMessages.Update,
+                data: result
             }
         } catch (error) {
             throw error

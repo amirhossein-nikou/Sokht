@@ -58,6 +58,12 @@ export class UserController {
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.userService.findOne(id);
     }
+    @Get('/driver/by-id/:id')
+    @MyApiConsumes()
+    @CanAccess(UserRole.OilDepotUser)
+    findOneDriver(@Param('id', ParseIntPipe) id: number) {
+        return this.userService.findOneDriver(id);
+    }
     @Get('/search/:search')
     @MyApiConsumes()
     @CanAccess(PremiumRoles.Boss)

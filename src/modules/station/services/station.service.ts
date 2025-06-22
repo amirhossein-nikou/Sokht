@@ -43,10 +43,11 @@ export class StationService {
                 //fuel_types: StringToArray(fuel_types),
                 fuels
             })
-            await this.stationRepository.save(station)
+            const result = await this.stationRepository.save(station)
             return {
                 status: HttpStatus.OK,
-                message: StationMessages.Created
+                message: StationMessages.Created,
+                data: result
             }
         } catch (error) {
             throw error
@@ -105,15 +106,17 @@ export class StationService {
             })
             //check user exist
             if (ownerId) await this.userService.findOneById(ownerId)
-            //check location
+                //check location
             if (locationId) {
                 await this.locationService.findOne(locationId)
                 await this.checkExistsLocation(locationId)
             }
             await this.stationRepository.update(id, updateObj)
+            const result = await this.findOneById(id)
             return {
                 status: HttpStatus.CREATED,
-                message: StationMessages.Update
+                message: StationMessages.Update,
+                data: result
             }
         } catch (error) {
             throw error

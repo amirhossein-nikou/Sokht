@@ -73,7 +73,7 @@ export class RequestService {
                 receive_at
             })
             const fuel = await this.fuelService.getById(fuel_type)
-            await this.requestRepository.save(request);
+            const result = await this.requestRepository.save(request);
             await this.notification.notificationHandler({
                 title: `پرسنل ${station.owner.first_name} ${station.owner.last_name} یک درخواست جدید به شماره ${request.id} و به مقدار ${request.value} لیتر سوخت ${fuel.name} ایجاد کرد`,
                 description: 'no description',
@@ -83,6 +83,7 @@ export class RequestService {
             return {
                 statusCode: HttpStatus.CREATED,
                 message: RequestMessages.Create,
+                data: result
             }
         } catch (error) {
             throw error
@@ -424,9 +425,10 @@ export class RequestService {
                 , ...updateObject
             })
             if (!updatedRequest || updatedRequest.affected == 0) throw new BadRequestException(RequestMessages.UpdateFailed)
+            const result = await this.getOneByIdForUpdateAndRemove(id)
             return {
                 statusCode: HttpStatus.OK,
-
+                data: result,
                 message: RequestMessages.Update
 
             }

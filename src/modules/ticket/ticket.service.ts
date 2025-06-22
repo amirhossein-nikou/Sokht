@@ -32,10 +32,11 @@ export class TicketService {
 				content, priority, target, title, file: filePath,
 				userId: id
 			})
-			await this.ticketRepository.save(ticket)
+			const result = await this.ticketRepository.save(ticket)
 			return {
 				statusCode: HttpStatus.CREATED,
-				message: TicketMessages.Create
+				message: TicketMessages.Create,
+				data: result,
 			}
 		} catch (error) {
 			if(filePath){
@@ -99,8 +100,10 @@ export class TicketService {
 			if (updateObject) {
 				await this.ticketRepository.update(id, updateObject)
             }
+			const result = await this.getOne(id, userId)
 			return {
 				statusCode: HttpStatus.OK,
+				data: result,
 				message: TicketMessages.Update
 			}
 		} catch (error) {

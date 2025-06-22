@@ -27,16 +27,17 @@ export class DepotService {
 			await this.locationService.getOneById(locationId)
 			await this.checkExistsLocation(locationId)
 			const depot = this.depotRepository.create({ locationId, name, ownerId })
-			await this.depotRepository.save(depot)
+			const result = await this.depotRepository.save(depot)
 			return {
 				statusCode: HttpStatus.CREATED,
-				message: DepotMessages.Create
+				message: DepotMessages.Create,
+				data: result
 			}
 		} catch (error) {
 			throw error
 		}
 	}
-	
+
 	async findAll(paginationDto: PaginationDto) {
 		try {
 			const { limit, page, skip } = paginationSolver(paginationDto)
@@ -47,7 +48,7 @@ export class DepotService {
 			})
 			return {
 				statusCode: HttpStatus.OK,
-				pagination: paginationGenerator(limit,page,count),
+				pagination: paginationGenerator(limit, page, count),
 				data: depots
 			}
 		} catch (error) {
@@ -97,9 +98,11 @@ export class DepotService {
 				await this.checkExistsLocation(locationId)
 			}
 			await this.depotRepository.update(id, updateObject)
+			const result = await this.findOneById(id)
 			return {
 				statusCode: HttpStatus.OK,
-				message: DepotMessages.Update
+				message: DepotMessages.Update,
+				data: result
 
 			}
 		} catch (error) {

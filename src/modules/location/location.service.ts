@@ -18,10 +18,11 @@ export class LocationService {
 		try {
 			const { lat, lon, address } = createLocationDto;
 			const location = this.locationRepository.create({ lat, lon, address })
-			await this.locationRepository.save(location)
+			const result = await this.locationRepository.save(location)
 			return {
 				statusCode: HttpStatus.CREATED,
-				message: LocationMessages.Create
+				message: LocationMessages.Create,
+				data: result
 			}
 		} catch (error) {
 			throw error
@@ -63,9 +64,11 @@ export class LocationService {
 			const updateObj = RemoveNullProperty(updateLocationDto);
 			await this.getOneById(id)
 			await this.locationRepository.update(id, updateObj)
+			const result = await this.getOneById(id)
 			return {
 				status: HttpStatus.CREATED,
-				message: LocationMessages.Update
+				message: LocationMessages.Update,
+				data: result
 			}
 		} catch (error) {
 			throw error

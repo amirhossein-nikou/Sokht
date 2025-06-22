@@ -37,10 +37,11 @@ export class SaleService {
 			} else {
 				sale.average_sale = average_sale
 			}
-			await this.averageSaleRepository.save(sale)
+			const result = await this.averageSaleRepository.save(sale)
 			return {
 				statusCode: HttpStatus.CREATED,
-				message: SaleMessages.Created
+				message: SaleMessages.Created,
+				data: result
 			}
 		} catch (error) {
 			throw error
