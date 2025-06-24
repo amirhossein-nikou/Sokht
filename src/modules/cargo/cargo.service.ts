@@ -135,6 +135,32 @@ export class CargoService {
         try {
             const cargo = await this.cargoRepository.findOne({
                 where: { id },
+                relations: {
+                    request: {
+                        status: true,
+                        station: true,
+                        rejectDetails: true
+                    },
+                },
+                select: {
+                    request: {
+                        id: true,
+                        priority: true,
+                        value: true,
+                        depotId: true,
+                        receive_at: true,
+                        created_at: true,
+                        priority_value: true,
+                        rejectDetails: {
+                            title: true,
+                            description: true
+                        },
+                        station: {
+                            id: true,
+                            name: true
+                        }
+                    }
+                }
             })
             if (!cargo) throw new NotFoundException(CargoMessages.Notfound)
             return {

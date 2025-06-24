@@ -194,7 +194,7 @@ export class RequestServiceAndroid {
                 .leftJoinAndSelect('depot.tankers', 'tankers')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name','tankers',
+                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -616,6 +616,7 @@ export class RequestServiceAndroid {
         const maxCap = await this.getMaxInventoryCapacity(stationId, fuel_type)
         const maxValues = inventoryValueSum + Number(value)
         if (value < 1000) throw new BadRequestException('request value must be more than 1000')
+        console.log( maxCap *1.2 + " value: " + maxValues);
         if (maxValues > (maxCap * 1.2))
             throw new BadRequestException('you cant receive more than your max capacity')
         return {
@@ -676,6 +677,7 @@ export class RequestServiceAndroid {
     }
     async getMaxInventoryCapacity(stationId: number, fuel_type) {
         const inventories = await this.inventoryService.findByStationIdAndFuel(stationId, fuel_type)
+        console.log(inventories);
         const sumValue = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
         return sumValue
     }

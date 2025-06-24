@@ -593,7 +593,6 @@ export class RequestService {
     async detectPriority(stationId: number, fuel_type: number,): Promise<PriorityType> {
         const inventories = await this.getSumValueForInventory(stationId, fuel_type)
         const average_sale = await this.getSumValueForSale(stationId, fuel_type)
-        console.log(inventories);
         if (inventories == undefined)
             throw new BadRequestException('station inventory is invalid')
         if (!average_sale)
