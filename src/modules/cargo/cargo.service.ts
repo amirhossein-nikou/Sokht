@@ -139,7 +139,6 @@ export class CargoService {
                     request: {
                         status: true,
                         station: true,
-                        rejectDetails: true
                     },
                 },
                 select: {
