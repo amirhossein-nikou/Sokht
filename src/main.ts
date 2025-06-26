@@ -6,18 +6,19 @@ import { SwaggerConfig } from './common/config/swagger.config';
 import { AppModule } from './modules/app/app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule,{
-    bodyParser: false
-  });
-  app.enableCors();
-  SwaggerConfig(app)
-  app.useGlobalPipes(new ValidationPipe)
-  app.use(json({ limit: '50mb' }));
-  app.use(urlencoded({extended: true}))
-  app.useStaticAssets('public',{prefix: '/public/'})
-  const { PORT } = process.env
-  await app.listen(PORT, () => {
-    console.log(`server started: http://localhost:${PORT}/swagger`);
-  });
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+        bodyParser: false
+    });
+    app.enableShutdownHooks()
+    app.enableCors();
+    SwaggerConfig(app)
+    app.useGlobalPipes(new ValidationPipe)
+    app.use(json({ limit: '50mb' }));
+    app.use(urlencoded({ extended: true }))
+    app.useStaticAssets('public', { prefix: '/public/' })
+    const { PORT } = process.env
+    await app.listen(PORT, () => {
+        console.log(`server started: http://localhost:${PORT}/swagger`);
+    });
 }
 bootstrap();
