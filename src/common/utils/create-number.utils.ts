@@ -11,6 +11,5 @@ export function CreateNumber(fuelType: number) {
     }
     counter += 1
     const number = `${year.charAt(1)}${month}${day}${fuelType}${counter.toString().padStart(4,'0')}`
-    console.log(number);
     return number
 }
