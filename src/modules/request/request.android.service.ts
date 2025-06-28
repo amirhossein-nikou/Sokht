@@ -93,9 +93,9 @@ export class RequestServiceAndroid {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
-            let whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
+            let whereQuery = `(request.statusId IN (0, 1, 2, 3) AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
             if (role !== UserRole.StationUser) {
-                whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL)`
+                whereQuery = `(request.statusId IN (0, 1, 2, 3) AND request.rejectDetails IS NULL)`
             }
             const [requests, count] = await this.requestRepository.createQueryBuilder('request')
                 .leftJoinAndSelect('request.depot', 'depot')
