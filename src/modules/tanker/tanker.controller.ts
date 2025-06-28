@@ -31,6 +31,12 @@ export class TankerController {
   findAll(@Query() paginationDto: PaginationDto,@Query('search') search?:string) {
     return this.tankerService.findAll(search,paginationDto);
   }
+  @Get('/available')
+  @ApiTags('web')
+  @CanAccess(UserRole.OilDepotUser)
+  getAvailableTankers() {
+    return this.tankerService.availableTankers();
+  }
 
   @Get('/by-id/:id')
   @CanAccess(UserRole.OilDepotUser)

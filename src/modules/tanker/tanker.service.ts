@@ -57,7 +57,7 @@ export class TankerService {
         const fullPlate = plateFormat(createPlateDto)
         const plate = await this.plateRepository.findOneBy({ full_plate: fullPlate })
         if (plate) throw new BadRequestException('plate already exists')
-        const newPlate = this.plateRepository.create({ char, city, first, second,full_plate:fullPlate })
+        const newPlate = this.plateRepository.create({ char, city, first, second, full_plate: fullPlate })
         return await this.plateRepository.save(newPlate)
     }
     async findAll(search: string, paginationDto: PaginationDto) {
@@ -94,7 +94,28 @@ export class TankerService {
             throw error
         }
     }
-
+    async availableTankers() {
+        try {
+            const { id } = this.req.user
+            const availableTankers = await this.tankerRepository.find({
+                where: {
+                    depot: { ownerId: id },
+                    available: true
+                }
+            })
+            const tankers = await this.tankerRepository.find({
+                where: {
+                    depot: { ownerId: id },
+                }
+            })
+            return {
+                allTankers: tankers.length,
+                availableTankers: availableTankers.length,
+            }
+        } catch (error) {
+            throw error
+        }
+    }
     async driverTankerInfo() {
         try {
             const { id } = this.req.user
@@ -114,7 +135,7 @@ export class TankerService {
 
     async findOne(id: number) {
         try {
-            const tanker = await this.tankerRepository.findOne({ where: { id }, relations: { cargo: true,plate:true }, select: { cargo: { tankerId: false } } })
+            const tanker = await this.tankerRepository.findOne({ where: { id }, relations: { cargo: true, plate: true }, select: { cargo: { tankerId: false } } })
             if (!tanker) throw new NotFoundException(TankerMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
@@ -179,8 +200,8 @@ export class TankerService {
             throw error
         }
     }
-    async updatePlateDto(id:number,updatePlateDto:UpdatePlateDto){
-        
+    async updatePlateDto(id: number, updatePlateDto: UpdatePlateDto) {
+
     }
     async remove(id: number) {
         try {
@@ -218,7 +239,7 @@ export class TankerService {
     //     return true
     // }
     async getByIdList(ids: number[]) {
-        const tanker = await this.tankerRepository.find({ where: { id: In(ids) } })
+        const tanker = await this.tankerRepository.find({ where: { id: In(ids), available: true } })
         if (tanker.length < ids.length) throw new NotFoundException('tanker not found')
         return tanker
     }

@@ -102,11 +102,12 @@ export class RequestService {
                 .leftJoinAndSelect('request.depot', 'depot')
                 .leftJoinAndSelect('request.status', 'status')
                 .leftJoinAndSelect('request.station', 'station')
-                .leftJoinAndSelect('depot.tankers', 'tankers')
+                .leftJoinAndSelect('request.cargo', 'cargo')
+                .leftJoinAndSelect('cargo.tankers', 'tankers')
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id', 'depot.name','depot.id','cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name','driver.last_name','driver.mobile','driver.national_code','driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'

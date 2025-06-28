@@ -15,6 +15,8 @@ export class TankerEntity {
     capacity: number;
     @Column({ unique: true })
     number: number;
+    @Column({default: true})
+    available: boolean;
     @Column({nullable: true })
     plateId: number;
     @Column()
