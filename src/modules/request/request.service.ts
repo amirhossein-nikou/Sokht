@@ -57,7 +57,7 @@ export class RequestService {
             //check fuel type
             await this.stationService.checkExistsFuelType(station.id, fuel_type)
             //await this.manageReceivedAt(station.id, receive_at, fuel_type)
-            //
+
             await this.filterRequestValue(station.id, fuel_type, value)
             // limit send requests just 4 time in day
             await this.limitSendRequests(station.id)
@@ -65,6 +65,13 @@ export class RequestService {
             const priority = await this.detectPriority(station.id, fuel_type)
             // check exists depot
             await this.depotService.findOneById(depotId)
+            let number = CreateNumber(fuel_type)
+            let isExistsNumber = await this.checkExistsNumber(number)
+            while (isExistsNumber == true) {
+                number = CreateNumber(fuel_type)
+                isExistsNumber = await this.checkExistsNumber(number)
+                console.log(isExistsNumber);
+            }
             const request = this.requestRepository.create({
                 fuel_type,
                 stationId: station.id,
@@ -74,7 +81,7 @@ export class RequestService {
                 statusId: StatusEnum.Posted,
                 depotId,
                 receive_at,
-                number: CreateNumber(fuel_type)
+                number
             })
             const fuel = await this.fuelService.getById(fuel_type)
             const result = await this.requestRepository.save(request);
@@ -111,7 +118,7 @@ export class RequestService {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
@@ -168,7 +175,7 @@ export class RequestService {
                 .leftJoinAndSelect('depot.tankers', 'tankers')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id','request.number', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id', 'request.number', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -204,7 +211,7 @@ export class RequestService {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
@@ -310,7 +317,7 @@ export class RequestService {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
@@ -380,7 +387,7 @@ export class RequestService {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
@@ -675,6 +682,11 @@ export class RequestService {
     async checkExistsStatus(statusId: number) {
         const status = await this.statusRepository.findOneBy({ id: statusId })
         if (status) throw new BadRequestException('status already exists')
+    }
+    async checkExistsNumber(number: string) {
+        const request = await this.requestRepository.findOneBy({ number })
+        if (request) return true
+        return false
     }
     async createStatus(id: number, title: string) {
         const status = await this.statusRepository.findOneBy({ id })
