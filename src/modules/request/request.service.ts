@@ -70,7 +70,6 @@ export class RequestService {
             while (isExistsNumber == true) {
                 number = CreateNumber(fuel_type)
                 isExistsNumber = await this.checkExistsNumber(number)
-                console.log(isExistsNumber);
             }
             const request = this.requestRepository.create({
                 fuel_type,
