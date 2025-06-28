@@ -27,7 +27,7 @@ export class InventoryController {
         return this.inventoryService.findAll(paginationDto);
     }
     @Get('/details/:fuel_type')
-    @ApiTags('Web')
+    @ApiTags('web')
     @CanAccess(UserRole.OilDepotUser)
     @PaginationDec()
     findAllInventoryDetails(@Query() paginationDto: PaginationDto, @Param('fuel_type', ParseIntPipe) fuel_type: number) {
