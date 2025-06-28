@@ -4,6 +4,7 @@ import { Request } from "express";
 import { CargoService } from "../cargo/cargo.service";
 import { InventoryService } from "../station/services/inventory.service";
 import { NotificationGateway } from "../notification/notification.gateway";
+import { CreateNumber } from "src/common/utils/create-number.utils";
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -18,11 +19,6 @@ export class HomeService {
         const { id, parentId } = this.req.user
         const inventory = await this.inventoryService.findAllUserInventories(parentId ?? id)
         const cargo = await this.cargoService.findCargoWithDetails()
-        // await this.notification.notificationHandler({
-        //     title: "dashboard",
-        //     description: `message from dashboard`,
-        //     userId: parentId ?? id
-        // })
         return {
             statusCode: HttpStatus.OK,
             data: {

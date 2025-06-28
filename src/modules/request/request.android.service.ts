@@ -26,6 +26,8 @@ import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
 import { FuelTypeService } from '../fuel-type/fuel-type.service';
+import { TankerService } from '../tanker/tanker.service';
+import { CreateNumber } from 'src/common/utils/create-number.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestServiceAndroid {
@@ -39,6 +41,7 @@ export class RequestServiceAndroid {
         private depotService: DepotService,
         private notification: NotificationGateway,
         private fuelService: FuelTypeService,
+        private tankerService: TankerService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createRequestDto: CreateRequestDto) {
@@ -70,7 +73,8 @@ export class RequestServiceAndroid {
                 priority_value: priority.priority_value,
                 statusId: StatusEnum.Posted,
                 depotId,
-                receive_at
+                receive_at,
+                number: CreateNumber(fuel_type)
             })
             const fuel = await this.fuelService.getById(fuel_type)
             const result = await this.requestRepository.save(request);
@@ -107,8 +111,8 @@ export class RequestServiceAndroid {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name','depot.id','cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
-                    'driver.first_name','driver.last_name','driver.mobile','driver.national_code','driver.id',
+                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -164,7 +168,7 @@ export class RequestServiceAndroid {
                 .leftJoinAndSelect('depot.tankers', 'tankers')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id','request.number', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -200,8 +204,8 @@ export class RequestServiceAndroid {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name','depot.id','cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
-                    'driver.first_name','driver.last_name','driver.mobile','driver.national_code','driver.id',
+                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -306,8 +310,8 @@ export class RequestServiceAndroid {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name','depot.id','cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
-                    'driver.first_name','driver.last_name','driver.mobile','driver.national_code','driver.id',
+                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -376,8 +380,8 @@ export class RequestServiceAndroid {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name','depot.id','cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
-                    'driver.first_name','driver.last_name','driver.mobile','driver.national_code','driver.id',
+                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -538,6 +542,7 @@ export class RequestServiceAndroid {
             if (request.statusId == StatusEnum.Received) throw new BadRequestException(RequestMessages.AlreadyReceived)
             await this.cargoRepository.update(request.cargo.id, { inProgress: false })
             await this.requestRepository.update(id, { statusId: StatusEnum.Received })
+            await this.tankerService.updateStatusByTakerList(request.cargo.tankers, true)
             return {
                 statusCode: HttpStatus.OK,
                 message: RequestMessages.Received
@@ -594,6 +599,7 @@ export class RequestServiceAndroid {
                 userId: request.station.ownerId,
                 parentId: request.station.ownerId
             })
+            await this.tankerService.updateStatusByTakerList(request.cargo.tankers, true)
             return {
                 statusCode: HttpStatus.OK,
                 message: "request rejected successfully"

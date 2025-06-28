@@ -27,6 +27,7 @@ import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
 import { FuelTypeService } from '../fuel-type/fuel-type.service';
 import { TankerService } from '../tanker/tanker.service';
+import { CreateNumber } from 'src/common/utils/create-number.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -72,7 +73,8 @@ export class RequestService {
                 priority_value: priority.priority_value,
                 statusId: StatusEnum.Posted,
                 depotId,
-                receive_at
+                receive_at,
+                number: CreateNumber(fuel_type)
             })
             const fuel = await this.fuelService.getById(fuel_type)
             const result = await this.requestRepository.save(request);
@@ -109,7 +111,7 @@ export class RequestService {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
@@ -166,7 +168,7 @@ export class RequestService {
                 .leftJoinAndSelect('depot.tankers', 'tankers')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id','request.number', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -202,7 +204,7 @@ export class RequestService {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
@@ -308,7 +310,7 @@ export class RequestService {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
@@ -378,7 +380,7 @@ export class RequestService {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id','request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'

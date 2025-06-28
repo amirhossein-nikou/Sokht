@@ -17,6 +17,8 @@ export class RequestEntity {
     id: number;
     @Column()
     stationId: number;
+    @Column({ nullable: true })
+    number: string;
     @Column({ enum: PriorityEnum })
     priority: PriorityEnum;
     @Column({ type: 'bigint' })
