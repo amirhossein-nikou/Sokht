@@ -162,7 +162,7 @@ export class InventoryService {
             throw error
         }
     }
-    async findAllInventoryDetails(paginationDto: PaginationDto, fuelType: number) {
+    async findAllInventoryDetails(fuelType: number) {
         try {
             const { id } = this.req.user
             const station = await this.stationService.findByUserId(id)
@@ -172,19 +172,21 @@ export class InventoryService {
                     status: true,
                     stationId: station.id,
                     fuel_type: fuelType
-                }
+                },
             });
             if (inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
             const capacity = await this.getMaxInventoryCapacity(station.id, fuelType)
             const value = await this.getSumValueForInventory(station.id, fuelType)
             const latestDate = this.findLatestDate(inventory)
             return {
-                inventory_count: inventory.length,
-                value,
-                capacity,
-                station_name: station.name,
-                location: station.location.address,
-                latestDate
+                data: {
+                    inventory_count: inventory.length,
+                    value,
+                    capacity,
+                    station_name: station.name,
+                    location: station.location.address,
+                    latestDate
+                }
             }
         } catch (error) {
             throw error

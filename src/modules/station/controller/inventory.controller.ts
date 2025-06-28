@@ -30,8 +30,8 @@ export class InventoryController {
     @ApiTags('web')
     @CanAccess(UserRole.OilDepotUser)
     @PaginationDec()
-    findAllInventoryDetails(@Query() paginationDto: PaginationDto, @Param('fuel_type', ParseIntPipe) fuel_type: number) {
-        return this.inventoryService.findAllInventoryDetails(paginationDto,fuel_type);
+    findAllInventoryDetails(@Param('fuel_type', ParseIntPipe) fuel_type: number) {
+        return this.inventoryService.findAllInventoryDetails(fuel_type);
     }
     @Get('/list/lastUpdates')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)
