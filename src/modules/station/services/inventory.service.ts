@@ -162,10 +162,10 @@ export class InventoryService {
             throw error
         }
     }
-    async findAllInventoryDetails(fuelType: number) {
+    async findAllInventoryDetails(fuelType: number,stationId: number) {
         try {
-            const { id } = this.req.user
-            const station = await this.stationService.findByUserId(id)
+            //depot user
+            const station = await this.stationService.findOneById(stationId)
             const inventory = await this.inventoryRepository.find({
                 relations: { station: true },
                 where: {

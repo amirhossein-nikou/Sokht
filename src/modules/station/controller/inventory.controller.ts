@@ -29,9 +29,11 @@ export class InventoryController {
     @Get('/details/:fuel_type')
     @ApiTags('web')
     @CanAccess(UserRole.OilDepotUser)
-    @PaginationDec()
-    findAllInventoryDetails(@Param('fuel_type', ParseIntPipe) fuel_type: number) {
-        return this.inventoryService.findAllInventoryDetails(fuel_type);
+    findAllInventoryDetails(
+        @Param('fuel_type', ParseIntPipe) fuel_type: number,
+        @Param('stationId', ParseIntPipe) stationId: number,
+    ) {
+        return this.inventoryService.findAllInventoryDetails(fuel_type,stationId);
     }
     @Get('/list/lastUpdates')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)
