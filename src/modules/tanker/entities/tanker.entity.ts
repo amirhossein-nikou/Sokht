@@ -3,6 +3,7 @@ import { CargoEntity } from "../../../modules/cargo/entities/cargo.entity";
 import { DepotEntity } from "../../../modules/depot/entity/depot.entity";
 import { UserEntity } from "../../../modules/user/entity/user.entity";
 import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { PlateEntity } from "./plate.entity";
 
 @Entity(EntityName.Tanker,{ orderBy: { id: "DESC" } })
 export class TankerEntity {
@@ -14,8 +15,8 @@ export class TankerEntity {
     capacity: number;
     @Column({ unique: true })
     number: number;
-    @Column({ unique: true, nullable: true })
-    plate: string;
+    @Column({nullable: true })
+    plateId: number;
     @Column()
     depotId: number;
     @OneToOne(() => UserEntity, user => user.tanker, { onDelete: 'CASCADE' })
@@ -25,4 +26,7 @@ export class TankerEntity {
     depot: DepotEntity
     @ManyToMany(() => CargoEntity, cargo => cargo.tankers, { onDelete: "CASCADE" })
     cargo: CargoEntity
+    @OneToOne(() => PlateEntity,plate => plate.tanker)
+    @JoinColumn({name: "plateId"})
+    plate: PlateEntity
 }

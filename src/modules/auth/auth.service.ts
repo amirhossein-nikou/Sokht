@@ -10,6 +10,7 @@ import { OtpEntity } from "./entity/otp.entity";
 import { payloadType } from "./types/payload";
 import { NotificationGateway } from "../notification/notification.gateway";
 import * as moment from "jalali-moment";
+import { SendSms } from "src/common/utils/send-sms.utils";
 
 @Injectable()
 export class AuthService {
@@ -28,10 +29,10 @@ export class AuthService {
                 throw new UnauthorizedException('something went wrong')
             }
             const code = await this.createOtpForUser(user)
+            await SendSms({ args: [code], bodyId: 340999, to: user.mobile })
             return {
                 statusCode: HttpStatus.OK,
                 message: "code send Successfully",
-                code
             }
         } catch (error) {
             throw error
@@ -43,9 +44,9 @@ export class AuthService {
         const code: string = randomInt(10000, 99999).toString();
         let otp = await this.otpRepository.findOne({ where: { userId: user.id } });
         if (otp) {
-            if (otp.expires_in > new Date()) {
-                throw new HttpException('code not expired', HttpStatus.OK);
-            }
+            // if (otp.expires_in > new Date()) {
+            //     throw new HttpException('code not expired', HttpStatus.OK);
+            // }
             otp.code = code;
             otp.expires_in = expire_in;
         } else {

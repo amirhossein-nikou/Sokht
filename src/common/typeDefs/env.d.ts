@@ -7,5 +7,6 @@ namespace NodeJS {
         DB_DATABASE: string,
         ACCESS_TOKEN_SECRET: string,
         REFRESH_TOKEN_SECRET: string,
+        SMS_TOKEN: string
     }
 }
