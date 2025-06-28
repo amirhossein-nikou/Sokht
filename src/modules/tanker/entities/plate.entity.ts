@@ -1,7 +1,6 @@
 import { EntityName } from "src/common/enums/entity.enum";
-import { AfterInsert, Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { TankerEntity } from "./tanker.entity";
-import { plateFormat } from "src/common/utils/plate-format.utils";
 
 @Entity(EntityName.Plate)
 export class PlateEntity {

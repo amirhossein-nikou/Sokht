@@ -9,7 +9,9 @@ async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
         bodyParser: false
     });
-    app.enableShutdownHooks()
+    const server = app.getHttpServer()
+    server.keepAliveTimeout = 30000
+    server.headersTimeout = 32000
     app.enableCors();
     SwaggerConfig(app)
     app.useGlobalPipes(new ValidationPipe)
