@@ -74,7 +74,7 @@ export class AndroidService {
     }
 
     receivedRequest(id: number) {
-        return this.requestService.receivedRequest(id);
+        return this.requestService.remove(id);
     }
 
     createRequestDetails() {
