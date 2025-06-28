@@ -632,7 +632,7 @@ export class RequestServiceAndroid {
     private async getOneByIdForUpdateAndRemove(id: number) {
         const request = await this.requestRepository.findOneBy({ id })
         if (!request) throw new NotFoundException(RequestMessages.Notfound)
-        if (request.statusId != 0) throw new BadRequestException('you cant update or remove on this status')
+        if ([1, 2, 3].includes(request.statusId)) throw new BadRequestException('you cant update or remove on this status')
         return request
     }
     async limitSendRequests(stationId: number) {
