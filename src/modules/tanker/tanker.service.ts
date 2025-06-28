@@ -76,7 +76,7 @@ export class TankerService {
                 .leftJoin('tanker.cargo', 'cargo')
                 .leftJoin('tanker.driver', 'driver')
                 .select([
-                    'tanker.id', 'tanker.number', 'tanker.plate', 'tanker.capacity',
+                    'tanker.id', 'tanker.number', 'tanker.plate', 'tanker.capacity','tanker.available',
                     'cargo.requestId', 'cargo.rejectId', 'cargo.inProgress', 'cargo.created_at', 'cargo.rejectDetails',
                     'driver.first_name', 'driver.last_name', 'driver.id', 'driver.mobile', 'driver.national_code'
                 ])
@@ -218,6 +218,11 @@ export class TankerService {
     }
 
     // utils
+    async updateStatusByTakerList(tankers: TankerEntity[], available: boolean) {
+        tankers.map(async tanker => {
+            await this.tankerRepository.update({ id: tanker.id }, { available })
+        })
+    }
     async getTankerById(id: number) {
         const tanker = await this.tankerRepository.findOneBy({ id })
         if (!tanker) throw new NotFoundException(TankerMessages.Notfound)

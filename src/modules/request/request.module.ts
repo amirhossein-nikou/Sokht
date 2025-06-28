@@ -14,10 +14,11 @@ import { RequestService } from './request.service';
 import { CargoEntity } from '../cargo/entities/cargo.entity';
 import { RequestServiceAndroid } from './request.android.service';
 import { NotificationGateway } from '../notification/notification.gateway';
+import { TankerModule } from '../tanker/tanker.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([RequestEntity, StatusEntity,CargoEntity]),
-    AuthModule, StationModule, InventoryModule, UserModule, DepotModule, FuelTypeModule],
+    AuthModule, StationModule, InventoryModule, UserModule, DepotModule, FuelTypeModule,TankerModule],
   controllers: [RequestController],
   providers: [RequestService, InventoryService,RequestServiceAndroid,NotificationGateway],
   exports: [RequestService, TypeOrmModule,RequestServiceAndroid]

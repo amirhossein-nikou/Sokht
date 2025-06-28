@@ -55,6 +55,7 @@ export class CargoService {
                 userId: request.station.ownerId,
                 parentId: request.station.ownerId
             })
+            await this.tankerService.updateStatusByTakerList(tankers, false)
             return {
                 statusCode: HttpStatus.CREATED,
                 message: CargoMessages.Create,
@@ -182,12 +183,12 @@ export class CargoService {
                     throw new BadRequestException('this request is not approved yet')
                 await this.checkExistsRequestId(requestId)
             }
-            let updateObject = RemoveNullProperty({tankerId, requestId})
+            let updateObject = RemoveNullProperty({ tankerId, requestId })
             if (updateObject) {
                 await this.cargoRepository.update(id, updateObject)
             }
             await this.requestService.updateOnCreateCargo(requestId ?? cargo.requestId, { receive_at, value })
-            const result =  await this.getOneById(id)
+            const result = await this.getOneById(id)
             return {
                 statusCode: HttpStatus.OK,
                 message: CargoMessages.Update,
@@ -220,6 +221,7 @@ export class CargoService {
             await this.cargoRepository.update(id, {
                 rejectDetails: { title, description }
             })
+            await this.tankerService.updateStatusByTakerList(cargo.tankers, true)
             return {
                 statusCode: HttpStatus.OK,
                 message: "cargo rejected successfully"
@@ -230,7 +232,7 @@ export class CargoService {
     }
     // utils
     async getOneById(id: number) {
-        const cargo = await this.cargoRepository.findOne({ where: {id},relations: {tankers: true,request: true} })
+        const cargo = await this.cargoRepository.findOne({ where: { id }, relations: { tankers: true, request: true } })
         if (!cargo) throw new NotFoundException(CargoMessages.Notfound)
         return cargo
     }
