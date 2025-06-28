@@ -93,18 +93,20 @@ export class RequestServiceAndroid {
         try {
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
-            let whereQuery = `(request.statusId IN (0, 1, 2, 3) AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
+            let whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
             if (role !== UserRole.StationUser) {
-                whereQuery = `(request.statusId IN (0, 1, 2, 3) AND request.rejectDetails IS NULL)`
+                whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL)`
             }
             const [requests, count] = await this.requestRepository.createQueryBuilder('request')
                 .leftJoinAndSelect('request.depot', 'depot')
                 .leftJoinAndSelect('request.status', 'status')
                 .leftJoinAndSelect('request.station', 'station')
                 .leftJoinAndSelect('depot.tankers', 'tankers')
+                .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
                     'request.id', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'driver.first_name','driver.last_name','driver.mobile','driver.national_code','driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])

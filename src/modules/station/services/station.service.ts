@@ -204,7 +204,7 @@ export class StationService {
         return station
     }
     async findByUserId(userId: number) {
-        const station = await this.stationRepository.findOne({ where: { ownerId: userId }, relations: { fuels: true,owner: true } })
+        const station = await this.stationRepository.findOne({ where: { ownerId: userId }, relations: { fuels: true,owner: true,location:true } })
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }

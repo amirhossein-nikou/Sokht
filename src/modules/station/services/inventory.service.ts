@@ -162,6 +162,32 @@ export class InventoryService {
             throw error
         }
     }
+    async findAllInventoryDetails(paginationDto: PaginationDto, fuelType: number) {
+        try {
+            const { id } = this.req.user
+            const station = await this.stationService.findByUserId(id)
+            const inventory = await this.inventoryRepository.find({
+                relations: { station: true },
+                where: {
+                    status: true,
+                    stationId: station.id,
+                    fuel_type: fuelType
+                }
+            });
+            if (inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
+            const capacity = await this.getMaxInventoryCapacity(station.id, fuelType)
+            const value = await this.getSumValueForInventory(station.id, fuelType)
+            return {
+                inventory_count: inventory.length,
+                value,
+                capacity,
+                station_name: station.name,
+                location: station.location.address
+            }
+        } catch (error) {
+            throw error
+        }
+    }
     async findOne(id: number) {
         try {
             const { id: userId, role, parentId } = this.req.user
@@ -341,5 +367,15 @@ export class InventoryService {
         });
         if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
         return inventory
+    }
+    async getSumValueForInventory(stationId: number, fuel_type) {
+        const inventories = await this.findByStationIdAndFuel(stationId, fuel_type)
+        const sumValue = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
+        return sumValue
+    }
+    async getMaxInventoryCapacity(stationId: number, fuel_type) {
+        const inventories = await this.findByStationIdAndFuel(stationId, fuel_type)
+        const sumValue = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
+        return sumValue
     }
 }

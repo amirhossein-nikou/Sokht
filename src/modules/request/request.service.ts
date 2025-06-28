@@ -103,9 +103,11 @@ export class RequestService {
                 .leftJoinAndSelect('request.status', 'status')
                 .leftJoinAndSelect('request.station', 'station')
                 .leftJoinAndSelect('depot.tankers', 'tankers')
+                .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
                     'request.id', 'depot.name', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'driver.first_name','driver.last_name','driver.mobile','driver.national_code','driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
@@ -541,8 +543,8 @@ export class RequestService {
             const stationFuels = station.fuels
             const capacityList = []
             const promise = stationFuels.map(async item => {
-                const contain = await this.getSumValueForInventory(station.id, item.id)
-                const maxCap = await this.getMaxInventoryCapacity(station.id, item.id)
+                const contain = await this.inventoryService.getSumValueForInventory(station.id, item.id)
+                const maxCap = await this.inventoryService.getMaxInventoryCapacity(station.id, item.id)
                 if (contain && maxCap) {
                     const availableValue = (maxCap - contain) * 1.2
                     capacityList.push({ availableValue, fuel_type: item.name })
@@ -591,7 +593,7 @@ export class RequestService {
     }
     // utils
     async detectPriority(stationId: number, fuel_type: number,): Promise<PriorityType> {
-        const inventories = await this.getSumValueForInventory(stationId, fuel_type)
+        const inventories = await this.inventoryService.getSumValueForInventory(stationId, fuel_type)
         const average_sale = await this.getSumValueForSale(stationId, fuel_type)
         if (inventories == undefined)
             throw new BadRequestException('station inventory is invalid')
@@ -612,9 +614,9 @@ export class RequestService {
         }
     }
     async filterRequestValue(stationId: number, fuel_type: number, value: number) {
-        const inventoryValueSum = await this.getSumValueForInventory(stationId, fuel_type)
+        const inventoryValueSum = await this.inventoryService.getSumValueForInventory(stationId, fuel_type)
         if (inventoryValueSum == undefined) throw new BadRequestException('inventory is invalid')
-        const maxCap = await this.getMaxInventoryCapacity(stationId, fuel_type)
+        const maxCap = await this.inventoryService.getMaxInventoryCapacity(stationId, fuel_type)
         const maxValues = inventoryValueSum + Number(value)
         if (value < 1000) throw new BadRequestException('request value must be more than 1000')
         if (maxValues > (maxCap * 1.2))
@@ -669,16 +671,6 @@ export class RequestService {
         await this.createStatus(StatusEnum.Approved, "تایید شده")
         await this.createStatus(StatusEnum.Received, "دریافت شده")
         await this.createStatus(StatusEnum.Reject, "رد شده")
-    }
-    async getSumValueForInventory(stationId: number, fuel_type) {
-        const inventories = await this.inventoryService.findByStationIdAndFuel(stationId, fuel_type)
-        const sumValue = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
-        return sumValue
-    }
-    async getMaxInventoryCapacity(stationId: number, fuel_type) {
-        const inventories = await this.inventoryService.findByStationIdAndFuel(stationId, fuel_type)
-        const sumValue = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
-        return sumValue
     }
     async getSumValueForSale(stationId: number, fuel_type) {
         const sales = await this.saleService.findByStationIdAndFuel(stationId, fuel_type)
