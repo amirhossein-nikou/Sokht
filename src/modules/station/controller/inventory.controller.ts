@@ -31,9 +31,8 @@ export class InventoryController {
     @CanAccess(UserRole.OilDepotUser)
     findAllInventoryDetails(
         @Param('fuel_type', ParseIntPipe) fuel_type: number,
-        @Param('stationId', ParseIntPipe) stationId: number,
     ) {
-        return this.inventoryService.findAllInventoryDetails(fuel_type,stationId);
+        return this.inventoryService.findAllInventoryDetails(fuel_type);
     }
     @Get('/list/lastUpdates')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)

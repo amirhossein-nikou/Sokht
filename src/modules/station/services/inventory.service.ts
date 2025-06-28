@@ -13,6 +13,7 @@ import { CreateInventoryDto, UpdateInventoryDto, UpdateValue } from "../dto/inve
 import { InventoryEntity } from "../entity/inventory.entity";
 import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
+import { StationEntity } from "../entity/station.entity";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
@@ -162,31 +163,13 @@ export class InventoryService {
             throw error
         }
     }
-    async findAllInventoryDetails(fuelType: number,stationId: number) {
+    async findAllInventoryDetails(fuelType: number) {
         try {
             //depot user
-            const station = await this.stationService.findOneById(stationId)
-            const inventory = await this.inventoryRepository.find({
-                relations: { station: true },
-                where: {
-                    status: true,
-                    stationId: station.id,
-                    fuel_type: fuelType
-                },
-            });
-            if (inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
-            const capacity = await this.getMaxInventoryCapacity(station.id, fuelType)
-            const value = await this.getSumValueForInventory(station.id, fuelType)
-            const latestDate = this.findLatestDate(inventory)
+            const station = await this.stationService.getAllStations()
+            const detailsList = await this.getSomeDetailsOfInventory(station,fuelType)
             return {
-                data: {
-                    inventory_count: inventory.length,
-                    value,
-                    capacity,
-                    station_name: station.name,
-                    location: station.location.address,
-                    latestDate
-                }
+                data: detailsList
             }
         } catch (error) {
             throw error
@@ -386,5 +369,28 @@ export class InventoryService {
         const inventories = await this.findByStationIdAndFuel(stationId, fuel_type)
         const sumValue = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
         return sumValue
+    }
+    async getSomeDetailsOfInventory(station: StationEntity[], fuel_type: number) {
+        let detailsList: Array<object> = []
+        console.log('object 1');
+        const promise = station.map(async station => {
+            const inventories = await this.findByStationIdAndFuel(station.id, fuel_type)
+            if(inventories.length == 0) throw new BadRequestException('inventory is invalid')
+                const capacity = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
+            const value = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
+            const latestDate = this.findLatestDate(inventories)
+            console.log('object 2');
+            detailsList.push({
+                inventory_count: inventories.length,
+                value,
+                capacity,
+                station_name: station.name,
+                location: station.location.address,
+                latestDate
+            })
+        })
+        await Promise.all(promise)
+        console.log('object 3');
+        return detailsList
     }
 }

@@ -106,7 +106,7 @@ export class StationService {
             })
             //check user exist
             if (ownerId) await this.userService.findOneById(ownerId)
-                //check location
+            //check location
             if (locationId) {
                 await this.locationService.findOne(locationId)
                 await this.checkExistsLocation(locationId)
@@ -198,13 +198,18 @@ export class StationService {
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
+    async getAllStations() {
+        const stations = await this.stationRepository.find({ relations: {location: true,inventory:true } })
+        if (stations.length == 0) throw new NotFoundException(StationMessages.NotFound)
+        return stations
+    }
     async findByUserStation(userId: number, id: number) {
         const station = await this.stationRepository.findOne({ where: { ownerId: userId, id }, relations: { fuels: true } })
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
     async findByUserId(userId: number) {
-        const station = await this.stationRepository.findOne({ where: { ownerId: userId }, relations: { fuels: true,owner: true,location:true } })
+        const station = await this.stationRepository.findOne({ where: { ownerId: userId }, relations: { fuels: true, owner: true, location: true } })
         if (!station) throw new NotFoundException(StationMessages.NotFound)
         return station
     }
