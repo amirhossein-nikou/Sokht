@@ -177,12 +177,14 @@ export class InventoryService {
             if (inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
             const capacity = await this.getMaxInventoryCapacity(station.id, fuelType)
             const value = await this.getSumValueForInventory(station.id, fuelType)
+            const latestDate = this.findLatestDate(inventory)
             return {
                 inventory_count: inventory.length,
                 value,
                 capacity,
                 station_name: station.name,
-                location: station.location.address
+                location: station.location.address,
+                latestDate
             }
         } catch (error) {
             throw error
@@ -337,6 +339,11 @@ export class InventoryService {
         });
         if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
         return inventory
+    }
+    findLatestDate(inventories: InventoryEntity[]) {
+        return inventories
+            .map(inventory => new Date(inventory.updated_at)) // Convert strings to Date objects
+            .reduce((latest, current) => (current > latest ? current : latest));
     }
     async findById(id: number) {
         const inventory = await this.inventoryRepository.findOne({
