@@ -7,12 +7,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 @Module({
   imports: [
     ConfigModule.forRoot({
-        envFilePath: join(process.cwd(),`.env.${process.env.NODE_ENV}`),
-        isGlobal: true
+      //.${process.env.NODE_ENV}
+      envFilePath: join(process.cwd(), `.env`),
+      isGlobal: true
     }),
     TypeOrmModule.forRoot(SequelizeConfig())
   ],
   controllers: [],
   providers: [],
 })
-export class CustomModule {}
+export class CustomModule { }
