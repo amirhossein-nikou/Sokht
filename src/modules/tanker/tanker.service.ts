@@ -183,7 +183,6 @@ export class TankerService {
             if (driverId && driverId > 0) {
                 await this.userService.findOneById(driverId);
             }
-            //if (plate) await this.checkExistsPlate(plate)
             if (number && number > 0) await this.checkExistsTankerNumber(number)
             const updateObject = RemoveNullProperty({ capacity, driverId, number })
             if (updateObject) {
@@ -199,9 +198,6 @@ export class TankerService {
         } catch (error) {
             throw error
         }
-    }
-    async updatePlateDto(id: number, updatePlateDto: UpdatePlateDto) {
-
     }
     async remove(id: number) {
         try {

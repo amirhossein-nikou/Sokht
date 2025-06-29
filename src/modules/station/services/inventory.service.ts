@@ -347,7 +347,7 @@ export class InventoryService {
                 fuel_type: fuelType
             }
         });
-        //if (!inventory || inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
+        if (inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
         return inventory
     }
     async findAllUserInventories(ownerId: number) {
