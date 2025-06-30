@@ -1,4 +1,4 @@
-import { HttpStatus, Inject, Injectable, NotFoundException, Scope, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException, Scope, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
@@ -9,9 +9,6 @@ import { CreateNotificationDto } from './dto/notification.dto';
 import { NotificationEntity } from './entity/notification.entity';
 import { NotificationMessages } from './enums/message.enum';
 import { DataType } from './types/message.type';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class NotificationService {
@@ -33,6 +30,7 @@ export class NotificationService {
 
     async findAll(data: DataType) {
         try {
+            console.log('access -> notification/findAll');
             const { token, pagination } = data
             const user = await this.validateToken(token)
             const { limit, page, skip } = paginationSolver(pagination)

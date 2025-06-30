@@ -25,6 +25,7 @@ export class InventoryService {
     ) { }
     async create(createInventoryDto: CreateInventoryDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { fuel_type, stationId, max, name } = createInventoryDto
             const { id, role } = this.req.user
             const station = await this.stationService.findOneById(stationId)
@@ -43,11 +44,13 @@ export class InventoryService {
                 data: result
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async findAll(paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id, role, parentId } = this.req.user
             let where: object = {
@@ -80,11 +83,13 @@ export class InventoryService {
                 data: inventories
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async findListOfLastUpdates(paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             const filterTime = new Date(Date.now() - 1000 * 60 * 60 * 4) //last 4 hours
             const { id, role, parentId } = this.req.user
@@ -120,11 +125,13 @@ export class InventoryService {
                 data: inventories
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async findListOfLastUpdatesAndroid(paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             const filterTime = new Date(Date.now() - 1000 * 60 * 60 * 4) //last 4 hours
             const { id, role, parentId } = this.req.user
@@ -160,23 +167,27 @@ export class InventoryService {
                 data: inventories
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async findAllInventoryDetails(fuelType: number) {
         try {
             //depot user
+            console.log(`access  -> ${this.req.url}`);
             const station = await this.stationService.getAllStations()
-            const detailsList = await this.getSomeDetailsOfInventory(station,fuelType)
+            const detailsList = await this.getSomeDetailsOfInventory(station, fuelType)
             return {
                 data: detailsList
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async findOne(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { id: userId, role, parentId } = this.req.user
             let where: object = {
                 id,
@@ -194,11 +205,13 @@ export class InventoryService {
                 data: inventory
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async update(id: number, updateInventoryDto: UpdateInventoryDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { fuel_type, stationId, max } = updateInventoryDto;
             const { id: userId } = this.req.user;
             const inventory = await this.findOneById(id, userId);
@@ -217,12 +230,14 @@ export class InventoryService {
                 data: result
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     // main
     async updateValue(id: number, updateValue: UpdateValue) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { value } = updateValue;
             const { id: userId } = this.req.user;
             const inventory = await this.findById(id);
@@ -237,12 +252,14 @@ export class InventoryService {
                 data: result
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     // android
     async updateValueAndroid(id: number, updateValue: UpdateValue) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { value } = updateValue;
             const inventory = await this.findById(id);
             if (Number(value) > Number(inventory.max)) throw new BadRequestException('value cant be more than max capacity')
@@ -254,11 +271,13 @@ export class InventoryService {
                 message: InventoryMessages.Update
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async remove(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { id: userId } = this.req.user
             const inventory = await this.findById(id)
             await this.inventoryRepository.remove(inventory)
@@ -268,11 +287,13 @@ export class InventoryService {
 
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async statusToggle(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const userId = this.req.user.id
             await this.userService.checkIfParent(userId)
             const inventory = await this.findById(id)
@@ -290,11 +311,13 @@ export class InventoryService {
                 message
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async statusToggleAndroid(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const userId = this.req.user.id
             await this.userService.checkIfParent(userId)
             const inventory = await this.findById(id)
@@ -312,6 +335,7 @@ export class InventoryService {
                 message
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
@@ -375,8 +399,8 @@ export class InventoryService {
         console.log('object 1');
         const promise = station.map(async station => {
             const inventories = await this.findByStationIdAndFuel(station.id, fuel_type)
-            if(inventories.length == 0) throw new BadRequestException('inventory is invalid')
-                const capacity = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
+            if (inventories.length == 0) throw new BadRequestException('inventory is invalid')
+            const capacity = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
             const value = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
             const latestDate = this.findLatestDate(inventories)
             console.log('object 2');

@@ -23,6 +23,7 @@ export class AuthService {
 
     async sendOtp(sendOtpDto: SendOtpDto) {
         try {
+            console.info('access sendOtp');
             const { mobile } = sendOtpDto;
             let user = await this.userRepository.findOne({ where: { mobile: ModifyMobileNumber(mobile) } })
             if (!user) {
@@ -35,6 +36,7 @@ export class AuthService {
                 message: "code send Successfully",
             }
         } catch (error) {
+            console.error(error.message);
             throw error
         }
     }
@@ -64,6 +66,7 @@ export class AuthService {
 
     async checkOtp(checkOtpDto: CheckOtpDto) {
         try {
+            console.log(`access  -> checkOtp`);
             const { mobile, code } = checkOtpDto;
             const user = await this.userRepository.findOne({
                 where: { mobile: ModifyMobileNumber(mobile) },
@@ -96,6 +99,7 @@ export class AuthService {
                 message: "logged in successfully"
             }
         } catch (error) {
+            console.log(error.message);
             throw error
         }
     }

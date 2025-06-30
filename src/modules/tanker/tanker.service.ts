@@ -30,6 +30,7 @@ export class TankerService {
 
     async create(createTankerDto: CreateTankerDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { id, parentId } = this.req.user
             const { capacity, driverId, number, char, city, first, second } = createTankerDto
             await this.checkExistsDriver(driverId)
@@ -49,6 +50,7 @@ export class TankerService {
                 }
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
@@ -61,6 +63,7 @@ export class TankerService {
     }
     async findAll(search: string, paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             let where: string = ''
             if (search) {
@@ -91,11 +94,13 @@ export class TankerService {
                 data: tankers
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async availableTankers() {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { id } = this.req.user
             const availableTankers = await this.tankerRepository.find({
                 where: {
@@ -113,11 +118,13 @@ export class TankerService {
                 availableTankers: availableTankers.length,
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async driverTankerInfo() {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { id } = this.req.user
             const tanker = await this.tankerRepository.findOne({
                 where: { driverId: id },
@@ -129,12 +136,14 @@ export class TankerService {
                 data: tanker
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
 
     async findOne(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const tanker = await this.tankerRepository.findOne({ where: { id }, relations: { cargo: true, plate: true }, select: { cargo: { tankerId: false } } })
             if (!tanker) throw new NotFoundException(TankerMessages.Notfound)
             return {
@@ -142,11 +151,13 @@ export class TankerService {
                 data: tanker
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async findOneByDriverId(driverId: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const tanker = await this.tankerRepository.findOne({
                 where: { driverId },
                 relations: { cargo: true, plate: true }, select: { cargo: { tankerId: false } }
@@ -157,12 +168,14 @@ export class TankerService {
                 data: tanker
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
 
     async findByRequestIdAndroid(requestId: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const tanker = await this.tankerRepository.find({
                 where: { cargo: { requestId } },
                 relations: { cargo: true }, select: { cargo: { tankerId: false } }
@@ -173,11 +186,13 @@ export class TankerService {
                 data: tanker
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async update(id: number, updateTankerDto: UpdateTankerDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { capacity, driverId, number, char, city, first, second } = updateTankerDto
             const tanker = await this.getTankerById(id)
             if (driverId && driverId > 0) {
@@ -197,6 +212,7 @@ export class TankerService {
 
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
@@ -221,6 +237,7 @@ export class TankerService {
     }
     async remove(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const tanker = await this.getTankerById(id)
             await this.tankerRepository.remove(tanker)
             return {
@@ -229,6 +246,7 @@ export class TankerService {
 
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }

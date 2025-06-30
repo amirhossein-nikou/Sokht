@@ -23,7 +23,8 @@ export class TicketService {
 	async create(createTicketDto: CreateTicketDto, file: multerFile) {
 		let filePath = null
 		try {
-			if(file){
+			console.log(`access  -> ${this.req.url}`);
+			if (file) {
 				filePath = getImagePath(file, file.path)
 			}
 			const { id } = this.req.user
@@ -39,7 +40,8 @@ export class TicketService {
 				data: result,
 			}
 		} catch (error) {
-			if(filePath){
+			console.log(`error -> ${this.req.url} -> `, error.message);
+			if (filePath) {
 				removeFile(filePath)
 			}
 			throw error
@@ -49,6 +51,7 @@ export class TicketService {
 
 	async findAll(paginationDto: PaginationDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { limit, page, skip } = paginationSolver(paginationDto);
 			const { id } = this.req.user
 			const [tickets, count] = await this.ticketRepository.findAndCount({
@@ -70,12 +73,14 @@ export class TicketService {
 				data: tickets
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 
 	async findOne(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { id: userId } = this.req.user
 			const ticket = await this.ticketRepository.findOne({
 				where: {
@@ -88,18 +93,20 @@ export class TicketService {
 				data: ticket
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 
 	async update(id: number, updateTicketDto: UpdateTicketDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { id: userId } = this.req.user
 			await this.getOne(id, userId)
 			const updateObject = RemoveNullProperty(updateTicketDto)
 			if (updateObject) {
 				await this.ticketRepository.update(id, updateObject)
-            }
+			}
 			const result = await this.getOne(id, userId)
 			return {
 				statusCode: HttpStatus.OK,
@@ -107,12 +114,14 @@ export class TicketService {
 				message: TicketMessages.Update
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 
 	async remove(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { id: userId } = this.req.user
 			const ticket = await this.getOne(id, userId)
 			await this.ticketRepository.remove(ticket)
@@ -121,6 +130,7 @@ export class TicketService {
 				message: TicketMessages.Remove
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}

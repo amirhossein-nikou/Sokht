@@ -28,6 +28,7 @@ export class StationService {
     ) { }
     async create(createStationDto: CreateStationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { isActive, locationId, name, ownerId, fuel_types } = createStationDto
             //check user exist
             const fuelIdList = getIdList(StringToArray(fuel_types))
@@ -50,12 +51,14 @@ export class StationService {
                 data: result
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
 
     async findAll(paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             const [stations, count] = await this.stationRepository.findAndCount({
                 relations: { location: true, fuels: true },
@@ -68,12 +71,14 @@ export class StationService {
                 data: stations
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
 
     async findOne(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const station = await this.stationRepository.findOne({
                 where: { id },
                 relations: {
@@ -88,12 +93,14 @@ export class StationService {
                 data: station
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
 
     async update(id: number, updateStationDto: UpdateStationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { isActive, locationId, name, ownerId, fuel_types } = updateStationDto
             let fuels
             if (fuel_types) {
@@ -119,12 +126,14 @@ export class StationService {
                 data: result
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
 
     async remove(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const station = await this.findOneById(id)
             await this.stationRepository.remove(station)
             return {
@@ -133,11 +142,13 @@ export class StationService {
 
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async stationStatusToggle(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const station = await this.findOneById(id)
             let message = ''
             if (station.isActive) {
@@ -153,11 +164,13 @@ export class StationService {
                 message
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async myStation() {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { id, parentId } = this.req.user
             const station = await this.stationRepository.find({
                 where: { ownerId: parentId ?? id },
@@ -178,6 +191,7 @@ export class StationService {
                 data: station
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
@@ -199,7 +213,7 @@ export class StationService {
         return station
     }
     async getAllStations() {
-        const stations = await this.stationRepository.find({ relations: {location: true,inventory:true } })
+        const stations = await this.stationRepository.find({ relations: { location: true, inventory: true } })
         if (stations.length == 0) throw new NotFoundException(StationMessages.NotFound)
         return stations
     }

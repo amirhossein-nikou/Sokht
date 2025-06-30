@@ -22,6 +22,7 @@ export class DepotService {
 	) { }
 	async create(createDepotDto: CreateDepotDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { locationId, name, ownerId } = createDepotDto
 			await this.userService.findOneById(ownerId)
 			await this.locationService.getOneById(locationId)
@@ -34,12 +35,14 @@ export class DepotService {
 				data: result
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `  , error.message)
 			throw error
 		}
 	}
 
 	async findAll(paginationDto: PaginationDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { limit, page, skip } = paginationSolver(paginationDto)
 			const [depots, count] = await this.depotRepository.findAndCount({
 				relations: { location: true, owner: true },
@@ -52,12 +55,14 @@ export class DepotService {
 				data: depots
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `  , error.message)
 			throw error
 		}
 	}
 
 	async findOne(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { id: ownerId } = this.req.user
 			const depot = await this.depotRepository.findOne({ where: { id }, relations: { location: true, owner: true } })
 			if (!depot) throw new NotFoundException(DepotMessages.Notfound)
@@ -66,11 +71,13 @@ export class DepotService {
 				data: depot
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `  , error.message)
 			throw error
 		}
 	}
 	async myDepot(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { id: ownerId, parentId } = this.req.user
 			const depot = await this.depotRepository.findOne({
 				where: {
@@ -84,11 +91,13 @@ export class DepotService {
 				data: depot
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `  , error.message)
 			throw error
 		}
 	}
 	async update(id: number, updateDepotDto: UpdateDepotDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { locationId, name, ownerId } = updateDepotDto
 			const updateObject = RemoveNullProperty({ locationId, name, ownerId })
 			await this.findOneById(id)
@@ -106,12 +115,14 @@ export class DepotService {
 
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `  , error.message)
 			throw error
 		}
 	}
 
 	async remove(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { id: ownerId } = this.req.user
 			const depot = await this.findOneByIdWithOwner(id, ownerId)
 			await this.depotRepository.remove(depot)
@@ -121,6 +132,7 @@ export class DepotService {
 
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `  , error.message)
 			throw error
 		}
 	}

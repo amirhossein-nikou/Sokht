@@ -16,15 +16,20 @@ export class HomeService {
         @Inject(REQUEST) private req: Request
     ) { }
     async dashboard() {
-        const { id, parentId } = this.req.user
-        const inventory = await this.inventoryService.findAllUserInventories(parentId ?? id)
-        const cargo = await this.cargoService.findCargoWithDetails(parentId ?? id)
-        return {
-            statusCode: HttpStatus.OK,
-            data: {
-                inventory,
-                cargo
+        try {
+            console.log(`access  -> ${this.req.url}`);
+            const { id, parentId } = this.req.user
+            const inventory = await this.inventoryService.findAllUserInventories(parentId ?? id)
+            const cargo = await this.cargoService.findCargoWithDetails(parentId ?? id)
+            return {
+                statusCode: HttpStatus.OK,
+                data: {
+                    inventory,
+                    cargo
+                }
             }
+        } catch (error) {
+            console.error(error.message);
         }
     }
 }

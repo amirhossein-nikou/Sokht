@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { CreateCargoDto } from './dto/create-cargo.dto';
 import { UpdateCargoDto } from './dto/update-cargo.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,18 +16,22 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 import { NotificationGateway } from '../notification/notification.gateway';
 import * as moment from 'jalali-moment';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class CargoService {
     constructor(
         @InjectRepository(CargoEntity) private cargoRepository: Repository<CargoEntity>,
         private tankerService: TankerService,
         private requestService: RequestService,
         private notification: NotificationGateway,
+        @Inject(REQUEST) private req: Request
     ) { }
     async create(createCargoDto: CreateCargoDto) {
         const { requestId, tankerId, receive_at, value } = createCargoDto
         try {
+            console.log(`access  -> ${this.req.url}`);
             const now = new Date().toISOString()
             //if (dispatch_time.toString() <= now) throw new BadRequestException('dispatch_time is less than current time')
             const tankerIdList = getIdList(StringToArray(tankerId))
@@ -62,12 +66,14 @@ export class CargoService {
                 data: result
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `  , error.message)
             throw error
         }
     }
 
     async findAll(paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             const [cargoes, count] = await this.cargoRepository.findAndCount({
                 where: { rejectDetails: null },
@@ -85,11 +91,13 @@ export class CargoService {
                 data: cargoes
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `  , error.message)
             throw error
         }
     }
     async findWithFuelType(fuel_type: number, paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             let where: Object = { rejectDetails: null }
             if (fuel_type) {
@@ -128,12 +136,14 @@ export class CargoService {
                 data: cargoes
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `  , error.message)
             throw error
         }
     }
 
     async findOne(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const cargo = await this.cargoRepository.findOne({
                 where: { id },
                 relations: {
@@ -168,12 +178,14 @@ export class CargoService {
                 data: cargo
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `  , error.message)
             throw error
         }
     }
 
     async update(id: number, updateCargoDto: UpdateCargoDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { requestId, receive_at, tankerId, value } = updateCargoDto
             const now = new Date().toISOString()
             const cargo = await this.getOneById(id)
@@ -195,12 +207,14 @@ export class CargoService {
                 data: result
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `  , error.message);
             throw error
         }
     }
 
     async remove(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const cargo = await this.getOneById(id)
             await this.cargoRepository.remove(cargo)
             return {
@@ -209,12 +223,14 @@ export class CargoService {
 
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `  , error.message);
             throw error
         }
     }
 
     async rejectCargo(id: number, rejectDto: RejectDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { description, title } = rejectDto
             const cargo = await this.getOneById(id)
             if (cargo.rejectDetails) throw new BadRequestException("this cargo already rejected")
@@ -227,6 +243,7 @@ export class CargoService {
                 message: "cargo rejected successfully"
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `  , error.message);
             throw error
         }
     }
@@ -243,7 +260,7 @@ export class CargoService {
     }
     async findCargoWithDetails(id: number) {
         const cargo = await this.cargoRepository.find({
-            where: { inProgress: true,request: {station: {ownerId: id}} },
+            where: { inProgress: true, request: { station: { ownerId: id } } },
             relations: {
                 request: true,
                 tankers: {

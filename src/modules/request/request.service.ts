@@ -46,6 +46,7 @@ export class RequestService {
     ) { }
     async create(createRequestDto: CreateRequestDto) {
         try {
+            console.log(`access -> ${this.req.url}`);
             const { fuel_type, value, depotId, receive_at } = createRequestDto
             const { id: userId, parentId } = this.req.user
             await this.insertStatus()
@@ -96,12 +97,14 @@ export class RequestService {
                 data: result
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
 
     async findAll(paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
             let whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
@@ -156,11 +159,13 @@ export class RequestService {
                 data: requests
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async findPendingApprove(paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
             let whereQuery = `(request.statusId IN (0) AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
@@ -190,11 +195,13 @@ export class RequestService {
                 data: requests
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async findByStatus(statusId: number, paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
             let whereQuery = `(request.statusId = :statusId AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
@@ -227,6 +234,7 @@ export class RequestService {
                 data: requests
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
@@ -270,6 +278,7 @@ export class RequestService {
     // }
     async findOne(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { id: userId, role, parentId } = this.req.user
             let where: object = {
                 id,
@@ -292,11 +301,13 @@ export class RequestService {
                 data: request
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async findByFuelType(searchWithFuelAndReceiveDto: SearchWithFuelAndReceiveDto, paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { fuel_type, receive_at } = searchWithFuelAndReceiveDto
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
@@ -355,11 +366,13 @@ export class RequestService {
                 data: requests
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async findByDate(search: SearchDto, paginationDto: PaginationDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             let { start, end, fuel_type } = search
             if (start > end) throw new BadRequestException('start date must be bigger than end date')
@@ -413,6 +426,7 @@ export class RequestService {
                 data: requests
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
@@ -435,6 +449,7 @@ export class RequestService {
 
     async update(id: number, updateRequestDto: UpdateRequestDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { value, receive_at } = updateRequestDto
             const request = await this.getOneByIdForUpdateAndRemove(id)
             const updateObject = RemoveNullProperty({ receive_at, value, })
@@ -456,11 +471,13 @@ export class RequestService {
 
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async updateOnCreateCargo(id: number, updateRequestDto: UpdateRequestDto) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { value, receive_at } = updateRequestDto
             const request = await this.getOneById(id)
             const updateObject = RemoveNullProperty({ receive_at, value, })
@@ -481,12 +498,14 @@ export class RequestService {
 
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
 
     async remove(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const request = await this.getOneByIdForUpdateAndRemove(id)
             await this.requestRepository.remove(request)
             return {
@@ -496,6 +515,7 @@ export class RequestService {
 
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
@@ -503,6 +523,7 @@ export class RequestService {
     async approvedRequest(id: number) {
         const request = await this.getOneById(id)
         try {
+            console.log(`access  -> ${this.req.url}`);
             if ([StatusEnum.Approved, StatusEnum.Licensing].includes(request.statusId)) {
                 throw new BadRequestException(RequestMessages.Approved)
             }
@@ -518,6 +539,7 @@ export class RequestService {
                 message: RequestMessages.ApprovedSuccess
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             if (request.statusId == StatusEnum.Approved) {
                 await this.requestRepository.update(id, { statusId: StatusEnum.Posted })
             }
@@ -526,6 +548,7 @@ export class RequestService {
     }
     async licenseRequest(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const request = await this.getOneById(id)
             if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
             if (request.statusId == StatusEnum.Licensing) throw new BadRequestException(RequestMessages.Licensed)
@@ -535,11 +558,13 @@ export class RequestService {
                 message: RequestMessages.LicenseSuccess
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async receivedRequest(id: number) {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const request = await this.getOneById(id)
             if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
             if (request.statusId == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
@@ -552,11 +577,13 @@ export class RequestService {
                 message: RequestMessages.Received
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async createRequestDetails() {
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { id, parentId } = this.req.user
             const station = await this.stationService.findByUserId(parentId ?? id)
             const depots = await this.depotService.getNameList()
@@ -583,12 +610,14 @@ export class RequestService {
                 }
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
     async rejectRequest(id: number, rejectDto: RejectDto) {
         const request = await this.getOneById(id)
         try {
+            console.log(`access  -> ${this.req.url}`);
             const { description, title } = rejectDto
             if (request.rejectDetails || request.statusId === StatusEnum.Reject)
                 throw new BadRequestException("this request already rejected")
@@ -611,6 +640,7 @@ export class RequestService {
                 message: "request rejected successfully"
             }
         } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
 

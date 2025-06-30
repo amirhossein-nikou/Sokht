@@ -24,6 +24,7 @@ export class UserService {
 	) { }
 	async create(createUserDto: CreateUserDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { role: userRole } = this.req.user
 			const { first_name, last_name, mobile, national_code, certificateId, role } = createUserDto
 			if (userRole === UserRole.HeadUser) {
@@ -45,12 +46,14 @@ export class UserService {
 				message: UserMessages.Created
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 
 	async addSubUsers(addSubUserDto: AddSubUserDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { first_name, last_name, mobile, national_code, certificateId } = addSubUserDto
 			const { id } = this.req.user
 			const user = await this.findOneById(id)
@@ -71,11 +74,13 @@ export class UserService {
 				message: UserMessages.Created
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async addDriver(addSubUserDto: AddSubUserDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { first_name, last_name, mobile, national_code, certificateId } = addSubUserDto
 			const { id } = this.req.user
 			const user = await this.findOneById(id)
@@ -103,11 +108,13 @@ export class UserService {
 				message: UserMessages.Created
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async findAllDrivers(paginationDto: PaginationDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { limit, page, skip } = paginationSolver(paginationDto)
 			const [drivers, count] = await this.userRepository.findAndCount({
 				where: { role: UserRole.Driver },
@@ -120,11 +127,13 @@ export class UserService {
 				data: drivers
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async findAll(paginationDto: PaginationDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { limit, page, skip } = paginationSolver(paginationDto)
 			const [users, count] = await this.userRepository.findAndCount({
 				take: limit,
@@ -136,11 +145,13 @@ export class UserService {
 				data: users
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async findOne(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const user = await this.userRepository.findOne({
 				where: { id },
 				relations: {
@@ -153,11 +164,13 @@ export class UserService {
 				data: user
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async findOneDriver(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const user = await this.userRepository.findOne({
 				where: { id },
 				relations: {
@@ -171,11 +184,13 @@ export class UserService {
 				data: user
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async searchUser(search: string) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			let where = {}
 			if (isMobilePhone(search, 'fa-IR')) {
 				where = {
@@ -198,11 +213,13 @@ export class UserService {
 				data: user
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async updateSubUserMobile(id: number, updateMobileDto: UpdateMobileDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { id: parentId } = this.req.user
 			const { mobile } = updateMobileDto
 			await this.checkExistsMobile(mobile)
@@ -218,11 +235,13 @@ export class UserService {
 				message: UserMessages.UpdateMobile
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async updateMyPhone(updateMobileDto: UpdateMobileDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { id, mobile } = this.req.user
 			const { mobile: newMobile } = updateMobileDto
 			const user = await this.findOneById(id)
@@ -241,24 +260,32 @@ export class UserService {
 				code
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async verifyUpdateMobile(code: string) {
-		const { id, mobile } = this.req.user
-		const user = await this.findOneById(id)
-		if (!user.newMobile) throw new BadRequestException('please update phone first')
-		await this.authService.checkOtp({ mobile, code })
-		await this.userRepository.update(id, { mobile: user.newMobile, newMobile: null })
-		const result = await this.findOneById(id)
-		return {
-			statusCode: HttpStatus.OK,
-			data: result,
-			message: 'mobile changed'
+		try {
+			console.log(`access  -> ${this.req.url}`);
+			const { id, mobile } = this.req.user
+			const user = await this.findOneById(id)
+			if (!user.newMobile) throw new BadRequestException('please update phone first')
+			await this.authService.checkOtp({ mobile, code })
+			await this.userRepository.update(id, { mobile: user.newMobile, newMobile: null })
+			const result = await this.findOneById(id)
+			return {
+				statusCode: HttpStatus.OK,
+				data: result,
+				message: 'mobile changed'
+			}
+		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
+			throw error
 		}
 	}
 	async remove(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const user = await this.findOneById(id)
 			await this.userRepository.remove(user)
 			return {
@@ -266,11 +293,13 @@ export class UserService {
 				message: UserMessages.Delete
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async removeDriver(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const user = await this.findOneById(id)
 			if (user.role !== UserRole.Driver) {
 				throw new ForbiddenException('you just can remove drivers')
@@ -281,11 +310,13 @@ export class UserService {
 				message: UserMessages.Delete
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async removeSubUser(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const parentId = this.req.user.id
 			const user = await this.findOneById(id)
 			if (user.parentId !== parentId) throw new BadRequestException('you just can remove your sub users')
@@ -295,11 +326,13 @@ export class UserService {
 				message: UserMessages.Delete
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async profile() {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { id, parentId } = this.req.user
 			let relations: object = {
 				child: true, stations: { location: true, fuels: true },
@@ -336,11 +369,13 @@ export class UserService {
 				data: user
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 	async mySubUsers() {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { id } = this.req.user
 			const subUsers = await this.userRepository.find({
 				where: { parentId: id },
@@ -355,6 +390,7 @@ export class UserService {
 				data: subUsers
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}

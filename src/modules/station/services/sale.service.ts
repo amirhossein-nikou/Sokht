@@ -21,6 +21,7 @@ export class SaleService {
 	) { }
 	async create(createSaleDto: CreateSaleDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { fuel_type, average_sale, stationId } = createSaleDto
 			const station = await this.stationService.findOneById(stationId)
 			if (!station.fuels.find(item => item.id == fuel_type))
@@ -44,21 +45,23 @@ export class SaleService {
 				data: result
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
 
 	async findAll(paginationDto: PaginationDto) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const { limit, page, skip } = paginationSolver(paginationDto)
-			const [averageSales,count] = await this.averageSaleRepository.findAndCount({
+			const [averageSales, count] = await this.averageSaleRepository.findAndCount({
 				relations: { station: true },
 				take: limit,
 				skip
 			});
 			return {
 				statusCode: HttpStatus.CREATED,
-				pagination: paginationGenerator(limit,page,count),
+				pagination: paginationGenerator(limit, page, count),
 				data: averageSales
 			}
 		} catch (error) {
@@ -68,6 +71,7 @@ export class SaleService {
 
 	async findOne(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const averageSale = await this.averageSaleRepository.findOne({
 				where: { id },
 				relations: {
@@ -80,6 +84,7 @@ export class SaleService {
 				data: averageSale
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
@@ -101,6 +106,7 @@ export class SaleService {
 
 	async remove(id: number) {
 		try {
+			console.log(`access  -> ${this.req.url}`);
 			const averageSale = await this.getOne(id)
 			await this.averageSaleRepository.remove(averageSale)
 			return {
@@ -108,6 +114,7 @@ export class SaleService {
 				message: SaleMessages.Remove
 			}
 		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
 			throw error
 		}
 	}
