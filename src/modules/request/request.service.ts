@@ -5,16 +5,19 @@ import { Request } from 'express';
 import { RejectDto } from 'src/common/dto/create-reject.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { StatusEnum } from 'src/common/enums/status.enum';
+import { CreateNumber } from 'src/common/utils/create-number.utils';
 import { FormatDateTime } from 'src/common/utils/formatDate.utils';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { Between, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { CargoEntity } from '../cargo/entities/cargo.entity';
 import { DepotService } from '../depot/depot.service';
+import { FuelTypeService } from '../fuel-type/fuel-type.service';
 import { NotificationGateway } from '../notification/notification.gateway';
 import { InventoryService } from '../station/services/inventory.service';
 import { SaleService } from '../station/services/sale.service';
 import { StationService } from '../station/services/station.service';
+import { TankerService } from '../tanker/tanker.service';
 import { UserRole } from '../user/enum/role.enum';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { SearchDto, SearchWithFuelAndReceiveDto } from './dto/search.dto';
@@ -25,9 +28,6 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
-import { FuelTypeService } from '../fuel-type/fuel-type.service';
-import { TankerService } from '../tanker/tanker.service';
-import { CreateNumber } from 'src/common/utils/create-number.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -603,7 +603,9 @@ export class RequestService {
                 userId: request.station.ownerId,
                 parentId: request.station.ownerId
             })
-            await this.tankerService.updateStatusByTakerList(request.cargo.tankers, true)
+            if (request.cargo) {
+                await this.tankerService.updateStatusByTakerList(request.cargo.tankers, true)
+            }
             return {
                 statusCode: HttpStatus.OK,
                 message: "request rejected successfully"
@@ -649,7 +651,13 @@ export class RequestService {
         }
     }
     async getOneById(id: number) {
-        const request = await this.requestRepository.findOne({ where: { id }, relations: { cargo: true, station: true } })
+        const request = await this.requestRepository.findOne({
+            where: { id }, relations: {
+                cargo: {
+                    tankers: true
+                }, station: true
+            }
+        })
         if (!request) throw new NotFoundException(RequestMessages.Notfound)
         return request
     }
@@ -665,7 +673,8 @@ export class RequestService {
         const request = await this.requestRepository.find({
             where: {
                 created_at: Between(now, end),
-                stationId
+                stationId,
+                statusId: In([StatusEnum.Approved, StatusEnum.Licensing, StatusEnum.Posted])
             },
         })
         if (request.length >= 4) throw new BadRequestException('cant send more than 4')
