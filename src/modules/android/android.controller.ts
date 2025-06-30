@@ -149,6 +149,6 @@ export class AndroidController {
     @Delete('/remove/request/:id')
     @CanAccess(UserRole.StationUser)
     remove(@Param('id', ParseIntPipe) id: number) {
-        return this.androidService.receivedRequest(id);
+        return this.androidService.removeRequest(id);
     }
 }
