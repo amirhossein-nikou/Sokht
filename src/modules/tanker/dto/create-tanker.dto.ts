@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsNumberString, IsString, Length } from "class-validator";
+import { IsAlpha, IsNumberString, IsString, Length } from "class-validator";
 
 export class CreateTankerDto {
     @ApiProperty()
@@ -26,7 +26,7 @@ export class CreateTankerDto {
     @Length(2, 2)
     city: number;
     @ApiProperty()
-    @IsString()
+    @IsAlpha("fa-IR",{message: 'char must contain only persian letters'})
     @Length(1, 1)
     char: string;
 }
@@ -44,7 +44,7 @@ export class CreatePlateDto {
     @Length(2, 2)
     city: number;
     @ApiProperty()
-    @IsString()
+    @IsAlpha("fa-IR",{message: 'char must contain only persian letters'})
     @Length(1, 1)
     char: string;
 }

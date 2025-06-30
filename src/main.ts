@@ -1,4 +1,4 @@
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationError, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { json, urlencoded } from 'body-parser';
@@ -14,7 +14,21 @@ async function bootstrap() {
     server.headersTimeout = 32000
     app.enableCors();
     SwaggerConfig(app)
-    app.useGlobalPipes(new ValidationPipe)
+    app.useGlobalPipes(new ValidationPipe({
+          exceptionFactory: (validationErrors: ValidationError[] = []) => {
+            const errors = validationErrors.map((error) => {
+              const constraints = error.constraints;
+              if (constraints) {
+                console.log( Object.values(constraints)[0]);
+                throw new BadRequestException(Object.values(constraints)[0]);
+              }
+              return 'Validation error';
+            });
+            return new BadRequestException(errors);
+          },
+          stopAtFirstError: false,
+        }),
+    );
     app.use(json({ limit: '50mb' }));
     app.use(urlencoded({ extended: true }))
     app.useStaticAssets('public', { prefix: '/public/' })
