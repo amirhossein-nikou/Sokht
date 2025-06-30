@@ -1,18 +1,7 @@
 import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { CreatePlateDto, CreateTankerDto } from './create-tanker.dto';
-import { IsNumberString } from 'class-validator';
+import { IsNumberString, IsOptional } from 'class-validator';
 
-export class UpdateTankerDto {
-    @ApiPropertyOptional()
-    @IsNumberString()
-    capacity: number;
-    @ApiPropertyOptional()
-    @IsNumberString()
-    // @Length()
-    number: number;
-    @ApiPropertyOptional()
-    @IsNumberString()
-    driverId: number;
-}
+export class UpdateTankerDto extends PartialType(CreateTankerDto) { }
 
 export class UpdatePlateDto extends PartialType(CreatePlateDto) { }

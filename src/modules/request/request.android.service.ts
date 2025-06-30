@@ -439,7 +439,6 @@ export class RequestServiceAndroid {
             const request = await this.getOneByIdForUpdateAndRemove(id)
             const updateObject = RemoveNullProperty({ receive_at, value, })
             const station = await this.stationService.findOneById(request.stationId)
-            if (receive_at) await this.manageReceivedAt(station.id, receive_at, request.fuel_type)
             if (value) await this.filterRequestValue(station.id, request.fuel_type, value)
             const priority = await this.detectPriority(station.id, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
@@ -466,7 +465,6 @@ export class RequestServiceAndroid {
             const request = await this.getOneById(id)
             const updateObject = RemoveNullProperty({ receive_at, value, })
             const station = await this.stationService.findOneById(request.stationId)
-            if (receive_at) await this.manageReceivedAt(station.id, receive_at, request.fuel_type)
             if (value) await this.filterRequestValue(station.id, request.fuel_type, value)
             const priority = await this.detectPriority(station.id, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
