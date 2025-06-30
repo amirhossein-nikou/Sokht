@@ -241,9 +241,9 @@ export class CargoService {
         if (cargo) throw new NotFoundException('cargo for this request already exists')
         return false
     }
-    async findCargoWithDetails() {
+    async findCargoWithDetails(id: number) {
         const cargo = await this.cargoRepository.find({
-            where: { inProgress: true },
+            where: { inProgress: true,request: {station: {ownerId: id}} },
             relations: {
                 request: true,
                 tankers: {
