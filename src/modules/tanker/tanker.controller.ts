@@ -27,9 +27,9 @@ export class TankerController {
   @ApiTags('web')
   @CanAccess(UserRole.OilDepotUser)
   @PaginationDec()
-  @ApiQuery({type:'string',required: false,name:'search'})
-  findAll(@Query() paginationDto: PaginationDto,@Query('search') search?:string) {
-    return this.tankerService.findAll(search,paginationDto);
+  @ApiQuery({ type: 'string', required: false, name: 'search' })
+  findAll(@Query() paginationDto: PaginationDto, @Query('search') search?: string) {
+    return this.tankerService.findAll(search, paginationDto);
   }
   @Get('/available')
   @ApiTags('web')
@@ -37,12 +37,19 @@ export class TankerController {
   getAvailableTankers() {
     return this.tankerService.availableTankers();
   }
+  @Get('/free/:capacity')
+  @ApiTags('web')
+  @CanAccess(UserRole.OilDepotUser)
+  findFreeTankers(@Param('capacity', ParseIntPipe) capacity: number) {
+    return this.tankerService.findFreeTankers(capacity);
+  }
 
   @Get('/by-id/:id')
   @CanAccess(UserRole.OilDepotUser)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.tankerService.findOne(id);
   }
+
   @Get('/by-driverId/:driverId')
   @CanAccess(UserRole.OilDepotUser)
   findOneByDriverId(@Param('driverId', ParseIntPipe) driverId: number) {

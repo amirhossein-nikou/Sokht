@@ -28,6 +28,7 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
+import { FuelTypeEnum } from 'src/common/enums/fuelType.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -49,7 +50,15 @@ export class RequestService {
             console.log(`access -> ${this.req.url}`);
             const { fuel_type, value, depotId, receive_at } = createRequestDto
             const { id: userId, parentId } = this.req.user
+            await this.fuelService.insertFuelType()
             await this.insertStatus()
+            const fuel = await this.fuelService.getById(fuel_type)
+            await this.fuelService.checkUpdateLimit()
+            if (fuel.limit && value > fuel.limit) {
+                throw new BadRequestException(`you cant request more than ${fuel.limit}`)
+            }
+            if (!fuel.available_value.includes(value))
+                throw new BadRequestException(`request value for this fuel cna be following values -> [${fuel.available_value}]`)
             // check exists station
             const now = FormatDateTime(new Date());
             //if (now > ReceiveTimeEnum.FOUR_PM || now < ReceiveTimeEnum.SEVEN_AM) throw new BadRequestException(`requests can be created from 07:00 until 16:00`)
@@ -83,7 +92,6 @@ export class RequestService {
                 receive_at,
                 number
             })
-            const fuel = await this.fuelService.getById(fuel_type)
             const result = await this.requestRepository.save(request);
             await this.notification.notificationHandler({
                 title: `پرسنل ${station.owner.first_name} ${station.owner.last_name} یک درخواست جدید به شماره ${request.id} و به مقدار ${request.value} لیتر سوخت ${fuel.name} ایجاد کرد`,
@@ -107,9 +115,9 @@ export class RequestService {
             console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             const { id: userId, role, parentId } = this.req.user
-            let whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
+            let whereQuery = `(request.statusId IN (0, 1, 2, 3) AND request.rejectDetails IS NULL AND station.ownerId = :ownerId)`
             if (role !== UserRole.StationUser) {
-                whereQuery = `(request.statusId IN (0, 1, 2) AND request.rejectDetails IS NULL)`
+                whereQuery = `(request.statusId IN (0, 1, 2, 3) AND request.rejectDetails IS NULL)`
             }
             const [requests, count] = await this.requestRepository.createQueryBuilder('request')
                 .leftJoinAndSelect('request.depot', 'depot')
@@ -131,28 +139,6 @@ export class RequestService {
                 .offset(skip)
                 .limit(limit)
                 .getManyAndCount()
-            // await this.requestRepository.findAndCount({
-            //     //where,
-            //     order: requestOrder,
-            //     relations: {
-            //         depot: true,
-            //     },
-            //     select: {
-            //         id: true,
-            //         priority: true,
-            //         depot: { name: true },
-            //         fuel_type: true,
-            //         fuel: { name: true },
-            //         value: true,
-            //         receive_at: true,
-            //         status: { status: true },
-            //         statusId: true,
-            //         stationId: true,
-            //         created_at: true
-            //     },
-            //     skip,
-            //     //take: 10,
-            // })
             return {
                 statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),
@@ -217,7 +203,7 @@ export class RequestService {
                 .leftJoinAndSelect('tankers.driver', 'driver')
                 .leftJoinAndSelect('request.fuel', 'fuel')
                 .select([
-                    'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
+                    'request.id', 'request.received_time', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
@@ -238,44 +224,6 @@ export class RequestService {
             throw error
         }
     }
-    // async getRequestArchive() {
-    //     try {
-    //         const { id: userId, role, parentId } = this.req.user
-    //         let where: object = {
-    //             station: {
-    //                 ownerId: parentId ?? userId
-    //             }
-    //         }
-    //         if (role !== UserRole.StationUser) {
-    //             where = {}
-    //         }
-    //         const requests = await this.requestRepository.find({
-    //             where,
-    //             relations: {
-    //                 depot: true,
-    //             },
-    //             order: requestOrder,
-    //             select: {
-    //                 id: true,
-    //                 depot: { name: true },
-    //                 fuel_type: true,
-    //                 fuel: { name: true },
-    //                 value: true,
-    //                 receive_at: true,
-    //                 status: { status: true },
-    //                 statusId: true,
-    //                 stationId: true,
-    //                 created_at: true
-    //             }
-    //         })
-    //         return {
-    //             statusCode: HttpStatus.OK,
-    //             data: requests
-    //         }
-    //     } catch (error) {
-    //         throw error
-    //     }
-    // }
     async findOne(id: number) {
         try {
             console.log(`access  -> ${this.req.url}`);
@@ -430,22 +378,6 @@ export class RequestService {
             throw error
         }
     }
-    // async findStationRequests(stationId: number) {
-    //     try {
-    //         const requests = await this.requestRepository.find({
-    //             where: { stationId }, relations: {
-    //                 depot: true,
-    //             },
-    //         })
-    //         if (!requests) throw new NotFoundException(RequestMessages.Notfound)
-    //         return {
-    //             statusCode: HttpStatus.OK,
-    //             data: requests
-    //         }
-    //     } catch (error) {
-    //         throw error
-    //     }
-    // }
 
     async update(id: number, updateRequestDto: UpdateRequestDto) {
         try {
@@ -454,7 +386,12 @@ export class RequestService {
             const request = await this.getOneByIdForUpdateAndRemove(id)
             const updateObject = RemoveNullProperty({ receive_at, value, })
             const station = await this.stationService.findOneById(request.stationId)
-            if (value) await this.filterRequestValue(station.id, request.fuel_type, value)
+            if (value) {
+                const fuel = await this.fuelService.getById(request.fuel_type)
+                if (!fuel.available_value.includes(value))
+                    throw new BadRequestException(`request value for this fuel cna be following values -> [${fuel.available_value}]`)
+                await this.filterRequestValue(station.id, request.fuel_type, value)
+            }
             const priority = await this.detectPriority(station.id, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
                 statusId: StatusEnum.Posted,
@@ -562,6 +499,24 @@ export class RequestService {
             throw error
         }
     }
+    async sendTankerForRequest(id: number) {
+        try {
+            console.log(`access  -> ${this.req.url}`);
+            const request = await this.getOneById(id)
+            if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
+            if (request.statusId == StatusEnum.Licensing) throw new BadRequestException(RequestMessages.LicenseFirst)
+            if (request.statusId == StatusEnum.SendTanker) throw new BadRequestException(RequestMessages.SendTanker)
+
+            await this.requestRepository.update(id, { statusId: StatusEnum.Licensing })
+            return {
+                statusCode: HttpStatus.OK,
+                message: RequestMessages.LicenseSuccess
+            }
+        } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
+            throw error
+        }
+    }
     async receivedRequest(id: number) {
         try {
             console.log(`access  -> ${this.req.url}`);
@@ -570,7 +525,7 @@ export class RequestService {
             if (request.statusId == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
             if (request.statusId == StatusEnum.Received) throw new BadRequestException(RequestMessages.AlreadyReceived)
             await this.cargoRepository.update(request.cargo.id, { inProgress: false })
-            await this.requestRepository.update(id, { statusId: StatusEnum.Received })
+            await this.requestRepository.update(id, { statusId: StatusEnum.Received, received_time: new Date() })
             await this.tankerService.updateStatusByTakerList(request.cargo.tankers, true)
             return {
                 statusCode: HttpStatus.OK,
@@ -694,7 +649,7 @@ export class RequestService {
     private async getOneByIdForUpdateAndRemove(id: number) {
         const request = await this.requestRepository.findOneBy({ id })
         if (!request) throw new NotFoundException(RequestMessages.Notfound)
-        if ([1, 2, 3].includes(request.statusId)) throw new BadRequestException('you cant update or remove on this status')
+        if ([StatusEnum.Approved, StatusEnum.Licensing, StatusEnum.Received].includes(request.statusId)) throw new BadRequestException('you cant update or remove on this status')
         return request
     }
     async limitSendRequests(stationId: number) {
@@ -733,7 +688,8 @@ export class RequestService {
     }
     async insertStatus() {
         await this.createStatus(StatusEnum.Posted, "در انتظار تایید")
-        await this.createStatus(StatusEnum.Licensing, 'صدور پروانه و ارسال نفت کش')
+        await this.createStatus(StatusEnum.Licensing, 'صدور پروانه')
+        await this.createStatus(StatusEnum.SendTanker, 'ارسال نفت کش')
         await this.createStatus(StatusEnum.Approved, "تایید شده")
         await this.createStatus(StatusEnum.Received, "دریافت شده")
         await this.createStatus(StatusEnum.Reject, "رد شده")

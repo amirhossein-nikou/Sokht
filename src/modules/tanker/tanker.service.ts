@@ -1,9 +1,12 @@
 import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
+import { isNumber } from 'class-validator';
 import { Request } from 'express';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { EntityName } from 'src/common/enums/entity.enum';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
+import { plateFormat } from 'src/common/utils/plate-format.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
 import { In, Repository } from 'typeorm';
 import { DepotService } from '../depot/depot.service';
@@ -11,12 +14,9 @@ import { UserRole } from '../user/enum/role.enum';
 import { UserService } from '../user/user.service';
 import { CreatePlateDto, CreateTankerDto } from './dto/create-tanker.dto';
 import { UpdatePlateDto, UpdateTankerDto } from './dto/update-tanker.dto';
+import { PlateEntity } from './entities/plate.entity';
 import { TankerEntity } from './entities/tanker.entity';
 import { TankerMessages } from './enum/message.enum';
-import { EntityName } from 'src/common/enums/entity.enum';
-import { isNumber } from 'class-validator';
-import { PlateEntity } from './entities/plate.entity';
-import { plateFormat } from 'src/common/utils/plate-format.utils';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TankerService {
@@ -98,6 +98,32 @@ export class TankerService {
             throw error
         }
     }
+    async findFreeTankers(capacity: number) {
+        try {
+            console.log(`access  -> ${this.req.url}`);
+            const tankers = await this.tankerRepository.find(
+                {
+                    where: { capacity },
+                    relations: {
+                        //cargo: true,
+                        plate: true,
+                        driver: true
+                    },
+                    select: {
+                        cargo: { tankerId: false },
+                        driver: {last_name: true,first_name: true,id: true}
+                    }
+                })
+            if (tankers.length <= 0) throw new NotFoundException(TankerMessages.Notfound)
+            return {
+                statusCode: HttpStatus.OK,
+                data: tankers
+            }
+        } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
+            throw error
+        }
+    }
     async availableTankers() {
         try {
             console.log(`access  -> ${this.req.url}`);
@@ -155,6 +181,7 @@ export class TankerService {
             throw error
         }
     }
+
     async findOneByDriverId(driverId: number) {
         try {
             console.log(`access  -> ${this.req.url}`);

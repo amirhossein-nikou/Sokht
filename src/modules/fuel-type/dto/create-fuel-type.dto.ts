@@ -1,8 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString } from "class-validator";
+import { IsArray, IsNumber, IsString } from "class-validator";
 
 export class CreateFuelTypeDto {
-    @ApiProperty()
     @IsString()
     name: string
+    @IsNumber()
+    id: number
+    @IsArray()
+    available_value: number[]
 }
