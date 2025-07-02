@@ -42,18 +42,8 @@ export class RequestEntity {
         }
     })
     created_at: Date
-    @Column({
-        nullable:true,
-        transformer: {
-            to(value) { return value },
-            from(value) {
-                if (value) {
-                    return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
-                }
-            }
-        }
-    })
-    received_time: Date
+    @Column({ enum: ReceiveTimeEnum ,nullable: true})
+    received_time: ReceiveTimeEnum
     @Column({ nullable: true, type: 'numeric' })
     priority_value: number
     @ManyToOne(() => DepotEntity, depot => depot.requests, { onDelete: "CASCADE" })

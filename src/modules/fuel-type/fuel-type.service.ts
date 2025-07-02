@@ -31,7 +31,7 @@ export class FuelTypeService {
 	async addLimitForDiesel(limit: number) {
 		try {
 			const diesel = await this.fuelTypeRepository.findOneBy({ id: FuelTypeEnum.Diesel })
-			if (!diesel.available_value.includes(limit)) throw new BadRequestException(`chose a limit between following values => ${diesel.available_value}`)
+			//if (!diesel.available_value.includes(limit)) throw new BadRequestException(`chose a limit between following values => ${diesel.available_value}`)
 			diesel.limit = limit
 			await this.fuelTypeRepository.save(diesel)
 			return {

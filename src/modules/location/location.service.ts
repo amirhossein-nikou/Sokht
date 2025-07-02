@@ -1,7 +1,7 @@
 import { HttpStatus, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationEntity } from './entity/location.entity';
@@ -20,8 +20,8 @@ export class LocationService {
 	async create(createLocationDto: CreateLocationDto) {
 		try {
 			console.log(`access  -> ${this.req.url}`);
-			const { lat, lon, address } = createLocationDto;
-			const location = this.locationRepository.create({ lat, lon, address })
+			const { lat, lon, address, province, city } = createLocationDto;
+			const location = this.locationRepository.create({ lat, lon, address, province, city })
 			const result = await this.locationRepository.save(location)
 			return {
 				statusCode: HttpStatus.CREATED,
@@ -29,16 +29,24 @@ export class LocationService {
 				data: result
 			}
 		} catch (error) {
-			console.log(`error -> ${this.req.url} -> `  , error.message)
+			console.log(`error -> ${this.req.url} -> `, error.message)
 			throw error
 		}
 	}
 
-	async findAll(paginationDto: PaginationDto) {
+	async findAll(search: string, paginationDto: PaginationDto) {
 		try {
 			console.log(`access  -> ${this.req.url}`);
 			const { limit, page, skip } = paginationSolver(paginationDto)
+			let where = ''
+			if (search) {
+
+			}
 			const [locations, count] = await this.locationRepository.findAndCount({
+				where:[	
+					{city: ILike(search)},
+					{province: ILike(search)},
+				],
 				take: limit,
 				skip
 			})
@@ -48,7 +56,7 @@ export class LocationService {
 				data: locations
 			}
 		} catch (error) {
-			console.log(`error -> ${this.req.url} -> `  , error.message)
+			console.log(`error -> ${this.req.url} -> `, error.message)
 			throw error
 		}
 	}
@@ -63,7 +71,7 @@ export class LocationService {
 				data: location,
 			}
 		} catch (error) {
-			console.log(`error -> ${this.req.url} -> `  , error.message)
+			console.log(`error -> ${this.req.url} -> `, error.message)
 			throw error
 		}
 	}
@@ -81,7 +89,7 @@ export class LocationService {
 				data: result
 			}
 		} catch (error) {
-			console.log(`error -> ${this.req.url} -> `  , error.message)
+			console.log(`error -> ${this.req.url} -> `, error.message)
 			throw error
 		}
 	}

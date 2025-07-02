@@ -10,6 +10,12 @@ export class CreateLocationDto {
     @IsString()
     address: string;
     @ApiProperty()
+    @IsString()
+    province: string;
+    @ApiProperty()
+    @IsString()
+    city: string;
+    @ApiProperty()
     @IsLongitude()
     @Length(1, 30)
     lon: number;

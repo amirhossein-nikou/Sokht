@@ -18,6 +18,7 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { paginationGenerator, paginationSolver } from "src/common/utils/pagination.utils";
 import { Request } from "express";
+import { ReceiveTimeEnum } from "../request/enums/time.enum";
 
 @Injectable({ scope: Scope.REQUEST })
 export class AndroidService {
@@ -73,8 +74,8 @@ export class AndroidService {
         return this.requestService.update(id, updateRequestDto);
     }
 
-    receivedRequest(id: number) {
-        return this.requestService.receivedRequest(id);
+    receivedRequest(id: number,time:ReceiveTimeEnum) {
+        return this.requestService.receivedRequest(id,time);
     }
 
     createRequestDetails() {

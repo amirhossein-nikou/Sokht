@@ -20,7 +20,7 @@ export class AverageSaleEntity {
     fuels: FuelTypeEntity
     @UpdateDateColumn({
         transformer: {
-            to(value) { return value },
+            to(value) { return new Date() },
             from(value) {
                 if (value) {
                     return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')

@@ -57,7 +57,7 @@ export class RequestServiceAndroid {
             if (fuel.limit && value > fuel.limit) {
                 throw new BadRequestException(`you cant request more than ${fuel.limit}`)
             }
-            if (!fuel.available_value.includes(value))
+            if (!fuel.available_value.includes(Number(value)))
                 throw new BadRequestException(`request value for this fuel cna be following values -> [${fuel.available_value}]`)
             // check exists station
             const now = FormatDateTime(new Date());
@@ -517,15 +517,16 @@ export class RequestServiceAndroid {
             throw error
         }
     }
-    async receivedRequest(id: number) {
+    async receivedRequest(id: number,time:ReceiveTimeEnum) {
         try {
             console.log(`access  -> ${this.req.url}`);
             const request = await this.getOneById(id)
             if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
             if (request.statusId == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
             if (request.statusId == StatusEnum.Received) throw new BadRequestException(RequestMessages.AlreadyReceived)
+            if(!request.cargo) throw new NotFoundException('cargo not found')
             await this.cargoRepository.update(request.cargo.id, { inProgress: false })
-            await this.requestRepository.update(id, { statusId: StatusEnum.Received, received_time: new Date() })
+            await this.requestRepository.update(id, { statusId: StatusEnum.Received, received_time: time })
             await this.tankerService.updateStatusByTakerList(request.cargo.tankers, true)
             return {
                 statusCode: HttpStatus.OK,

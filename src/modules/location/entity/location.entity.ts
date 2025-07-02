@@ -14,6 +14,10 @@ export class LocationEntity {
     lat: number;
     @Column({ type: 'numeric' })
     lon: number;
+    @Column({nullable: true})
+    province: string;
+    @Column({nullable: true})
+    city: string;
     @OneToOne(() => StationEntity, (station) => station.location)
     station: StationEntity;
     @OneToOne(() => DepotEntity, depot => depot.location)

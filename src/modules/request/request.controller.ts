@@ -91,8 +91,9 @@ export class RequestController {
     }
     @Patch('/received/:id')
     @CanAccess(UserRole.StationUser)
-    received(@Param('id', ParseIntPipe) id: number) {
-        return this.requestService.receivedRequest(id);
+    @ApiQuery({ type:'enum',enum:ReceiveTimeEnum, name: 'time', required: false })
+    received(@Param('id', ParseIntPipe) id: number,@Query('time') time:ReceiveTimeEnum) {
+        return this.requestService.receivedRequest(id,time);
     }
     @Patch('/reject/:id')
     @ApiTags('web')

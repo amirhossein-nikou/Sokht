@@ -111,7 +111,7 @@ export class TankerService {
                     },
                     select: {
                         cargo: { tankerId: false },
-                        driver: {last_name: true,first_name: true,id: true}
+                        driver: { last_name: true, first_name: true, id: true }
                     }
                 })
             if (tankers.length <= 0) throw new NotFoundException(TankerMessages.Notfound)
@@ -246,17 +246,20 @@ export class TankerService {
     async updatePlate(id: number, updatePlateDto: UpdatePlateDto) {
         let { char, city, first, second } = updatePlateDto
         const plate = await this.getPlateById(id)
-        // if (!char) char = plate.char
-        // if (!city) city = plate.city
-        // if (!first) first = plate.first
-        // if (!second) second = plate.second
-        const fullPlate = plateFormat({
-            char: char ?? plate.char,
-            city: city ?? plate.city,
-            first: first ?? plate.first,
-            second: second ?? plate.second
-        })
-        await this.checkExistsPlate(fullPlate)
+        let fullPlate = ''
+        if (char || city || first || second) {
+            if (!char) char = plate.char
+            if (!city) city = plate.city
+            if (!first) first = plate.first
+            if (!second) second = plate.second
+            fullPlate = plateFormat({
+                char: char ?? plate.char,
+                city: city ?? plate.city,
+                first: first ?? plate.first,
+                second: second ?? plate.second
+            })
+            await this.checkExistsPlate(fullPlate)
+        }
         const updateObject = RemoveNullProperty({ char, city, first, second, full_plate: fullPlate })
         if (updateObject) {
             await this.plateRepository.update(id, updateObject)

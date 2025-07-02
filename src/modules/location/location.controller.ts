@@ -8,6 +8,7 @@ import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationService } from './location.service';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
+import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('location')
 @UserAuthGuard()
@@ -23,8 +24,9 @@ export class LocationController {
 
   @Get('/list')
   @PaginationDec()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.locationService.findAll(paginationDto);
+  @ApiQuery({ type: 'string', name: 'search', required: false })
+  findAll(@Query() paginationDto: PaginationDto, @Query('search') search: string) {
+    return this.locationService.findAll(search, paginationDto);
   }
 
   @Get('/get-one/:id')
