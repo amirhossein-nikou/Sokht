@@ -11,6 +11,8 @@ import { DepotEntity } from './entity/depot.entity';
 import { DepotMessages } from './enum/message.enum';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
+import { UserRole } from '../user/enum/role.enum';
+import { PremiumRoles } from 'src/common/enums/otherRole.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class DepotService {
@@ -123,8 +125,13 @@ export class DepotService {
 	async remove(id: number) {
 		try {
 			console.log(`access  -> ${this.req.url}`);
-			const { id: ownerId } = this.req.user
-			const depot = await this.findOneByIdWithOwner(id, ownerId)
+			const { id: ownerId,role } = this.req.user
+			let depot
+			if(role === UserRole.HeadUser){
+				depot = await this.findOneById(id)
+			}else{
+				depot = await this.findOneByIdWithOwner(id, ownerId)
+			}
 			await this.depotRepository.remove(depot)
 			return {
 				statusCode: HttpStatus.OK,

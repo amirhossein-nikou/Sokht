@@ -9,10 +9,11 @@ import { paginationGenerator, paginationSolver } from 'src/common/utils/paginati
 import { Repository } from 'typeorm';
 import { AuthService } from '../auth/auth.service';
 import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
-import { UpdateMobileDto } from './dto/update-user.dto';
+import { UpdateMobileDto, UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entity/user.entity';
 import { UserRole } from './enum/role.enum';
 import { UserMessages } from './enum/user.message';
+import { RemoveNullProperty } from 'src/common/utils/update.utils';
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -277,6 +278,32 @@ export class UserService {
 				statusCode: HttpStatus.OK,
 				data: result,
 				message: 'mobile changed'
+			}
+		} catch (error) {
+			console.log(`error -> ${this.req.url} -> `, error.message);
+			throw error
+		}
+	}
+	async update(id: number,updateUserDto: UpdateUserDto) {
+		try {
+			console.log(`access  -> ${this.req.url}`);
+			let { certificateId, first_name, last_name, mobile, national_code } = updateUserDto
+			await this.findOneById(id)
+			if (mobile) {
+				await this.checkExistsMobile(mobile)
+				mobile = ModifyMobileNumber(mobile)
+			}
+			if (national_code) await this.checkExistsNationalCode(national_code)
+			if (certificateId) await this.checkExistsCertificateId(certificateId)
+			const updateObject = RemoveNullProperty({ certificateId, first_name, last_name, mobile, national_code })
+			if(updateObject){
+				await this.userRepository.update(id,updateObject)
+			}
+			const result = await this.findOneById(id)
+			return {
+				statusCode: HttpStatus.OK,
+				data: result,
+				message: 'user updated'
 			}
 		} catch (error) {
 			console.log(`error -> ${this.req.url} -> `, error.message);

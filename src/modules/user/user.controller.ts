@@ -4,7 +4,7 @@ import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { PremiumRoles } from 'src/common/enums/otherRole.enum';
 import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
-import { UpdateMobileDto } from './dto/update-user.dto';
+import { UpdateMobileDto, UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from './enum/role.enum';
 import { UserService } from './user.service';
 import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
@@ -86,7 +86,12 @@ export class UserController {
     updateMyMobile(@Body() updateMobileDto: UpdateMobileDto) {
         return this.userService.updateMyPhone(updateMobileDto);
     }
-
+    @Patch('/update/:id')
+    @MyApiConsumes()
+    @CanAccess(PremiumRoles.Head) // main admin
+    update(@Param('id', ParseIntPipe) id: number,@Body() updateUserDto: UpdateUserDto) {
+        return this.userService.update(id,updateUserDto);
+    }
     @Delete('/remove/:id')
     @MyApiConsumes()
     @CanAccess(PremiumRoles.Boss) // main admin
