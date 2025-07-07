@@ -39,7 +39,7 @@ export class InventoryService {
             })
             const result = await this.inventoryRepository.save(inventory)
             return {
-                status: HttpStatus.CREATED,
+                statusCode: HttpStatus.CREATED,
                 message: InventoryMessages.Created,
                 data: result
             }
@@ -78,7 +78,7 @@ export class InventoryService {
                 }
             })
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),
                 data: inventories
             }
@@ -120,7 +120,7 @@ export class InventoryService {
                 }
             })
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),
                 data: inventories
             }
@@ -162,7 +162,7 @@ export class InventoryService {
                 }
             })
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),
                 data: inventories
             }
@@ -201,7 +201,7 @@ export class InventoryService {
             const inventory = await this.inventoryRepository.findOne({ where });
             if (!inventory) throw new NotFoundException(InventoryMessages.NotFound)
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 data: inventory
             }
         } catch (error) {
@@ -225,7 +225,7 @@ export class InventoryService {
             await this.inventoryRepository.update({ id: inventory.id }, obj)
             const result = await this.findOneById(id, userId);
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 message: InventoryMessages.Update,
                 data: result
             }
@@ -247,7 +247,7 @@ export class InventoryService {
             await this.inventoryRepository.update({ id: inventory.id }, obj)
             const result = await this.findById(id);
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 message: InventoryMessages.Update,
                 data: result
             }
@@ -267,7 +267,7 @@ export class InventoryService {
             const obj = RemoveNullProperty(updateValue)
             await this.inventoryRepository.update({ id: inventory.id }, obj)
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 message: InventoryMessages.Update
             }
         } catch (error) {
@@ -282,7 +282,7 @@ export class InventoryService {
             const inventory = await this.findById(id)
             await this.inventoryRepository.remove(inventory)
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 message: InventoryMessages.Remove
 
             }
@@ -371,7 +371,7 @@ export class InventoryService {
                 fuel_type: fuelType
             }
         });
-        if (inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
+        //if (inventory.length == 0) throw new NotFoundException(InventoryMessages.NotFound)
         return inventory
     }
     async findAllUserInventories(ownerId: number) {

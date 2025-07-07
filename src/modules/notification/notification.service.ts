@@ -67,7 +67,7 @@ export class NotificationService {
             const notification = await this.getOneById(id)
             await this.notificationRepository.remove(notification)
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 message: NotificationMessages.Remove
             }
         } catch (error) {

@@ -1,4 +1,4 @@
-import { ConflictException, HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import { randomInt } from "crypto";
@@ -95,6 +95,8 @@ export class AuthService {
                 data: {
                     accessToken,
                     refreshToken,
+                    role: user.role,
+                    isParent: !user.parentId
                 },
                 message: "logged in successfully"
             }

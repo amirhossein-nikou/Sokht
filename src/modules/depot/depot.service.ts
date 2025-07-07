@@ -102,9 +102,9 @@ export class DepotService {
 			console.log(`access  -> ${this.req.url}`);
 			const { locationId, name, ownerId } = updateDepotDto
 			const updateObject = RemoveNullProperty({ locationId, name, ownerId })
-			await this.findOneById(id)
+			const depot = await this.findOneById(id)
 			if (ownerId && ownerId.toString() !== "0") await this.userService.findOneById(ownerId)
-			if (locationId && locationId.toString() !== "0") {
+			if (locationId && locationId.toString() !== "0" && locationId != depot.locationId) {
 				await this.locationService.getOneById(locationId)
 				await this.checkExistsLocation(locationId)
 			}

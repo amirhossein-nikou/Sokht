@@ -46,7 +46,7 @@ export class StationService {
             })
             const result = await this.stationRepository.save(station)
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 message: StationMessages.Created,
                 data: result
             }
@@ -66,7 +66,7 @@ export class StationService {
                 skip
             });
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),
                 data: stations
             }
@@ -84,12 +84,18 @@ export class StationService {
                 relations: {
                     location: true,
                     average_sale: true,
-                    fuels: true
+                    fuels: true,
+                    owner: true
+                },
+                select: {
+                    owner: {
+                        id: true,first_name: true,last_name: true,mobile: true,national_code: true,certificateId: true
+                    }
                 }
             })
             if (!station) throw new NotFoundException(StationMessages.NotFound)
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 data: station
             }
         } catch (error) {
@@ -103,25 +109,27 @@ export class StationService {
             console.log(`access  -> ${this.req.url}`);
             const { isActive, locationId, name, ownerId, fuel_types } = updateStationDto
             let fuels
+            const station = await this.findOneById(id)
             if (fuel_types) {
                 const fuelIdList = getIdList(StringToArray(fuel_types))
                 fuels = await this.fuelTypeService.getByIdList(fuelIdList)
+                station.fuels = fuels
+                await this.stationRepository.save(station)
             }
-            const station = await this.findOneById(id)
             const updateObj = RemoveNullProperty({
-                ...updateStationDto, isActive: StringToBoolean(isActive), fuels
+               locationId, name, ownerId, isActive: StringToBoolean(isActive)
             })
             //check user exist
             if (ownerId) await this.userService.findOneById(ownerId)
             //check location
-            if (locationId) {
+            if (locationId && locationId != station.locationId) {
                 await this.locationService.findOne(locationId)
                 await this.checkExistsLocation(locationId)
             }
             await this.stationRepository.update(id, updateObj)
             const result = await this.findOneById(id)
             return {
-                status: HttpStatus.CREATED,
+                statusCode: HttpStatus.CREATED,
                 message: StationMessages.Update,
                 data: result
             }
@@ -137,7 +145,7 @@ export class StationService {
             const station = await this.findOneById(id)
             await this.stationRepository.remove(station)
             return {
-                status: HttpStatus.OK,
+                statusCode: HttpStatus.OK,
                 message: StationMessages.Remove
 
             }
@@ -175,9 +183,9 @@ export class StationService {
             const station = await this.stationRepository.find({
                 where: { ownerId: parentId ?? id },
                 relations: {
-                    requests: {
-                        cargo: true
-                    },
+                    // requests: {
+                    //     cargo: true
+                    // },
                     inventory: true,
                     location: true
                 },

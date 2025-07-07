@@ -28,7 +28,6 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
-import { FuelTypeEnum } from 'src/common/enums/fuelType.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestServiceAndroid {
@@ -241,7 +240,20 @@ export class RequestServiceAndroid {
                 where,
                 relations: {
                     depot: true,
+                    cargo: true,
+                    station: {
+                        owner: true
+                    }
                 },
+                select: {
+                    station: {
+                        id: true,
+                        name: true,
+                        owner: {
+                            id: true, first_name: true, last_name: true, mobile: true, national_code: true, certificateId: true
+                        }
+                    }
+                }
             })
             if (!request) throw new NotFoundException(RequestMessages.Notfound)
             return {
@@ -517,14 +529,15 @@ export class RequestServiceAndroid {
             throw error
         }
     }
-    async receivedRequest(id: number,time:ReceiveTimeEnum) {
+    async receivedRequest(id: number, time: ReceiveTimeEnum) {
         try {
             console.log(`access  -> ${this.req.url}`);
             const request = await this.getOneById(id)
+            console.log(time);
             if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
             if (request.statusId == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
             if (request.statusId == StatusEnum.Received) throw new BadRequestException(RequestMessages.AlreadyReceived)
-            if(!request.cargo) throw new NotFoundException('cargo not found')
+            if (!request.cargo) throw new NotFoundException('cargo not found')
             await this.cargoRepository.update(request.cargo.id, { inProgress: false })
             await this.requestRepository.update(id, { statusId: StatusEnum.Received, received_time: time })
             await this.tankerService.updateStatusByTakerList(request.cargo.tankers, true)

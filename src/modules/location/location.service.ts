@@ -84,7 +84,7 @@ export class LocationService {
 			await this.locationRepository.update(id, updateObj)
 			const result = await this.getOneById(id)
 			return {
-				status: HttpStatus.CREATED,
+				statusCode: HttpStatus.CREATED,
 				message: LocationMessages.Update,
 				data: result
 			}
@@ -100,7 +100,7 @@ export class LocationService {
 			const location = await this.getOneById(id)
 			await this.locationRepository.remove(location)
 			return {
-				status: HttpStatus.OK,
+				statusCode: HttpStatus.OK,
 				message: LocationMessages.Remove
 			}
 		} catch (error) {
