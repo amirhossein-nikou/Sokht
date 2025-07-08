@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { MyApiConsumes } from "src/common/decorators/api-consume.dec";
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CreateInventoryDto, UpdateInventoryDto, UpdateValue } from "../dto/inventory.dto";
@@ -23,8 +23,9 @@ export class InventoryController {
     @Get('/list')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)
     @PaginationDec()
-    findAll(@Query() paginationDto: PaginationDto) {
-        return this.inventoryService.findAll(paginationDto);
+    @ApiQuery({ name:"stationId" , required: false})
+    findAll(@Query() paginationDto: PaginationDto, @Query('stationId') stationId: number) {
+        return this.inventoryService.findAll(paginationDto,stationId);
     }
     @Get('/details/:fuel_type')
     @ApiTags('web')

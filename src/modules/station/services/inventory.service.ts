@@ -49,7 +49,7 @@ export class InventoryService {
             throw error
         }
     }
-    async findAll(paginationDto: PaginationDto) {
+    async findAll(paginationDto: PaginationDto, stationId: number) {
         try {
             console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
@@ -60,7 +60,7 @@ export class InventoryService {
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = {}
+                where = { stationId: stationId ?? null}
             }
             const [inventories, count] = await this.inventoryRepository.findAndCount({
                 where,
@@ -69,6 +69,7 @@ export class InventoryService {
                 select: {
                     id: true,
                     status: true,
+                    stationId: true,
                     name: true,
                     value: true,
                     updated_at: true,
@@ -420,7 +421,7 @@ export class InventoryService {
         console.log('object 3');
         return detailsList
     }
-    async getAvailableInventory(stationId: number,fuel_type:number) {
+    async getAvailableInventory(stationId: number, fuel_type: number) {
         const inventory = await this.inventoryRepository.findOne({
             relations: { fuels: true },
             where: {
@@ -431,7 +432,7 @@ export class InventoryService {
                 }
             },
             select: {
-                id:true,
+                id: true,
                 fuels: { name: true }
             }
         })

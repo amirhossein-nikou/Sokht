@@ -37,8 +37,8 @@ export class AndroidService {
         console.log(updateValue);
         return this.inventoryService.updateValueAndroid(id, updateValue);
     }
-    findAllInventories(paginationDto: PaginationDto) {
-        return this.inventoryService.findAll(paginationDto)
+    findAllInventories(paginationDto: PaginationDto, stationId: number) {
+        return this.inventoryService.findAll(paginationDto,stationId)
     }
     changeInventoryStatus(inventoryId: number) {
         return this.inventoryService.statusToggle(inventoryId)

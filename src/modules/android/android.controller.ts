@@ -32,7 +32,7 @@ export class AndroidController {
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)
     @PaginationDec()
     findAll(@Query() paginationDto: PaginationDto) {
-        return this.androidService.findAllInventories(paginationDto);
+        return this.androidService.findAllInventories(paginationDto,null);
     }
     @Get('/inventory/status-toggle/:id')
     @CanAccess(UserRole.StationUser, UserRole.HeadUser)
