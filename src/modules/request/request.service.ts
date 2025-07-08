@@ -565,7 +565,7 @@ export class RequestService {
                 const contain = await this.inventoryService.getSumValueForInventory(station.id, item.id)
                 const maxCap = await this.inventoryService.getMaxInventoryCapacity(station.id, item.id)
                 const inventory = await this.inventoryService.getAvailableInventory(station.id, item.id)
-                if (inventory) availableFuels.push({ id: item.id, name: item.name })
+                if(inventory) availableFuels.push(item)
                 if (contain && maxCap) {
                     const availableValue = (maxCap - contain) * 1.2
                     capacityList.push({ availableValue: Math.round(availableValue), fuel_type: item.name })
