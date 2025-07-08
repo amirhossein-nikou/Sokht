@@ -89,6 +89,11 @@ export class RequestController {
     license(@Param('id', ParseIntPipe) id: number) {
         return this.requestService.approvedRequest(id);
     }
+    @Patch('/send/tanker/:id')
+    @CanAccess(UserRole.OilDepotUser)
+    sendTankerForRequest(@Param('id', ParseIntPipe) id: number) {
+        return this.requestService.sendTankerForRequest(id);
+    }
     @Patch('/received/:id')
     @CanAccess(UserRole.StationUser)
     @ApiQuery({ type:'enum',enum:ReceiveTimeEnum, name: 'time', required: false })

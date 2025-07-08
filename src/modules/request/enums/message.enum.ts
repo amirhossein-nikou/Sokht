@@ -9,6 +9,7 @@ export enum RequestMessages{
     Received = 'status change to received successfully',
     Licensed = 'this Request already have license',
     SendTanker = 'request status is already in SendTanker',
+    TankerSent = 'request status changed to sendTanker',
     AlreadyReceived = 'this Request already have received',
     LicenseSuccess = 'licensed successfully',
     ApprovedFirst = 'please approved your request first',

@@ -517,13 +517,12 @@ export class RequestService {
             console.log(`access  -> ${this.req.url}`);
             const request = await this.getOneById(id)
             if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
-            if (request.statusId == StatusEnum.Licensing) throw new BadRequestException(RequestMessages.LicenseFirst)
+            if (request.statusId == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
             if (request.statusId == StatusEnum.SendTanker) throw new BadRequestException(RequestMessages.SendTanker)
-
-            await this.requestRepository.update(id, { statusId: StatusEnum.Licensing })
+            await this.requestRepository.update(id, { statusId: StatusEnum.SendTanker })
             return {
                 statusCode: HttpStatus.OK,
-                message: RequestMessages.LicenseSuccess
+                message: RequestMessages.TankerSent
             }
         } catch (error) {
             console.log(`error -> ${this.req.url} -> `, error.message);
