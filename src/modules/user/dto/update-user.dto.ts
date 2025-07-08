@@ -21,5 +21,5 @@ export class VerifyMobileDto {
     code: string
 }
 export class UpdateUserDto extends PartialType(PickType(CreateUserDto,
-    ['last_name', 'first_name', 'mobile', 'national_code', 'certificateId']
+    ['last_name', 'first_name', 'mobile', 'national_code', 'certificateId','position']
 )) { }
