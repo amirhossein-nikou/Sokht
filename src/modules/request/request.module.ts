@@ -12,7 +12,6 @@ import { StatusEntity } from './entities/status.entity';
 import { RequestController } from './request.controller';
 import { RequestService } from './request.service';
 import { CargoEntity } from '../cargo/entities/cargo.entity';
-import { RequestServiceAndroid } from './request.android.service';
 import { NotificationGateway } from '../notification/notification.gateway';
 import { TankerModule } from '../tanker/tanker.module';
 
@@ -20,8 +19,8 @@ import { TankerModule } from '../tanker/tanker.module';
   imports: [TypeOrmModule.forFeature([RequestEntity, StatusEntity,CargoEntity]),
     AuthModule, StationModule, InventoryModule, UserModule, DepotModule, FuelTypeModule,TankerModule],
   controllers: [RequestController],
-  providers: [RequestService, InventoryService,RequestServiceAndroid,NotificationGateway],
-  exports: [RequestService, TypeOrmModule,RequestServiceAndroid]
+  providers: [RequestService, InventoryService,NotificationGateway],
+  exports: [RequestService, TypeOrmModule]
 })
 
 export class RequestModule { }
