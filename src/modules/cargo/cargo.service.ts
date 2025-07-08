@@ -193,7 +193,7 @@ export class CargoService {
                 const request = await this.requestService.getOneById(requestId)
                 if (request.statusId !== StatusEnum.Approved)
                     throw new BadRequestException('this request is not approved yet')
-                await this.checkExistsRequestId(requestId)
+                if(requestId !== cargo.requestId)await this.checkExistsRequestId(requestId)
             }
             let updateObject = RemoveNullProperty({ tankerId, requestId })
             if (updateObject) {

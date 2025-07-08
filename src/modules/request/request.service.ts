@@ -70,7 +70,7 @@ export class RequestService {
 
             await this.filterRequestValue(station.id, fuel_type, value)
             // limit send requests just 4 time in day
-            await this.limitSendRequests(station.id)
+            await this.limitSendRequests(station.id, fuel_type)
             //---
             const priority = await this.detectPriority(station.id, fuel_type)
             // check exists depot
@@ -564,7 +564,7 @@ export class RequestService {
                 const contain = await this.inventoryService.getSumValueForInventory(station.id, item.id)
                 const maxCap = await this.inventoryService.getMaxInventoryCapacity(station.id, item.id)
                 const inventory = await this.inventoryService.getAvailableInventory(station.id, item.id)
-                if(inventory) availableFuels.push(item)
+                if (inventory) availableFuels.push(item)
                 if (contain && maxCap) {
                     const availableValue = (maxCap - contain) * 1.2
                     capacityList.push({ availableValue: Math.round(availableValue), fuel_type: item.name })
@@ -669,14 +669,15 @@ export class RequestService {
         if ([StatusEnum.Approved, StatusEnum.Licensing, StatusEnum.Received].includes(request.statusId)) throw new BadRequestException('you cant update or remove on this status')
         return request
     }
-    async limitSendRequests(stationId: number) {
+    async limitSendRequests(stationId: number, fuel_type: number) {
         const now = new Date(new Date().toISOString().split('T')[0])
         const end = new Date(now.getTime() + (1 * 1000 * 60 * 60 * 24));
         const request = await this.requestRepository.find({
             where: {
                 created_at: Between(now, end),
                 stationId,
-                statusId: In([StatusEnum.Approved, StatusEnum.Licensing, StatusEnum.Posted])
+                fuel_type,
+                statusId: In([StatusEnum.Approved, StatusEnum.SendTanker, StatusEnum.Licensing, StatusEnum.Posted])
             },
         })
         if (request.length >= 4) throw new BadRequestException('cant send more than 4')

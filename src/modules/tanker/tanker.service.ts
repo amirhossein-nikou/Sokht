@@ -225,7 +225,7 @@ export class TankerService {
             if (driverId && driverId > 0) {
                 await this.userService.findOneById(driverId);
             }
-            if (number && number > 0) await this.checkExistsTankerNumber(number)
+            if (number && number > 0 && number !== tanker.number) await this.checkExistsTankerNumber(number)
             const updateObject = RemoveNullProperty({ capacity, driverId, number })
             await this.updatePlate(tanker.plateId, { char, city, first, second })
             if (updateObject) {
@@ -258,7 +258,7 @@ export class TankerService {
                 first: first ?? plate.first,
                 second: second ?? plate.second
             })
-            await this.checkExistsPlate(fullPlate)
+            if(fullPlate !== plate.full_plate) await this.checkExistsPlate(fullPlate)
         }
         const updateObject = RemoveNullProperty({ char, city, first, second, full_plate: fullPlate })
         if (updateObject) {

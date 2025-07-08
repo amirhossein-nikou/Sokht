@@ -286,14 +286,14 @@ export class UserService {
 	async update(id: number, updateUserDto: UpdateUserDto) {
 		try {
 			console.log(`access  -> ${this.req.url}`);
-			let { certificateId, first_name, last_name, mobile, national_code,position } = updateUserDto
-			await this.findOneById(id)
+			let { certificateId, first_name, last_name, mobile, national_code, position } = updateUserDto
+			const user = await this.findOneById(id)
 			if (mobile) {
-				await this.checkExistsMobile(mobile)
+				if (ModifyMobileNumber(mobile) !== user.mobile) await this.checkExistsMobile(mobile)
 				mobile = ModifyMobileNumber(mobile)
 			}
-			if (national_code) await this.checkExistsNationalCode(national_code)
-			const updateObject = RemoveNullProperty({position, certificateId, first_name, last_name, mobile, national_code })
+			if (national_code && national_code !== user.national_code) await this.checkExistsNationalCode(national_code)
+			const updateObject = RemoveNullProperty({ position, certificateId, first_name, last_name, mobile, national_code })
 			if (updateObject) {
 				await this.userRepository.update(id, updateObject)
 			}

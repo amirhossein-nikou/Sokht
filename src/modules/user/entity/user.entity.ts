@@ -40,11 +40,11 @@ export class UserEntity {
     @OneToOne(() => OtpEntity, otp => otp.user)
     @JoinColumn({ name: 'otpId' })
     otp: OtpEntity;
-    @OneToMany(() => StationEntity, station => station.owner)
+    @OneToMany(() => StationEntity, station => station.owner, { onDelete: "CASCADE" })
     stations: StationEntity[];
     @OneToMany(() => TicketEntity, ticket => ticket.user, { onDelete: "CASCADE" })
     tickets: TicketEntity[];
-    @OneToOne(() => DepotEntity, depot => depot.owner)
+    @OneToOne(() => DepotEntity, depot => depot.owner, { onDelete: "CASCADE" })
     depot: DepotEntity;
     @OneToOne(() => TankerEntity, tanker => tanker.driver, { onDelete: "CASCADE" })
     tanker: TankerEntity;

@@ -4,17 +4,16 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
 import { PaginationDto } from "src/common/dto/pagination.dto";
 import { paginationGenerator, paginationSolver } from "src/common/utils/pagination.utils";
-import { In, LessThanOrEqual, MoreThan, MoreThanOrEqual, Repository } from "typeorm";
+import { LessThanOrEqual, Repository } from "typeorm";
 import { RemoveNullProperty } from "../../../common/utils/update.utils";
 import { FuelTypeService } from "../../../modules/fuel-type/fuel-type.service";
 import { UserRole } from "../../../modules/user/enum/role.enum";
 import { UserService } from "../../../modules/user/user.service";
 import { CreateInventoryDto, UpdateInventoryDto, UpdateValue } from "../dto/inventory.dto";
 import { InventoryEntity } from "../entity/inventory.entity";
+import { StationEntity } from "../entity/station.entity";
 import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
-import { StationEntity } from "../entity/station.entity";
-import * as moment from "jalali-moment";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
@@ -400,14 +399,13 @@ export class InventoryService {
     }
     async getSomeDetailsOfInventory(station: StationEntity[], fuel_type: number) {
         let detailsList: Array<object> = []
-        console.log('object 1');
         const promise = station.map(async station => {
             const inventories = await this.findByStationIdAndFuel(station.id, fuel_type)
-            if (inventories.length == 0) throw new BadRequestException('inventory is invalid')
+            console.log(inventories.length);
+            if (inventories.length == 0) return
             const capacity = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
             const value = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
             const latestDate = this.findLatestDate(inventories)
-            console.log('object 2');
             detailsList.push({
                 inventory_count: inventories.length,
                 value,
@@ -418,7 +416,7 @@ export class InventoryService {
             })
         })
         await Promise.all(promise)
-        console.log('object 3');
+        if(detailsList.length == 0) throw new BadRequestException('something went wrong')
         return detailsList
     }
     async getAvailableInventory(stationId: number, fuel_type: number) {

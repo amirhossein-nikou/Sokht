@@ -37,7 +37,7 @@ export class DepotService {
 				data: result
 			}
 		} catch (error) {
-			console.log(`error -> ${this.req.url} -> `  , error.message)
+			console.log(`error -> ${this.req.url} -> `, error.message)
 			throw error
 		}
 	}
@@ -57,7 +57,7 @@ export class DepotService {
 				data: depots
 			}
 		} catch (error) {
-			console.log(`error -> ${this.req.url} -> `  , error.message)
+			console.log(`error -> ${this.req.url} -> `, error.message)
 			throw error
 		}
 	}
@@ -73,7 +73,7 @@ export class DepotService {
 				data: depot
 			}
 		} catch (error) {
-			console.log(`error -> ${this.req.url} -> `  , error.message)
+			console.log(`error -> ${this.req.url} -> `, error.message)
 			throw error
 		}
 	}
@@ -93,7 +93,7 @@ export class DepotService {
 				data: depot
 			}
 		} catch (error) {
-			console.log(`error -> ${this.req.url} -> `  , error.message)
+			console.log(`error -> ${this.req.url} -> `, error.message)
 			throw error
 		}
 	}
@@ -106,7 +106,7 @@ export class DepotService {
 			if (ownerId && ownerId.toString() !== "0") await this.userService.findOneById(ownerId)
 			if (locationId && locationId.toString() !== "0" && locationId != depot.locationId) {
 				await this.locationService.getOneById(locationId)
-				await this.checkExistsLocation(locationId)
+				if (locationId !== depot.locationId) await this.checkExistsLocation(locationId)
 			}
 			await this.depotRepository.update(id, updateObject)
 			const result = await this.findOneById(id)
@@ -117,7 +117,7 @@ export class DepotService {
 
 			}
 		} catch (error) {
-			console.log(`error -> ${this.req.url} -> `  , error.message)
+			console.log(`error -> ${this.req.url} -> `, error.message)
 			throw error
 		}
 	}
@@ -125,11 +125,11 @@ export class DepotService {
 	async remove(id: number) {
 		try {
 			console.log(`access  -> ${this.req.url}`);
-			const { id: ownerId,role } = this.req.user
+			const { id: ownerId, role } = this.req.user
 			let depot
-			if(role === UserRole.HeadUser){
+			if (role !== UserRole.OilDepotUser) {
 				depot = await this.findOneById(id)
-			}else{
+			} else {
 				depot = await this.findOneByIdWithOwner(id, ownerId)
 			}
 			await this.depotRepository.remove(depot)
@@ -139,7 +139,7 @@ export class DepotService {
 
 			}
 		} catch (error) {
-			console.log(`error -> ${this.req.url} -> `  , error.message)
+			console.log(`error -> ${this.req.url} -> `, error.message)
 			throw error
 		}
 	}

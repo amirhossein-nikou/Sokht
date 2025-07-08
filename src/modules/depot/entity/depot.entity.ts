@@ -4,7 +4,7 @@ import { LocationEntity } from "../../../modules/location/entity/location.entity
 import { RequestEntity } from "../../../modules/request/entities/request.entity";
 import { TankerEntity } from "../../../modules/tanker/entities/tanker.entity";
 import { UserEntity } from "../../../modules/user/entity/user.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { AfterSoftRemove, Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity(EntityName.Depot, { orderBy: { id: "DESC" } })
 export class DepotEntity {
@@ -16,8 +16,13 @@ export class DepotEntity {
     ownerId: number;
     @Column()
     locationId: number;
-    @OneToOne(() => UserEntity, owner => owner.depot)
+    @OneToOne(() => UserEntity, owner => owner.depot,{onDelete: 'CASCADE'})
     @JoinColumn({ name: 'ownerId' })
+    @AfterSoftRemove()
+    afterSoftRemove() {
+    console.log(`User with ID ${this.id} was soft-deleted.`);
+    // Add any custom logic here, like logging or triggering an event.
+  }
     owner: UserEntity;
     @OneToOne(() => LocationEntity, location => location.depot, { onDelete: "CASCADE" })
     @JoinColumn({ name: 'locationId' })
