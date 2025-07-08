@@ -29,7 +29,7 @@ export class CreateUserDto {
     @ApiPropertyOptional()
     @IsNumberString()
     @IsOptional()
-    @Length(2, 6)
+    @Length(1, 10)
     certificateId: number
 }
 export class AddSubUserDto {

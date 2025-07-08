@@ -34,7 +34,6 @@ export class UserService {
 			}
 			await this.checkExistsMobile(mobile)
 			await this.checkExistsNationalCode(national_code)
-			if (certificateId) await this.checkExistsCertificateId(certificateId)
 			const user = this.userRepository.create({
 				first_name, last_name,
 				mobile: ModifyMobileNumber(mobile),
@@ -62,7 +61,6 @@ export class UserService {
 			if (user.child.length >= 3) throw new BadRequestException('you cant have more than 3 sub user')
 			await this.checkExistsMobile(mobile)
 			await this.checkExistsNationalCode(national_code)
-			if (certificateId) await this.checkExistsCertificateId(certificateId)
 			const subUser = this.userRepository.create({
 				first_name, last_name, mobile: ModifyMobileNumber(mobile), national_code, certificateId,
 				parentId: user.id,
@@ -89,7 +87,6 @@ export class UserService {
 			if (user.parent || user.parentId) throw new BadRequestException('this user is not allowed to add driver')
 			await this.checkExistsMobile(mobile)
 			await this.checkExistsNationalCode(national_code)
-			if (certificateId) await this.checkExistsCertificateId(certificateId)
 			const driver = this.userRepository.create({
 				first_name, last_name,
 				mobile: ModifyMobileNumber(mobile), national_code, certificateId,
@@ -296,7 +293,6 @@ export class UserService {
 				mobile = ModifyMobileNumber(mobile)
 			}
 			if (national_code) await this.checkExistsNationalCode(national_code)
-			if (certificateId) await this.checkExistsCertificateId(certificateId)
 			const updateObject = RemoveNullProperty({position, certificateId, first_name, last_name, mobile, national_code })
 			if (updateObject) {
 				await this.userRepository.update(id, updateObject)
@@ -443,11 +439,6 @@ export class UserService {
 	async checkExistsNationalCode(national_code: string) {
 		const user = await this.userRepository.findOne({ where: { national_code } })
 		if (user) throw new ConflictException('national code unavailable')
-		return false
-	}
-	async checkExistsCertificateId(certificateId: number) {
-		const user = await this.userRepository.findOne({ where: { certificateId } })
-		if (user) throw new ConflictException('CertificateId unavailable')
 		return false
 	}
 	async checkIfParent(id: number) {
