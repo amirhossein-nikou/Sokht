@@ -2,7 +2,7 @@ import { PaginationDto } from "src/common/dto/pagination.dto";
 import { CreateRequestDtoAndroid } from "../request/dto/create-request.dto";
 import { SearchDtoAndroid, SearchWithFuelAndReceiveDtoAndroid } from "../request/dto/search.dto";
 import { UpdateRequestDtoAndroid } from "../request/dto/update-request.dto";
-import { RequestServiceAndroid } from "../request/request.android.service";
+import { RequestService } from "../request/request.service";
 import { UpdateValueAndroid } from "../station/dto/inventory.dto";
 import { InventoryService } from "../station/services/inventory.service";
 import { TankerService } from "../tanker/tanker.service";
@@ -26,7 +26,7 @@ export class AndroidService {
         @Inject(REQUEST) private req: Request,
         private userService: UserServiceAndroid,
         private inventoryService: InventoryService,
-        private requestService: RequestServiceAndroid,
+        private requestService: RequestService,
         private tankerService: TankerService,
         private homeService: HomeService,
         @InjectRepository(NotificationEntity) private notificationRepository: Repository<NotificationEntity>,
