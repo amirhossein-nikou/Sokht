@@ -89,7 +89,7 @@ export class RequestController {
     license(@Param('id', ParseIntPipe) id: number) {
         return this.requestService.approvedRequest(id);
     }
-    @Patch('/send/tanker/:id')
+    @Patch('/status/sendTanker/:id')
     @CanAccess(UserRole.OilDepotUser)
     sendTankerForRequest(@Param('id', ParseIntPipe) id: number) {
         return this.requestService.sendTankerForRequest(id);
