@@ -565,14 +565,13 @@ export class RequestService {
                 const contain = await this.inventoryService.getSumValueForInventory(station.id, item.id)
                 const maxCap = await this.inventoryService.getMaxInventoryCapacity(station.id, item.id)
                 const inventory = await this.inventoryService.getAvailableInventory(station.id, item.id)
-                if(inventory) availableFuels.push(item)
+                if (inventory) availableFuels.push({ id: item.id, name: item.name })
                 if (contain && maxCap) {
                     const availableValue = (maxCap - contain) * 1.2
                     capacityList.push({ availableValue: Math.round(availableValue), fuel_type: item.name })
                 }
             })
             await Promise.all(promise)
-            //const availableFuels = await this.inventoryService.getAvailableInventoriesByIdList(idList)
             if (capacityList.length == 0) throw new BadRequestException('something went wrong in capacity')
             return {
                 statusCode: HttpStatus.OK,

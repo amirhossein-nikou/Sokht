@@ -97,6 +97,7 @@ export class RequestController {
     }
     @Patch('/reject/:id')
     @ApiTags('web')
+    @MyApiConsumes()
     @CanAccess(UserRole.OilDepotUser)
     reject(@Param('id', ParseIntPipe) id: number, @Body() rejectDto: RejectDto) {
         return this.requestService.rejectRequest(id, rejectDto);
