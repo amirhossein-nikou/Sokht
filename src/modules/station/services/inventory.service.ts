@@ -4,7 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
 import { PaginationDto } from "src/common/dto/pagination.dto";
 import { paginationGenerator, paginationSolver } from "src/common/utils/pagination.utils";
-import { LessThanOrEqual, Repository } from "typeorm";
+import { In, LessThanOrEqual, MoreThan, MoreThanOrEqual, Repository } from "typeorm";
 import { RemoveNullProperty } from "../../../common/utils/update.utils";
 import { FuelTypeService } from "../../../modules/fuel-type/fuel-type.service";
 import { UserRole } from "../../../modules/user/enum/role.enum";
@@ -14,6 +14,7 @@ import { InventoryEntity } from "../entity/inventory.entity";
 import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
 import { StationEntity } from "../entity/station.entity";
+import * as moment from "jalali-moment";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
@@ -91,8 +92,8 @@ export class InventoryService {
         try {
             console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
-            const filterTime = new Date(Date.now() - 1000 * 60 * 60 * 4) //last 4 hours
             const { id, role, parentId } = this.req.user
+            const filterTime = new Date(Date.now() - 1000 * 60 * 60 * 4) //last 4 hours
             let where: object = {
                 updated_at: LessThanOrEqual(filterTime),
                 status: true,
@@ -119,6 +120,7 @@ export class InventoryService {
                     }
                 }
             })
+            console.log(inventories[1].updated_at < filterTime);
             return {
                 statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),
@@ -134,6 +136,7 @@ export class InventoryService {
             console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             const filterTime = new Date(Date.now() - 1000 * 60 * 60 * 4) //last 4 hours
+
             const { id, role, parentId } = this.req.user
             let where: object = {
                 updated_at: LessThanOrEqual(filterTime),
@@ -416,5 +419,22 @@ export class InventoryService {
         await Promise.all(promise)
         console.log('object 3');
         return detailsList
+    }
+    async getAvailableInventory(stationId: number,fuel_type:number) {
+        const inventory = await this.inventoryRepository.findOne({
+            relations: { fuels: true },
+            where: {
+                status: true,
+                stationId,
+                fuels: {
+                    id: fuel_type
+                }
+            },
+            select: {
+                id:true,
+                fuels: { name: true }
+            }
+        })
+        return inventory
     }
 }

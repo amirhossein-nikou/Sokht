@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
-import { Repository } from 'typeorm';
+import { ArrayContains, In, Repository } from 'typeorm';
 import { StringToBoolean } from '../../../common/utils/boolean.utils';
 import { getIdList } from '../../../common/utils/id.utils';
 import { requestOrder } from '../../../common/utils/order-by.utils';
@@ -89,7 +89,7 @@ export class StationService {
                 },
                 select: {
                     owner: {
-                        id: true,first_name: true,last_name: true,mobile: true,national_code: true,certificateId: true
+                        id: true, first_name: true, last_name: true, mobile: true, national_code: true, certificateId: true
                     }
                 }
             })
@@ -117,7 +117,7 @@ export class StationService {
                 await this.stationRepository.save(station)
             }
             const updateObj = RemoveNullProperty({
-               locationId, name, ownerId, isActive: StringToBoolean(isActive)
+                locationId, name, ownerId, isActive: StringToBoolean(isActive)
             })
             //check user exist
             if (ownerId) await this.userService.findOneById(ownerId)
@@ -247,7 +247,13 @@ export class StationService {
     async checkExistsFuelType(stationId: number, fuel_type: number) {
         const fuels = await this.fuelTypeService.getById(fuel_type)
         const station = await this.stationRepository.findOne({
-            where: { id: stationId, fuels }
+            relations: { fuels: true },
+            where: {
+                id: stationId,
+                fuels: {
+                    id: fuel_type
+                }
+            },
         })
         if (!station)
             throw new BadRequestException("you don't have this fuel in this station")

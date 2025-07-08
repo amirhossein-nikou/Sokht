@@ -27,7 +27,7 @@ export class InventoryEntity {
     fuels: FuelTypeEntity
     @UpdateDateColumn({
         transformer: {
-            to(value) { return new Date() },
+            to(value) { return value },
             from(value) {
                 if (value) {
                     return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')

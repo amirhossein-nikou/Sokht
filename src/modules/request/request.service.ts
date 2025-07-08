@@ -560,22 +560,26 @@ export class RequestService {
             const receiveTimes = Object.values(ReceiveTimeEnum);
             const stationFuels = station.fuels
             const capacityList = []
+            const availableFuels = []
             const promise = stationFuels.map(async item => {
                 const contain = await this.inventoryService.getSumValueForInventory(station.id, item.id)
                 const maxCap = await this.inventoryService.getMaxInventoryCapacity(station.id, item.id)
+                const inventory = await this.inventoryService.getAvailableInventory(station.id, item.id)
+                if(inventory) availableFuels.push(item)
                 if (contain && maxCap) {
                     const availableValue = (maxCap - contain) * 1.2
                     capacityList.push({ availableValue: Math.round(availableValue), fuel_type: item.name })
                 }
             })
             await Promise.all(promise)
+            //const availableFuels = await this.inventoryService.getAvailableInventoriesByIdList(idList)
             if (capacityList.length == 0) throw new BadRequestException('something went wrong in capacity')
             return {
                 statusCode: HttpStatus.OK,
                 data: {
                     depots,
                     receiveTimes,
-                    stationFuels,
+                    stationFuels: availableFuels,
                     capacityList
                 }
             }
