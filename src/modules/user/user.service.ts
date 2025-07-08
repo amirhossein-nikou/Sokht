@@ -8,7 +8,7 @@ import { ModifyMobileNumber } from 'src/common/utils/mobile.utils';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 import { Repository } from 'typeorm';
 import { AuthService } from '../auth/auth.service';
-import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
+import { AddDriverDto, AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
 import { UpdateMobileDto, UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entity/user.entity';
 import { UserRole } from './enum/role.enum';
@@ -27,7 +27,7 @@ export class UserService {
 		try {
 			console.log(`access  -> ${this.req.url}`);
 			const { role: userRole } = this.req.user
-			const { first_name, last_name, mobile, national_code, certificateId, role } = createUserDto
+			const { first_name, last_name, mobile, national_code, certificateId, role, position } = createUserDto
 			if (userRole === UserRole.HeadUser) {
 				if (role === UserRole.Driver || role === UserRole.HeadUser)
 					throw new ForbiddenException('you are not allow to create this roles')
@@ -38,7 +38,7 @@ export class UserService {
 			const user = this.userRepository.create({
 				first_name, last_name,
 				mobile: ModifyMobileNumber(mobile),
-				national_code, certificateId, role
+				national_code, certificateId, role, position
 			})
 			const result = await this.userRepository.save(user)
 			return {
@@ -55,7 +55,7 @@ export class UserService {
 	async addSubUsers(addSubUserDto: AddSubUserDto) {
 		try {
 			console.log(`access  -> ${this.req.url}`);
-			const { first_name, last_name, mobile, national_code, certificateId } = addSubUserDto
+			const { first_name, last_name, mobile, national_code, certificateId, position } = addSubUserDto
 			const { id } = this.req.user
 			const user = await this.findOneById(id)
 			if (user.parent || user.parentId) throw new BadRequestException('this user is not allowed to add sub users')
@@ -66,7 +66,8 @@ export class UserService {
 			const subUser = this.userRepository.create({
 				first_name, last_name, mobile: ModifyMobileNumber(mobile), national_code, certificateId,
 				parentId: user.id,
-				role: user.role
+				role: user.role,
+				position
 			})
 			const result = await this.userRepository.save(subUser)
 			return {
@@ -79,10 +80,10 @@ export class UserService {
 			throw error
 		}
 	}
-	async addDriver(addSubUserDto: AddSubUserDto) {
+	async addDriver(addSubUserDto: AddDriverDto) {
 		try {
 			console.log(`access  -> ${this.req.url}`);
-			const { first_name, last_name, mobile, national_code, certificateId } = addSubUserDto
+			const { first_name, last_name, mobile, national_code, certificateId, position } = addSubUserDto
 			const { id } = this.req.user
 			const user = await this.findOneById(id)
 			if (user.parent || user.parentId) throw new BadRequestException('this user is not allowed to add driver')
@@ -93,7 +94,8 @@ export class UserService {
 				first_name, last_name,
 				mobile: ModifyMobileNumber(mobile), national_code, certificateId,
 				//parentId: user.id,
-				role: UserRole.Driver
+				role: UserRole.Driver,
+				position: position ?? 'راننده'
 			})
 			await this.userRepository.save(driver)
 			return {
@@ -284,7 +286,7 @@ export class UserService {
 			throw error
 		}
 	}
-	async update(id: number,updateUserDto: UpdateUserDto) {
+	async update(id: number, updateUserDto: UpdateUserDto) {
 		try {
 			console.log(`access  -> ${this.req.url}`);
 			let { certificateId, first_name, last_name, mobile, national_code } = updateUserDto
@@ -296,8 +298,8 @@ export class UserService {
 			if (national_code) await this.checkExistsNationalCode(national_code)
 			if (certificateId) await this.checkExistsCertificateId(certificateId)
 			const updateObject = RemoveNullProperty({ certificateId, first_name, last_name, mobile, national_code })
-			if(updateObject){
-				await this.userRepository.update(id,updateObject)
+			if (updateObject) {
+				await this.userRepository.update(id, updateObject)
 			}
 			const result = await this.findOneById(id)
 			return {

@@ -10,10 +10,10 @@ import { SearchDto, SearchDtoAndroid, SearchWithFuelAndReceiveDtoAndroid } from 
 import { UpdateRequestDtoAndroid } from "../request/dto/update-request.dto";
 import { ReceiveTimeEnum } from "../request/enums/time.enum";
 import { UpdateValueAndroid } from "../station/dto/inventory.dto";
-import { AddSubUserDtoAndroid } from "../user/dto/create-user.dto";
 import { UpdateMobileDtoAndroid } from "../user/dto/update-user.dto";
 import { UserRole } from "../user/enum/role.enum";
 import { AndroidService } from "./android.service";
+import { AddSubUserDto } from "../user/dto/create-user.dto";
 
 @Controller('/android')
 @UserAuthGuard()
@@ -106,7 +106,7 @@ export class AndroidController {
     @Post('/user/sub-user')
     @MyApiConsumes()
     @CanAccess(UserRole.HeadUser, UserRole.StationUser, UserRole.OilDepotUser)
-    addSubUser(@Body() addSubUserDto: AddSubUserDtoAndroid) {
+    addSubUser(@Body() addSubUserDto: AddSubUserDto) {
         return this.androidService.addSubUser(addSubUserDto);
     }
     @Get('/user/profile')

@@ -15,6 +15,8 @@ export class UserEntity {
     first_name: string
     @Column()
     last_name: string
+    @Column({nullable: true})
+    position: string
     @Column({ unique: true })
     mobile: string
     @Column({ unique: true })

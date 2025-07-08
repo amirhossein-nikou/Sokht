@@ -1,30 +1,29 @@
+import { HttpStatus, Inject, Injectable, Scope } from "@nestjs/common";
+import { REQUEST } from "@nestjs/core";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Request } from "express";
 import { PaginationDto } from "src/common/dto/pagination.dto";
+import { paginationGenerator, paginationSolver } from "src/common/utils/pagination.utils";
+import { Repository } from "typeorm";
+import { HomeService } from "../home/home.service";
+import { NotificationEntity } from "../notification/entity/notification.entity";
 import { CreateRequestDtoAndroid } from "../request/dto/create-request.dto";
 import { SearchDtoAndroid, SearchWithFuelAndReceiveDtoAndroid } from "../request/dto/search.dto";
 import { UpdateRequestDtoAndroid } from "../request/dto/update-request.dto";
+import { ReceiveTimeEnum } from "../request/enums/time.enum";
 import { RequestService } from "../request/request.service";
 import { UpdateValueAndroid } from "../station/dto/inventory.dto";
 import { InventoryService } from "../station/services/inventory.service";
 import { TankerService } from "../tanker/tanker.service";
-import { AddSubUserDtoAndroid } from "../user/dto/create-user.dto";
+import { AddSubUserDto } from "../user/dto/create-user.dto";
 import { UpdateMobileDtoAndroid } from "../user/dto/update-user.dto";
-import { UserServiceAndroid } from "../user/user.android.service";
-import { HttpStatus, Inject, Injectable, Scope } from "@nestjs/common";
-import { HomeService } from "../home/home.service";
-import { NotificationService } from "../notification/notification.service";
-import { REQUEST } from "@nestjs/core";
-import { NotificationEntity } from "../notification/entity/notification.entity";
-import { Repository } from "typeorm";
-import { InjectRepository } from "@nestjs/typeorm";
-import { paginationGenerator, paginationSolver } from "src/common/utils/pagination.utils";
-import { Request } from "express";
-import { ReceiveTimeEnum } from "../request/enums/time.enum";
+import { UserService } from "../user/user.service";
 
 @Injectable({ scope: Scope.REQUEST })
 export class AndroidService {
     constructor(
         @Inject(REQUEST) private req: Request,
-        private userService: UserServiceAndroid,
+        private userService: UserService,
         private inventoryService: InventoryService,
         private requestService: RequestService,
         private tankerService: TankerService,
@@ -89,7 +88,7 @@ export class AndroidService {
     }
     // user routes
 
-    addSubUser(addSubUserDto: AddSubUserDtoAndroid) {
+    addSubUser(addSubUserDto:AddSubUserDto) {
         return this.userService.addSubUsers(addSubUserDto);
     }
 

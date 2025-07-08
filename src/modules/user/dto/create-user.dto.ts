@@ -12,6 +12,10 @@ export class CreateUserDto {
     @Length(2, 50)
     last_name: string
     @ApiProperty()
+    @IsString()
+    @Length(1, 50)
+    position: string
+    @ApiProperty()
     @IsMobilePhone('fa-IR')
     mobile: string
     @ApiProperty()
@@ -38,6 +42,10 @@ export class AddSubUserDto {
     @Length(2, 50)
     last_name: string
     @ApiProperty()
+    @IsString()
+    @Length(1, 50)
+    position: string
+    @ApiProperty()
     @IsMobilePhone('fa-IR')
     mobile: string
     @ApiProperty()
@@ -51,7 +59,7 @@ export class AddSubUserDto {
     @Length(1, 10)
     certificateId: number
 }
-export class AddSubUserDtoAndroid {
+export class AddDriverDto {
     @ApiProperty()
     @IsString()
     @Length(2, 50)
@@ -60,6 +68,11 @@ export class AddSubUserDtoAndroid {
     @IsString()
     @Length(2, 50)
     last_name: string
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    @Length(1, 50)
+    position: string
     @ApiProperty()
     @IsMobilePhone('fa-IR')
     mobile: string

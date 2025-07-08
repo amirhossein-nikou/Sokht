@@ -3,7 +3,7 @@ import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { PremiumRoles } from 'src/common/enums/otherRole.enum';
-import { AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
+import { AddDriverDto, AddSubUserDto, CreateUserDto } from './dto/create-user.dto';
 import { UpdateMobileDto, UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from './enum/role.enum';
 import { UserService } from './user.service';
@@ -32,7 +32,7 @@ export class UserController {
     @CanAccess(UserRole.OilDepotUser)
     @ApiTags('web')
     @MyApiConsumes()
-    addDriver(@Body() createUserDto: AddSubUserDto) {
+    addDriver(@Body() createUserDto: AddDriverDto) {
         return this.userService.addDriver(createUserDto);
     }
 
