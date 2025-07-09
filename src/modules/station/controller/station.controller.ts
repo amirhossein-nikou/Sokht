@@ -54,7 +54,7 @@ export class StationController {
   findAll(@Query() paginationDto: PaginationDto) {
     return this.stationService.findAll(paginationDto);
   }
-  @Get('/list/:by_user')
+  @Get('/list/limit/:by_user')
   @CanAccess(UserRole.HeadUser, UserRole.OilDepotUser)
   @PaginationDec()
   findAllChangedLimit(@Query() paginationDto: PaginationDto, @Param('by_user', ParseBoolPipe) by_user: boolean) {
