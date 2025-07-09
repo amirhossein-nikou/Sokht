@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
-import { ArrayContains, In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { StringToBoolean } from '../../../common/utils/boolean.utils';
 import { getIdList } from '../../../common/utils/id.utils';
 import { requestOrder } from '../../../common/utils/order-by.utils';
@@ -75,7 +75,26 @@ export class StationService {
             throw error
         }
     }
-
+    async findAllChangedLimit(paginationDto: PaginationDto, by_user: boolean) {
+        try {
+            console.log(`access  -> ${this.req.url}`);
+            const { limit, page, skip } = paginationSolver(paginationDto)
+            const [stations, count] = await this.stationRepository.findAndCount({
+                where: { limit: { by_user } },
+                relations: { location: true, fuels: true },
+                take: limit,
+                skip
+            });
+            return {
+                statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit, page, count),
+                data: stations
+            }
+        } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
+            throw error
+        }
+    }
     async findOne(id: number) {
         try {
             console.log(`access  -> ${this.req.url}`);
@@ -203,6 +222,7 @@ export class StationService {
             throw error
         }
     }
+
     // utils
     async checkExistsLocation(locationId: number) {
         const station = await this.stationRepository.findOne({ where: { locationId } })

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsDate, IsNumber, IsNumberString, IsOptional } from "class-validator";
+import { IsBoolean, IsDate, IsNumber, IsNumberString, IsOptional } from "class-validator";
 
 export class LimitDto{
     @ApiProperty()
@@ -12,4 +12,6 @@ export class LimitDto{
     @IsNumberString()
     @ApiProperty()
     stationId:number;
+    
+    by_user: boolean
 }

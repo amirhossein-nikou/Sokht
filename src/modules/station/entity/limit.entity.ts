@@ -12,6 +12,8 @@ export class LimitEntity {
     stationId: number
     @Column({type: 'timestamp'})
     date: Date;
+    @Column({type: 'boolean',default: false})
+    by_user: boolean
     @UpdateDateColumn({transformer: DateToJalali})
     updated_at: Date
     @OneToOne(() => StationEntity, station => station.limit,{onDelete: 'CASCADE'})

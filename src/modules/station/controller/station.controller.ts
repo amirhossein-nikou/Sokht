@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpStatus, Query, ParseBoolPipe } from '@nestjs/common';
 import { StationService } from './../services/station.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
@@ -54,6 +54,12 @@ export class StationController {
   findAll(@Query() paginationDto: PaginationDto) {
     return this.stationService.findAll(paginationDto);
   }
+  @Get('/list/:by_user')
+  @CanAccess(UserRole.HeadUser, UserRole.OilDepotUser)
+  @PaginationDec()
+  findAllChangedLimit(@Query() paginationDto: PaginationDto, @Param('by_user', ParseBoolPipe) by_user: boolean) {
+    return this.stationService.findAllChangedLimit(paginationDto, by_user);
+  }
 
   @Get('/get-one/:id')
   @CanAccess(UserRole.HeadUser, UserRole.OilDepotUser)
@@ -86,6 +92,7 @@ export class StationController {
   @CanAccess(UserRole.OilDepotUser)
   @MyApiConsumes()
   addLimitForDiesel(@Body() limitDto: LimitDto) {
+    limitDto.by_user = true
     return this.limitService.AddLimit(limitDto);
   }
 }

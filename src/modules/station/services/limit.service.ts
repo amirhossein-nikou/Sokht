@@ -5,6 +5,7 @@ import { LimitDto } from "../dto/limit.dto";
 import { LimitEntity } from "../entity/limit.entity";
 import { StationService } from "./station.service";
 import * as moment from 'moment-jalaali';
+import { StringToBoolean } from "src/common/utils/boolean.utils";
 @Injectable()
 export class LimitService {
     constructor(
@@ -14,7 +15,8 @@ export class LimitService {
     ) { }
     async AddLimit(limitDto: LimitDto) {
         try {
-            let { date, stationId, value } = limitDto
+            let { date, stationId, value, by_user } = limitDto
+            console.log(by_user);
             const station = await this.stationService.findOneById(stationId)
             let limit = await this.getLimitByStationId(station.id)
             if (!date) {
@@ -23,8 +25,9 @@ export class LimitService {
             if (limit) {
                 limit.date = date
                 limit.value = value
+                limit.by_user = by_user
             } else {
-                limit = this.limitRepository.create({ date, stationId, value })
+                limit = this.limitRepository.create({ date, stationId, value, by_user })
             }
             await this.limitRepository.save(limit)
             return {
@@ -47,7 +50,7 @@ export class LimitService {
         const updated_at = new Date(moment(new Date(limit.updated_at)).format('YYYY-MM-DD'))
         const now = new Date(moment(new Date()).format('YYYY-MM-DD'))
         if (updated_at < now) {
-            return await this.AddLimit({ stationId, value: 13500 })
+            return await this.AddLimit({ stationId, value: 13500, by_user: false })
         }
     }
 }
