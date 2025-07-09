@@ -217,17 +217,16 @@ export class InventoryService {
         try {
             console.log(`access  -> ${this.req.url}`);
             const { fuel_type, stationId, max } = updateInventoryDto;
-            const { id: userId } = this.req.user;
-            const inventory = await this.findOneById(id, userId);
+            const inventory = await this.findById(id);
             if (inventory.status == false) throw new BadRequestException('inventory is deActive')
             if (stationId) await this.stationService.findOneById(stationId)
             if (fuel_type) {
                 await this.fuelTypeService.getById(fuel_type)
             }
             if (fuel_type && stationId) await this.stationService.checkExistsFuelType(stationId, fuel_type)
-            const obj = RemoveNullProperty(updateInventoryDto)
+            const obj = RemoveNullProperty({ fuel_type, stationId, max })
             await this.inventoryRepository.update({ id: inventory.id }, obj)
-            const result = await this.findOneById(id, userId);
+            const result = await this.findById(id);
             return {
                 statusCode: HttpStatus.OK,
                 message: InventoryMessages.Update,
