@@ -19,6 +19,14 @@ export class DepotEntity {
     @OneToOne(() => UserEntity, owner => owner.depot)
     @JoinColumn({ name: 'ownerId' })
     owner: UserEntity;
+<<<<<<< HEAD
+=======
+    @AfterSoftRemove()
+    afterSoftRemove() {
+    console.log(`User with ID ${this.id} was soft-deleted.`);
+    // Add any custom logic here, like logging or triggering an event.
+    }
+>>>>>>> 4f3fb687ed5fdd28a27e40db91456b3897ed5aaf
     @OneToOne(() => LocationEntity, location => location.depot, { onDelete: "CASCADE" })
     @JoinColumn({ name: 'locationId' })
     location: LocationEntity
