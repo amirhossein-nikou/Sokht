@@ -7,8 +7,7 @@ import { FuelTypeEntity } from './entities/fuel-type.entity';
 import { REQUEST } from '@nestjs/core';
 import e, { Request } from 'express';
 import { FuelTypeEnum } from 'src/common/enums/fuelType.enum';
-import * as  moment from 'jalali-moment';
-
+import * as moment from 'moment-jalaali';
 @Injectable({ scope: Scope.REQUEST })
 export class FuelTypeService {
 	constructor(

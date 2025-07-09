@@ -3,7 +3,7 @@ import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } f
 import { TicketTargetEnum } from "../enum/target.enum";
 import { TicketPriorityEnum } from "../enum/ticket-priority.enum";
 import { UserEntity } from "../../../modules/user/entity/user.entity";
-import * as moment from 'jalali-moment'
+import { DateToJalali } from "src/common/utils/convert-time.utils";
 
 @Entity(EntityName.Ticket, { orderBy: { id: "DESC" } })
 export class TicketEntity {
@@ -24,14 +24,7 @@ export class TicketEntity {
     @Column({ default: false })
     status: boolean
     @CreateDateColumn({
-        transformer: {
-            to(value) { return value },
-            from(value) {
-                if (value) {
-                    return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
-                }
-            }
-        }
+        transformer: DateToJalali
     })
     created_at: Date
     // relations 

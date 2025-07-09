@@ -15,7 +15,7 @@ import { RejectDto } from 'src/common/dto/create-reject.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 import { NotificationGateway } from '../notification/notification.gateway';
-import * as moment from 'jalali-moment';
+import * as moment from 'moment-jalaali';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 

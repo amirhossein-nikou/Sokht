@@ -3,7 +3,7 @@ import { EntityName } from "../../../common/enums/entity.enum";
 import { RequestEntity } from "../../../modules/request/entities/request.entity";
 import { TankerEntity } from "../../../modules/tanker/entities/tanker.entity";
 import { RejectDetails } from "src/common/types/reject-details.type";
-import * as moment from "jalali-moment";
+import { DateToJalali } from "src/common/utils/convert-time.utils";
 
 @Entity(EntityName.Cargo, { orderBy: { id: "DESC" } })
 export class CargoEntity {
@@ -24,14 +24,7 @@ export class CargoEntity {
     @JoinColumn({ name: "requestId" })
     request: RequestEntity
     @CreateDateColumn({
-        transformer: {
-            to(value) { return value },
-            from(value) {
-                if (value) {
-                    return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
-                }
-            }
-        }
+        transformer: DateToJalali
     })
     created_at: Date
     @Column({ nullable: true, type: 'json' })

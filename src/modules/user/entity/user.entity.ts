@@ -15,7 +15,7 @@ export class UserEntity {
     first_name: string
     @Column()
     last_name: string
-    @Column({nullable: true})
+    @Column({ nullable: true })
     position: string
     @Column({ unique: true })
     mobile: string
@@ -44,7 +44,7 @@ export class UserEntity {
     stations: StationEntity[];
     @OneToMany(() => TicketEntity, ticket => ticket.user, { onDelete: "CASCADE" })
     tickets: TicketEntity[];
-    @OneToOne(() => DepotEntity, depot => depot.owner, { onDelete: "CASCADE" })
+    @OneToOne(() => DepotEntity, depot => depot.owner)
     depot: DepotEntity;
     @OneToOne(() => TankerEntity, tanker => tanker.driver, { onDelete: "CASCADE" })
     tanker: TankerEntity;

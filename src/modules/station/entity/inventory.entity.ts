@@ -2,7 +2,7 @@ import { EntityName } from "../../../common/enums/entity.enum";
 import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity";
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { StationEntity } from "./station.entity";
-import * as moment from "jalali-moment";
+import { DateToJalali } from "src/common/utils/convert-time.utils";
 
 @Entity(EntityName.Inventory, { orderBy: { id: "DESC" } })
 export class InventoryEntity {
@@ -26,14 +26,7 @@ export class InventoryEntity {
     @JoinColumn({ name: 'fuel_type' })
     fuels: FuelTypeEntity
     @UpdateDateColumn({
-        transformer: {
-            to(value) { return value },
-            from(value) {
-                if (value) {
-                    return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
-                }
-            }
-        }
+        transformer: DateToJalali
     })
     updated_at: Date
 }

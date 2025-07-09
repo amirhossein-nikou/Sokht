@@ -2,8 +2,10 @@ import { BadRequestException, HttpStatus, Inject, Injectable, NotFoundException,
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
+import * as moment from 'moment-jalaali';
 import { RejectDto } from 'src/common/dto/create-reject.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { FuelTypeEnum } from 'src/common/enums/fuelType.enum';
 import { StatusEnum } from 'src/common/enums/status.enum';
 import { CreateNumber } from 'src/common/utils/create-number.utils';
 import { FormatDateTime } from 'src/common/utils/formatDate.utils';
@@ -14,7 +16,9 @@ import { CargoEntity } from '../cargo/entities/cargo.entity';
 import { DepotService } from '../depot/depot.service';
 import { FuelTypeService } from '../fuel-type/fuel-type.service';
 import { NotificationGateway } from '../notification/notification.gateway';
+import { LimitEntity } from '../station/entity/limit.entity';
 import { InventoryService } from '../station/services/inventory.service';
+import { LimitService } from '../station/services/limit.service';
 import { SaleService } from '../station/services/sale.service';
 import { StationService } from '../station/services/station.service';
 import { TankerService } from '../tanker/tanker.service';
@@ -28,7 +32,6 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
-import { FuelTypeEnum } from 'src/common/enums/fuelType.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -43,6 +46,7 @@ export class RequestService {
         private notification: NotificationGateway,
         private fuelService: FuelTypeService,
         private tankerService: TankerService,
+        private limitService: LimitService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createRequestDto: CreateRequestDto) {
@@ -52,18 +56,19 @@ export class RequestService {
             const { id: userId, parentId } = this.req.user
             await this.fuelService.insertFuelType()
             await this.insertStatus()
+            const station = await this.stationService.findByUserId(parentId ?? userId)
             const fuel = await this.fuelService.getById(fuel_type)
-            await this.fuelService.checkUpdateLimit()
-            if (fuel.limit && value > fuel.limit) {
-                throw new BadRequestException(`you cant request more than ${fuel.limit}`)
+            await this.limitService.checkUpdateLimit(station.id)
+            const limit = await this.limitService.getLimitByStationId(station.id)
+            if (fuel_type == FuelTypeEnum.Diesel) {
+                this.limitFuelValue(limit, value)
             }
             if (!fuel.available_value.includes(Number(value)))
-                throw new BadRequestException(`request value for this fuel cna be following values -> [${fuel.available_value}]`)
+                throw new BadRequestException(`request value for this fuel can be following values -> [${fuel.available_value}]`)
             // check exists station
             const now = FormatDateTime(new Date());
             //if (now > ReceiveTimeEnum.FOUR_PM || now < ReceiveTimeEnum.SEVEN_AM) throw new BadRequestException(`requests can be created from 07:00 until 16:00`)
             // if (receive_at < now) throw new BadRequestException(`receive_at must be more than ${now}`)
-            const station = await this.stationService.findByUserId(parentId ?? userId)
             //check fuel type
             await this.stationService.checkExistsFuelType(station.id, fuel_type)
             //await this.manageReceivedAt(station.id, receive_at, fuel_type)
@@ -723,5 +728,12 @@ export class RequestService {
             where: { stationId, receive_at, fuel_type, created_at: Between(start, end) }
         })
         if (request) throw new BadRequestException('this received Time is already used for this fuel')
+    }
+    limitFuelValue(limit: LimitEntity, value: number) {
+        const date = moment(limit.date).format('YYYY-MM-DD')
+        const now = moment(new Date()).format('YYYY-MM-DD')
+        if (value > limit.value && date == now) {
+            throw new BadRequestException(`you cant request more than ${limit.value}`)
+        }
     }
 }

@@ -72,6 +72,7 @@ export class InventoryService {
                     name: true,
                     value: true,
                     updated_at: true,
+                    max: true,
                     fuels: {
                         name: true,
                         id: true

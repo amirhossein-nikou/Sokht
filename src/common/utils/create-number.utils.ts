@@ -1,4 +1,4 @@
-import * as moment from "jalali-moment";
+import * as moment from 'moment-jalaali';
 let counter = 0
 let lastDay = '04'
 export function CreateNumber(fuelType: number) {

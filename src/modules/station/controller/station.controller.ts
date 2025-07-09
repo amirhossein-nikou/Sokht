@@ -10,11 +10,17 @@ import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserRole } from 'src/modules/user/enum/role.enum';
 import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { LimitService } from '../services/limit.service';
+import { LimitDto } from '../dto/limit.dto';
 
 @Controller('station')
 @UserAuthGuard()
 export class StationController {
-  constructor(private readonly stationService: StationService) { }
+  constructor(
+    private readonly stationService: StationService,
+    private readonly limitService: LimitService
+
+  ) { }
 
   //depot - r - head -> crud
   @Post('/create')
@@ -43,14 +49,14 @@ export class StationController {
       ]
     }
   })
-  @CanAccess(UserRole.HeadUser,UserRole.OilDepotUser)
+  @CanAccess(UserRole.HeadUser, UserRole.OilDepotUser)
   @PaginationDec()
   findAll(@Query() paginationDto: PaginationDto) {
     return this.stationService.findAll(paginationDto);
   }
 
   @Get('/get-one/:id')
-  @CanAccess(UserRole.HeadUser,UserRole.OilDepotUser)
+  @CanAccess(UserRole.HeadUser, UserRole.OilDepotUser)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.stationService.findOne(id);
   }
@@ -75,5 +81,11 @@ export class StationController {
   @CanAccess(UserRole.HeadUser)
   statusToggle(@Param('id', ParseIntPipe) id: number) {
     return this.stationService.stationStatusToggle(id);
+  }
+  @Post('/limit/diesel')
+  @CanAccess(UserRole.OilDepotUser)
+  @MyApiConsumes()
+  addLimitForDiesel(@Body() limitDto: LimitDto) {
+    return this.limitService.AddLimit(limitDto);
   }
 }

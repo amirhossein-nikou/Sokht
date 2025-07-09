@@ -1,15 +1,15 @@
-import { EntityName } from "../../../common/enums/entity.enum"
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm"
-import { PriorityEnum } from "../enums/priority.enum"
-import { StatusEnum } from "../../../common/enums/status.enum"
-import { ReceiveTimeEnum } from "../enums/time.enum"
-import { DepotEntity } from "../../../modules/depot/entity/depot.entity"
-import { CargoEntity } from "../../../modules/cargo/entities/cargo.entity"
-import { StationEntity } from "../../../modules/station/entity/station.entity"
-import { StatusEntity } from "./status.entity"
-import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity"
 import { RejectDetails } from "src/common/types/reject-details.type"
-import * as moment from "jalali-moment"
+import { DateToJalali } from "src/common/utils/convert-time.utils"
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm"
+import { EntityName } from "../../../common/enums/entity.enum"
+import { StatusEnum } from "../../../common/enums/status.enum"
+import { CargoEntity } from "../../../modules/cargo/entities/cargo.entity"
+import { DepotEntity } from "../../../modules/depot/entity/depot.entity"
+import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity"
+import { StationEntity } from "../../../modules/station/entity/station.entity"
+import { PriorityEnum } from "../enums/priority.enum"
+import { ReceiveTimeEnum } from "../enums/time.enum"
+import { StatusEntity } from "./status.entity"
 
 @Entity(EntityName.Request)
 export class RequestEntity {
@@ -32,14 +32,7 @@ export class RequestEntity {
     @Column({ enum: ReceiveTimeEnum })
     receive_at: ReceiveTimeEnum;
     @CreateDateColumn({
-        transformer: {
-            to(value) { return value },
-            from(value) {
-                if (value) {
-                    return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
-                }
-            }
-        }
+        transformer: DateToJalali
     })
     created_at: Date
     @Column({ enum: ReceiveTimeEnum ,nullable: true})

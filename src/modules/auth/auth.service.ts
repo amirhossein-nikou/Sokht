@@ -9,7 +9,7 @@ import { CheckOtpDto, SendOtpDto } from "./dto/auth.dto";
 import { OtpEntity } from "./entity/otp.entity";
 import { payloadType } from "./types/payload";
 import { NotificationGateway } from "../notification/notification.gateway";
-import * as moment from "jalali-moment";
+import * as moment from 'moment-jalaali';
 import { SendSms } from "src/common/utils/send-sms.utils";
 
 @Injectable()

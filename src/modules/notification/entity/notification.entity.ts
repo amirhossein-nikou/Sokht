@@ -1,5 +1,5 @@
-import * as moment from "jalali-moment";
 import { EntityName } from "src/common/enums/entity.enum";
+import { DateToJalali } from "src/common/utils/convert-time.utils";
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 
@@ -16,14 +16,7 @@ export class NotificationEntity {
     @Column({nullable: true})
     parentId: number
     @CreateDateColumn({
-        transformer: {
-            to(value) { return value },
-            from(value) {
-                if (value) {
-                    return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
-                }
-            }
-        }
+        transformer: DateToJalali
     })
     created_at: Date
 }
