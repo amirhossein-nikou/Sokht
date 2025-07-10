@@ -29,7 +29,7 @@ export class InventoryController {
     }
     @Get('/details/:fuel_type')
     @ApiTags('web')
-    @CanAccess(UserRole.OilDepotUser)
+    @CanAccess(UserRole.OilDepotUser,UserRole.HeadUser)
     findAllInventoryDetails(
         @Param('fuel_type', ParseIntPipe) fuel_type: number,
     ) {
