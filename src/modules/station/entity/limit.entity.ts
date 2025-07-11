@@ -1,7 +1,8 @@
 import { EntityName } from "src/common/enums/entity.enum";
-import { DateToJalali } from "src/common/utils/convert-time.utils";
+import { DateToJalali, jalaliDate } from "src/common/utils/convert-time.utils";
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { StationEntity } from "./station.entity";
+import { Expose } from "class-transformer";
 @Entity(EntityName.Limit, { orderBy: { id: "DESC" } })
 export class LimitEntity {
     @PrimaryGeneratedColumn()
@@ -10,13 +11,22 @@ export class LimitEntity {
     value: number;
     @Column()
     stationId: number
-    @Column({type: 'timestamp'})
+    @Column({ type: 'timestamp' })
     date: Date;
-    @Column({type: 'boolean',default: false})
+    @Column({ type: 'boolean', default: false })
     by_user: boolean
-    @UpdateDateColumn({transformer: DateToJalali})
+    @UpdateDateColumn()
     updated_at: Date
-    @OneToOne(() => StationEntity, station => station.limit,{onDelete: 'CASCADE'})
-    @JoinColumn({name:'stationId'})
+    @Expose({})
+    get jalali_updated_at(): string {
+        return jalaliDate(this.updated_at)
+    }
+    @Expose({})
+    get jalali_date(): string {
+        return jalaliDate(this.date)
+    }
+    @OneToOne(() => StationEntity, station => station.limit, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'stationId' })
     station: StationEntity
+
 }

@@ -1,5 +1,6 @@
+import { Expose } from "class-transformer";
 import { EntityName } from "src/common/enums/entity.enum";
-import { DateToJalali } from "src/common/utils/convert-time.utils";
+import { DateToJalali, jalaliDate } from "src/common/utils/convert-time.utils";
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 
@@ -13,10 +14,12 @@ export class NotificationEntity {
     description: string
     @Column()
     userId: number
-    @Column({nullable: true})
+    @Column({ nullable: true })
     parentId: number
-    @CreateDateColumn({
-        transformer: DateToJalali
-    })
+    @CreateDateColumn()
     created_at: Date
+    @Expose()
+    get jalali_created_at(): string {
+        return jalaliDate(this.created_at)
+    }
 }

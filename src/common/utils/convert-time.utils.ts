@@ -8,3 +8,6 @@ export const DateToJalali: ValueTransformer = {
         }
     }
 }
+export function jalaliDate(value: Date):string {
+    return moment(value).locale('fa').format('jYYYY-jMM-jDD HH:mm:ss')
+}

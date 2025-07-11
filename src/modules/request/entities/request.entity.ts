@@ -1,5 +1,5 @@
 import { RejectDetails } from "src/common/types/reject-details.type"
-import { DateToJalali } from "src/common/utils/convert-time.utils"
+import { DateToJalali, jalaliDate } from "src/common/utils/convert-time.utils"
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm"
 import { EntityName } from "../../../common/enums/entity.enum"
 import { StatusEnum } from "../../../common/enums/status.enum"
@@ -10,6 +10,7 @@ import { StationEntity } from "../../../modules/station/entity/station.entity"
 import { PriorityEnum } from "../enums/priority.enum"
 import { ReceiveTimeEnum } from "../enums/time.enum"
 import { StatusEntity } from "./status.entity"
+import { Expose } from "class-transformer"
 
 @Entity(EntityName.Request)
 export class RequestEntity {
@@ -31,11 +32,13 @@ export class RequestEntity {
     statusId: StatusEnum;
     @Column({ enum: ReceiveTimeEnum })
     receive_at: ReceiveTimeEnum;
-    @CreateDateColumn({
-        transformer: DateToJalali
-    })
+    @CreateDateColumn()
     created_at: Date
-    @Column({ enum: ReceiveTimeEnum ,nullable: true})
+    @Expose({})
+    get jalali_created_at(): string {
+        return jalaliDate(this.created_at)
+    }
+    @Column({ enum: ReceiveTimeEnum, nullable: true })
     received_time: ReceiveTimeEnum
     @Column({ nullable: true, type: 'numeric' })
     priority_value: number

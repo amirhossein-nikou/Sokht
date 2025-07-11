@@ -304,28 +304,6 @@ export class RequestService {
                 .offset(skip)
                 .limit(limit)
                 .getManyAndCount()
-            // const [requests, count] = await this.requestRepository.findAndCount({
-            //     where,
-            //     relations: {
-            //         depot: { location: true },
-            //     },
-            //     order: requestOrder,
-            //     select: {
-            //         id: true,
-            //         depot: { name: true },
-            //         fuel_type: true,
-            //         fuel: { name: true },
-            //         value: true,
-            //         receive_at: true,
-            //         status: { status: true },
-            //         statusId: true,
-            //         stationId: true,
-            //         created_at: true
-            //     },
-            //     //take: limit,
-            //     skip
-            // })
-            //if (requests.length <= 0) throw new NotFoundException(RequestMessages.Notfound)
             return {
                 statusCode: HttpStatus.OK,
                 pagination: paginationGenerator(limit, page, count),

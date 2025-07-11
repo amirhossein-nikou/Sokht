@@ -1,4 +1,5 @@
-import { DateToJalali } from "src/common/utils/convert-time.utils";
+import { Expose } from "class-transformer";
+import { jalaliDate } from "src/common/utils/convert-time.utils";
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { EntityName } from "../../../common/enums/entity.enum";
 import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity";
@@ -6,8 +7,8 @@ import { LocationEntity } from "../../../modules/location/entity/location.entity
 import { RequestEntity } from "../../../modules/request/entities/request.entity";
 import { UserEntity } from "../../../modules/user/entity/user.entity";
 import { InventoryEntity } from "./inventory.entity";
-import { AverageSaleEntity } from "./sale.entity";
 import { LimitEntity } from "./limit.entity";
+import { AverageSaleEntity } from "./sale.entity";
 
 @Entity(EntityName.Station, { orderBy: { id: "DESC" } })
 export class StationEntity {
@@ -23,10 +24,12 @@ export class StationEntity {
     locationId: number;
     // @Column({type: 'int' ,array: true})
     // fuel_types: number[]
-    @CreateDateColumn({
-        transformer: DateToJalali
-    })
+    @CreateDateColumn()
     created_at: Date
+    @Expose()
+    get jalali_created_at(): string {
+        return jalaliDate(this.created_at)
+    }
     // relations
     @ManyToOne(() => UserEntity, user => user.stations, { onDelete: 'CASCADE' })
     owner: UserEntity;

@@ -1,8 +1,9 @@
+import { Expose } from 'class-transformer';
+import { jalaliDate } from "src/common/utils/convert-time.utils";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { EntityName } from "../../../common/enums/entity.enum";
 import { FuelTypeEntity } from "../../../modules/fuel-type/entities/fuel-type.entity";
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { StationEntity } from "./station.entity";
-import { DateToJalali } from "src/common/utils/convert-time.utils";
 
 @Entity(EntityName.Inventory, { orderBy: { id: "DESC" } })
 export class InventoryEntity {
@@ -25,8 +26,10 @@ export class InventoryEntity {
     @ManyToOne(() => FuelTypeEntity, { onDelete: "CASCADE", eager: true })
     @JoinColumn({ name: 'fuel_type' })
     fuels: FuelTypeEntity
-    @UpdateDateColumn({
-        transformer: DateToJalali
-    })
+    @UpdateDateColumn()
     updated_at: Date
+    @Expose({})
+    get jalali_updated_at(): string{
+        return jalaliDate(this.updated_at)
+    }
 }
