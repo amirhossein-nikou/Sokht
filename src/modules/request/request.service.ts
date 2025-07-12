@@ -58,9 +58,9 @@ export class RequestService {
             await this.insertStatus()
             const station = await this.stationService.findByUserId(parentId ?? userId)
             const fuel = await this.fuelService.getById(fuel_type)
-            await this.limitService.checkUpdateLimit(station.id)
-            const limit = await this.limitService.getLimitByStationId(station.id)
             if (fuel_type == FuelTypeEnum.Diesel) {
+                await this.limitService.checkUpdateLimit(station.id)
+                const limit = await this.limitService.getLimitByStationId(station.id)
                 this.limitFuelValue(limit, value)
             }
             if (!fuel.available_value.includes(Number(value)))

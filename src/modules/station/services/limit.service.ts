@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { LimitDto } from "../dto/limit.dto";
@@ -16,7 +16,6 @@ export class LimitService {
     async AddLimit(limitDto: LimitDto) {
         try {
             let { date, stationId, value, by_user } = limitDto
-            console.log(by_user);
             const station = await this.stationService.findOneById(stationId)
             let limit = await this.getLimitByStationId(station.id)
             if (!date) {
@@ -42,15 +41,17 @@ export class LimitService {
     //utils
     async getLimitByStationId(stationId: number) {
         const limit = await this.limitRepository.findOneBy({ stationId })
-        if (!limit) return null
+        if (!limit) throw new NotFoundException('limit not found')
         return limit
     }
     async checkUpdateLimit(stationId: number) {
         const limit = await this.limitRepository.findOneBy({ stationId })
-        const updated_at = new Date(moment(new Date(limit.updated_at)).format('YYYY-MM-DD'))
-        const now = new Date(moment(new Date()).format('YYYY-MM-DD'))
-        if (updated_at < now) {
-            return await this.AddLimit({ stationId, value: 13500, by_user: false })
+        if(limit){
+            const updated_at = new Date(moment(new Date(limit.updated_at)).format('YYYY-MM-DD'))
+            const now = new Date(moment(new Date()).format('YYYY-MM-DD'))
+            if (updated_at < now) {
+                return await this.AddLimit({ stationId, value: 13500, by_user: false })
+            }
         }
     }
 }
