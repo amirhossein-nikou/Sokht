@@ -20,6 +20,8 @@ export class LimitService {
             let limit = await this.getLimitByStationId(station.id)
             if (!date) {
                 date = new Date()
+            }else{
+                date = new Date(date)
             }
             if (limit) {
                 limit.date = date
