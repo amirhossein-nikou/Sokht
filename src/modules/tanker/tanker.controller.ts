@@ -37,6 +37,12 @@ export class TankerController {
   getAvailableTankers() {
     return this.tankerService.availableTankers();
   }
+  @Get('/list/available')
+  @ApiTags('web')
+  @CanAccess(UserRole.OilDepotUser)
+  availableTankerList() {
+    return this.tankerService.availableTankerList();
+  }
   @Get('/free/:capacity')
   @ApiTags('web')
   @CanAccess(UserRole.OilDepotUser)

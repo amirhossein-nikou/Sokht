@@ -1,11 +1,11 @@
 import { PaginationDto } from "../dto/pagination.dto";
 
 export function paginationSolver(paginationDto: PaginationDto) {
-    let { limit = 10, page = 0 } = paginationDto;
+    let { limit = 100, page = 0 } = paginationDto;
     if (!page || page <= 1) page = 0
     else page = page - 1
 
-    if (!limit || limit <= 0) limit = 10
+    if (!limit || limit <= 0) limit = 100
     let skip = page * limit;
     return {
         skip,

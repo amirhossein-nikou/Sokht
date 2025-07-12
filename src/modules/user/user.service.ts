@@ -136,6 +136,10 @@ export class UserService {
 			console.log(`access  -> ${this.req.url}`);
 			const { limit, page, skip } = paginationSolver(paginationDto)
 			const [users, count] = await this.userRepository.findAndCount({
+				relations: {stations: true},
+				select: {
+					stations: {name: true,id: true}
+				},
 				take: limit,
 				skip
 			});
@@ -157,6 +161,9 @@ export class UserService {
 				relations: {
 					parent: true, child: true, otp: true, stations: true
 				},
+				select: {
+					stations: {name: true,id: true}
+				}
 			})
 			if (!user) throw new NotFoundException(UserMessages.NotFound)
 			return {
@@ -205,6 +212,9 @@ export class UserService {
 				where,
 				relations: {
 					parent: true, child: true
+				},
+				select: {
+					stations: {name: true,id: true}
 				}
 			})
 			if (!user) throw new NotFoundException(UserMessages.NotFound)

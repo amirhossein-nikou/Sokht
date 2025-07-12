@@ -10,6 +10,7 @@ import { CargoService } from './cargo.service';
 import { CreateCargoDto } from './dto/create-cargo.dto';
 import { UpdateCargoDto } from './dto/update-cargo.dto';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { StatusEnum } from 'src/common/enums/status.enum';
 
 @Controller('cargo')
 @UserAuthGuard()
@@ -41,9 +42,18 @@ export class CargoController {
   @ApiTags('web')
   @CanAccess(UserRole.OilDepotUser, UserRole.HeadUser)
   @PaginationDec()
-  @ApiQuery({name:'fuel_type',required: false,type: 'number'})
-  findWithFuelType(@Query() paginationDto: PaginationDto,@Query('fuel_type') fuel_type?: number) {
+  @ApiQuery({ name: 'fuel_type', required: false, type: 'number' })
+  findWithFuelType(@Query() paginationDto: PaginationDto, @Query('fuel_type') fuel_type?: number) {
     return this.cargoService.findWithFuelType(fuel_type, paginationDto);
+  }
+  @Get('/by-status')
+  @MyApiConsumes()
+  @ApiTags('web')
+  @CanAccess(UserRole.OilDepotUser, UserRole.HeadUser)
+  @PaginationDec()
+  @ApiQuery({ name: 'statusId', required: true, type: 'enum', enum: [StatusEnum.Licensing,StatusEnum.SendTanker] })
+  findWithStatus(@Query() paginationDto: PaginationDto, @Query('statusId') statusId: number) {
+    return this.cargoService.findWithStatus(statusId, paginationDto);
   }
   @Patch('/update/:id')
   @MyApiConsumes()

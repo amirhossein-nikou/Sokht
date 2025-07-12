@@ -56,6 +56,9 @@ export class SaleService {
 			const { limit, page, skip } = paginationSolver(paginationDto)
 			const [averageSales, count] = await this.averageSaleRepository.findAndCount({
 				relations: { station: true },
+				select: {
+					station: {name: true,id: true}
+				},
 				take: limit,
 				skip
 			});
@@ -76,6 +79,9 @@ export class SaleService {
 				where: { id },
 				relations: {
 					station: true
+				},
+				select: {
+					station: {name: true,id: true}
 				}
 			});
 			if (!averageSale) throw new NotFoundException(SaleMessages.NotFound)

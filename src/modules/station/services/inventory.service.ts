@@ -73,6 +73,7 @@ export class InventoryService {
                     value: true,
                     updated_at: true,
                     max: true,
+                    station:{name: true},
                     fuels: {
                         name: true,
                         id: true
@@ -114,6 +115,7 @@ export class InventoryService {
                     status: true,
                     name: true,
                     value: true,
+                    station:{name: true},
                     updated_at: true,
                     fuels: {
                         name: true,
@@ -158,6 +160,7 @@ export class InventoryService {
                     status: true,
                     name: true,
                     value: true,
+                    station:{name: true},
                     updated_at: true,
                     fuels: {
                         name: true,

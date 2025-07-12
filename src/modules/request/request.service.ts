@@ -135,7 +135,7 @@ export class RequestService {
                 .select([
                     'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
-                    'request.value', 'request.receive_at', 'request.priority', 'status.status',
+                    'request.value', 'request.receive_at', 'request.priority', 'status.status','station.name',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
                 .where(whereQuery, { ownerId: parentId ?? userId })
@@ -210,7 +210,7 @@ export class RequestService {
                 .select([
                     'request.id', 'request.received_time', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
-                    'request.value', 'request.receive_at', 'request.priority', 'status.status',
+                    'request.value', 'request.receive_at', 'request.priority', 'status.status','station.name',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
                 .where(whereQuery, { ownerId: parentId ?? userId, statusId })
@@ -295,8 +295,7 @@ export class RequestService {
                 .select([
                     'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
-                    'request.value', 'request.receive_at', 'request.priority', 'status.status',
-                    'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
+                    'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value','station.name'
                 ])
                 .where(whereQuery, { ownerId: parentId ?? userId, fuel_type, receive_at })
                 .orderBy('request.receive_at', 'ASC')
@@ -346,7 +345,8 @@ export class RequestService {
                     'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
-                    'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
+                    'request.created_at', 'request.statusId', 'request.stationId','station.name'
+                    , 'request.priority_value'
                 ])
                 .where(whereQuery, { ownerId: parentId ?? userId, start, end, fuel_type })
                 .orderBy('request.receive_at', 'ASC')

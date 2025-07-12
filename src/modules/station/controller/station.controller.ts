@@ -3,7 +3,7 @@ import { StationService } from './../services/station.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { ResponseUtils } from 'src/common/utils/response.utils';
-import { ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { StationMessages } from '../enum/message.enum';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
 import { CanAccess } from 'src/common/decorators/role.decorator';
@@ -57,8 +57,12 @@ export class StationController {
   @Get('/list/limit/:by_user')
   @CanAccess(UserRole.HeadUser, UserRole.OilDepotUser)
   @PaginationDec()
-  findAllChangedLimit(@Query() paginationDto: PaginationDto, @Param('by_user', ParseBoolPipe) by_user: boolean) {
-    return this.stationService.findAllChangedLimit(paginationDto, by_user);
+  @ApiQuery({name:"date" ,required: false})
+  findAllChangedLimit(@Query() paginationDto: PaginationDto,
+   @Param('by_user', ParseBoolPipe) by_user: boolean,
+   @Query('date') date: string
+  ) {
+    return this.stationService.findAllChangedLimit(paginationDto, by_user,date);
   }
 
   @Get('/get-one/:id')

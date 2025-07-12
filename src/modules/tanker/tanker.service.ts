@@ -140,8 +140,35 @@ export class TankerService {
                 }
             })
             return {
+                statusCode: HttpStatus.OK,
                 allTankers: tankers.length,
                 availableTankers: availableTankers.length,
+            }
+        } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
+            throw error
+        }
+    }
+    async availableTankerList() {
+        try {
+            console.log(`access  -> ${this.req.url}`);
+            const { id } = this.req.user
+            const availableTankers = await this.tankerRepository.find({
+                where: {
+                    depot: { ownerId: id },
+                    available: true
+                },
+                relations: {
+                    plate: true,
+                    driver: true
+                },
+                select: {
+                    driver: { last_name: true, first_name: true, id: true }
+                }
+            })
+            return {
+                statusCode: HttpStatus.OK,
+                data: availableTankers
             }
         } catch (error) {
             console.log(`error -> ${this.req.url} -> `, error.message);
@@ -225,7 +252,7 @@ export class TankerService {
             if (driverId && driverId > 0) {
                 await this.userService.findOneById(driverId);
             }
-            if (number && number > 0 && number !== tanker.number) await this.checkExistsTankerNumber(number)
+            if (number && number > 0 && number != tanker.number) await this.checkExistsTankerNumber(number)
             const updateObject = RemoveNullProperty({ capacity, driverId, number })
             await this.updatePlate(tanker.plateId, { char, city, first, second })
             if (updateObject) {
@@ -258,7 +285,7 @@ export class TankerService {
                 first: first ?? plate.first,
                 second: second ?? plate.second
             })
-            if(fullPlate !== plate.full_plate) await this.checkExistsPlate(fullPlate)
+            if (fullPlate !== plate.full_plate) await this.checkExistsPlate(fullPlate)
         }
         const updateObject = RemoveNullProperty({ char, city, first, second, full_plate: fullPlate })
         if (updateObject) {

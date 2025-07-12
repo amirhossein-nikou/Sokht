@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
-import { Repository } from 'typeorm';
+import { Between, ILike, In, Like, Repository } from 'typeorm';
 import { StringToBoolean } from '../../../common/utils/boolean.utils';
 import { getIdList } from '../../../common/utils/id.utils';
 import { requestOrder } from '../../../common/utils/order-by.utils';
@@ -16,11 +16,15 @@ import { UserService } from '../../user/user.service';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
 import { StationEntity } from '../entity/station.entity';
 import { StationMessages } from '../enum/message.enum';
+import { LimitService } from './limit.service';
+import { FuelTypeEnum } from 'src/common/enums/fuelType.enum';
+import { LimitEntity } from '../entity/limit.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class StationService {
     constructor(
         @InjectRepository(StationEntity) private stationRepository: Repository<StationEntity>,
+        @InjectRepository(LimitEntity) private limitRepository: Repository<LimitEntity>,
         private userService: UserService,
         private locationService: LocationService,
         private fuelTypeService: FuelTypeService,
@@ -44,6 +48,11 @@ export class StationService {
                 //fuel_types: StringToArray(fuel_types),
                 fuels
             })
+            // add limit => 
+            if (fuelIdList.includes(FuelTypeEnum.Diesel)) {
+                const limit = this.limitRepository.create({value: 13500,stationId: station.id,by_user: false,date: new Date()})
+                await this.limitRepository.save(limit)
+            }
             const result = await this.stationRepository.save(station)
             return {
                 statusCode: HttpStatus.OK,
@@ -75,12 +84,17 @@ export class StationService {
             throw error
         }
     }
-    async findAllChangedLimit(paginationDto: PaginationDto, by_user: boolean) {
+    async findAllChangedLimit(paginationDto: PaginationDto, by_user: boolean,date: string) {
         try {
             console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
+            let start = new Date(new Date().toISOString().split('T')[0])
+            if(date){
+                start = new Date(new Date(date).toISOString().split('T')[0])
+            }
+            let end = new Date(start.getTime() + 1000* 60*60*24)
             const [stations, count] = await this.stationRepository.findAndCount({
-                where: { limit: { by_user } },
+                where: { limit: { by_user, date: Between(start,end)} },
                 relations: { location: true, fuels: true },
                 take: limit,
                 skip

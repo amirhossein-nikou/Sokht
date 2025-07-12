@@ -60,7 +60,7 @@ export class UserController {
     }
     @Get('/driver/by-id/:id')
     @MyApiConsumes()
-    @CanAccess(UserRole.OilDepotUser)
+    @CanAccess(UserRole.OilDepotUser,UserRole.HeadUser)
     findOneDriver(@Param('id', ParseIntPipe) id: number) {
         return this.userService.findOneDriver(id);
     }

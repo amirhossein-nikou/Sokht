@@ -66,7 +66,7 @@ export class CargoService {
                 data: result
             }
         } catch (error) {
-            console.log(`error -> ${this.req.url} -> `  , error.message)
+            console.log(`error -> ${this.req.url} -> `, error.message)
             throw error
         }
     }
@@ -91,7 +91,7 @@ export class CargoService {
                 data: cargoes
             }
         } catch (error) {
-            console.log(`error -> ${this.req.url} -> `  , error.message)
+            console.log(`error -> ${this.req.url} -> `, error.message)
             throw error
         }
     }
@@ -136,11 +136,58 @@ export class CargoService {
                 data: cargoes
             }
         } catch (error) {
-            console.log(`error -> ${this.req.url} -> `  , error.message)
+            console.log(`error -> ${this.req.url} -> `, error.message)
             throw error
         }
     }
-
+    async findWithStatus(statusId: number, paginationDto: PaginationDto) {
+        try {
+            console.log(`access  -> ${this.req.url}`);
+            const { limit, page, skip } = paginationSolver(paginationDto)
+            let where: Object = { rejectDetails: null }
+            if (statusId) {
+                where = {
+                    rejectDetails: null,
+                    request: { statusId }
+                }
+            }
+            const [cargoes, count] = await this.cargoRepository.findAndCount({
+                relations: {
+                    request: {
+                        status: true,
+                        station: true
+                    },
+                    tankers: { driver: true }
+                },
+                where: {
+                    rejectDetails: null,
+                    request: { statusId }
+                },
+                select: {
+                    request: {
+                        id: true,
+                        value: true,
+                        receive_at: true,
+                        station: { name: true, id: true }
+                    },
+                    tankers: {
+                        id: true, number: true,
+                        driver: { id: true, first_name: true, last_name: true, mobile: true, national_code: true, }
+                    }
+                },
+                take: limit,
+                skip
+            })
+            return {
+                statusCode: HttpStatus.OK,
+                pagination: paginationGenerator(limit, page, count),
+                data: cargoes
+            }
+        } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message)
+            throw error
+        }
+    }
     async findOne(id: number) {
         try {
             console.log(`access  -> ${this.req.url}`);
@@ -178,7 +225,7 @@ export class CargoService {
                 data: cargo
             }
         } catch (error) {
-            console.log(`error -> ${this.req.url} -> `  , error.message)
+            console.log(`error -> ${this.req.url} -> `, error.message)
             throw error
         }
     }
@@ -193,7 +240,7 @@ export class CargoService {
                 const request = await this.requestService.getOneById(requestId)
                 if (request.statusId !== StatusEnum.Approved)
                     throw new BadRequestException('this request is not approved yet')
-                if(requestId !== cargo.requestId)await this.checkExistsRequestId(requestId)
+                if (requestId !== cargo.requestId) await this.checkExistsRequestId(requestId)
             }
             let updateObject = RemoveNullProperty({ tankerId, requestId })
             if (updateObject) {
@@ -207,7 +254,7 @@ export class CargoService {
                 data: result
             }
         } catch (error) {
-            console.log(`error -> ${this.req.url} -> `  , error.message);
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
@@ -223,7 +270,7 @@ export class CargoService {
 
             }
         } catch (error) {
-            console.log(`error -> ${this.req.url} -> `  , error.message);
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
@@ -243,7 +290,7 @@ export class CargoService {
                 message: "cargo rejected successfully"
             }
         } catch (error) {
-            console.log(`error -> ${this.req.url} -> `  , error.message);
+            console.log(`error -> ${this.req.url} -> `, error.message);
             throw error
         }
     }
