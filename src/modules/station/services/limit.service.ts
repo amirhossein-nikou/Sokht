@@ -43,7 +43,7 @@ export class LimitService {
     //utils
     async getLimitByStationId(stationId: number) {
         const limit = await this.limitRepository.findOneBy({ stationId })
-        if (!limit) throw new NotFoundException('limit not found')
+        if (!limit) return null
         return limit
     }
     async checkUpdateLimit(stationId: number) {
