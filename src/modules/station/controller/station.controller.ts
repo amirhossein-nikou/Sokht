@@ -89,7 +89,7 @@ export class StationController {
     return this.stationService.stationStatusToggle(id);
   }
   @Post('/limit/diesel')
-  @CanAccess(UserRole.OilDepotUser)
+  @CanAccess(UserRole.OilDepotUser,UserRole.HeadUser)
   @MyApiConsumes()
   addLimitForDiesel(@Body() limitDto: LimitDto) {
     limitDto.by_user = true
