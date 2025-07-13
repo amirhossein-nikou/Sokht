@@ -15,7 +15,6 @@ import { StationEntity } from "../entity/station.entity";
 import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
 import { jalaliDate } from "src/common/utils/convert-time.utils";
-import { RequestService } from "src/modules/request/request.service";
 import { SaleService } from "./sale.service";
 import { PriorityEnum } from "src/modules/request/enums/priority.enum";
 import { PriorityType } from "src/modules/request/types/priority.type";

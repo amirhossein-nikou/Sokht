@@ -6,12 +6,13 @@ import { MyApiConsumes } from 'src/common/decorators/api-consume.dec';
 import { UserRole } from '../user/enum/role.enum';
 import { CanAccess } from 'src/common/decorators/role.decorator';
 import { UserAuthGuard } from 'src/common/decorators/auth.decorator';
-import { SearchDto, SearchWithFuelAndReceiveDto } from './dto/search.dto';
+import { SearchByDate, SearchDto, SearchWithFuelAndReceiveDto } from './dto/search.dto';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { RejectDto } from 'src/common/dto/create-reject.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PaginationDec } from 'src/common/decorators/paginatio.decorator';
+import { fromEnum } from './enums/from.enum';
 
 @Controller('request')
 @UserAuthGuard()
@@ -76,6 +77,32 @@ export class RequestController {
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.requestService.findOne(id);
     }
+    @Get('/reports')
+    @ApiQuery({ name: 'end', required: true })
+    @ApiQuery({ name: 'start', required: true })
+    @ApiQuery({ name: 'from', required: true,enum: fromEnum })
+    @CanAccess(UserRole.HeadUser, UserRole.OilDepotUser)
+    reports(@Query() searchDto: SearchByDate,@Query('from') from: fromEnum) {
+        const { end, start } = searchDto
+        const search: SearchByDate = {
+            start: new Date(start),
+            end: new Date(end),
+        }
+        return this.requestService.reports(search,from);
+    }    
+    @Get('/reports/daily/:id')
+    @ApiQuery({ name: 'end', required: true })
+    @ApiQuery({ name: 'start', required: true })
+    @ApiQuery({ name: 'from', required: true,enum: fromEnum })
+    @CanAccess(UserRole.HeadUser, UserRole.OilDepotUser)
+    dailyReports(@Query() searchDto: SearchByDate,@Query('from') from: fromEnum,@Param('id',ParseIntPipe) id: number) {
+        const { end, start } = searchDto
+        const search: SearchByDate = {
+            start: new Date(start),
+            end: new Date(end),
+        }
+        return this.requestService.dailyReports(search,from,id);
+    }
 
 
     @Patch('/update/:id')
@@ -96,9 +123,9 @@ export class RequestController {
     }
     @Patch('/received/:id')
     @CanAccess(UserRole.StationUser)
-    @ApiQuery({ type:'enum',enum:ReceiveTimeEnum, name: 'time', required: false })
-    received(@Param('id', ParseIntPipe) id: number,@Query('time') time:ReceiveTimeEnum) {
-        return this.requestService.receivedRequest(id,time);
+    @ApiQuery({ type: 'enum', enum: ReceiveTimeEnum, name: 'time', required: false })
+    received(@Param('id', ParseIntPipe) id: number, @Query('time') time: ReceiveTimeEnum) {
+        return this.requestService.receivedRequest(id, time);
     }
     @Patch('/reject/:id')
     @ApiTags('web')

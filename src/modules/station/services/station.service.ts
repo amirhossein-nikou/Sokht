@@ -92,7 +92,7 @@ export class StationService {
             if(date){
                 start = new Date(new Date(date).toISOString().split('T')[0])
             }
-            let end = new Date(start.getTime() + 1000* 60*60*24)
+            let end = new Date(start.getTime() + 1000 * 60 * 60 * 24)
             const [stations, count] = await this.stationRepository.findAndCount({
                 where: { limit: { by_user, date: Between(start,end)} },
                 relations: { location: true, fuels: true },

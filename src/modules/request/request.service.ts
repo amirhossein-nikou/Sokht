@@ -11,7 +11,7 @@ import { CreateNumber } from 'src/common/utils/create-number.utils';
 import { FormatDateTime } from 'src/common/utils/formatDate.utils';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { Between, In, Repository } from 'typeorm';
+import { And, Between, In, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { CargoEntity } from '../cargo/entities/cargo.entity';
 import { DepotService } from '../depot/depot.service';
 import { FuelTypeService } from '../fuel-type/fuel-type.service';
@@ -24,7 +24,7 @@ import { StationService } from '../station/services/station.service';
 import { TankerService } from '../tanker/tanker.service';
 import { UserRole } from '../user/enum/role.enum';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { SearchDto, SearchWithFuelAndReceiveDto } from './dto/search.dto';
+import { SearchByDate, SearchDto, SearchWithFuelAndReceiveDto } from './dto/search.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { RequestEntity } from './entities/request.entity';
 import { StatusEntity } from './entities/status.entity';
@@ -32,6 +32,7 @@ import { RequestMessages } from './enums/message.enum';
 import { PriorityEnum } from './enums/priority.enum';
 import { ReceiveTimeEnum } from './enums/time.enum';
 import { PriorityType } from './types/priority.type';
+import { fromEnum } from './enums/from.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RequestService {
@@ -135,7 +136,7 @@ export class RequestService {
                 .select([
                     'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
-                    'request.value', 'request.receive_at', 'request.priority', 'status.status','station.name',
+                    'request.value', 'request.receive_at', 'request.priority', 'status.status', 'station.name',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
                 .where(whereQuery, { ownerId: parentId ?? userId })
@@ -210,7 +211,7 @@ export class RequestService {
                 .select([
                     'request.id', 'request.received_time', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
-                    'request.value', 'request.receive_at', 'request.priority', 'status.status','station.name',
+                    'request.value', 'request.receive_at', 'request.priority', 'status.status', 'station.name',
                     'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value'
                 ])
                 .where(whereQuery, { ownerId: parentId ?? userId, statusId })
@@ -295,7 +296,7 @@ export class RequestService {
                 .select([
                     'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
-                    'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value','station.name'
+                    'request.created_at', 'request.statusId', 'request.stationId', 'request.priority_value', 'station.name'
                 ])
                 .where(whereQuery, { ownerId: parentId ?? userId, fuel_type, receive_at })
                 .orderBy('request.receive_at', 'ASC')
@@ -345,7 +346,7 @@ export class RequestService {
                     'request.id', 'request.number', 'depot.name', 'depot.id', 'cargo.id', 'request.fuel_type', 'fuel.name', 'tankers',
                     'driver.first_name', 'driver.last_name', 'driver.mobile', 'driver.national_code', 'driver.id',
                     'request.value', 'request.receive_at', 'request.priority', 'status.status',
-                    'request.created_at', 'request.statusId', 'request.stationId','station.name'
+                    'request.created_at', 'request.statusId', 'request.stationId', 'station.name'
                     , 'request.priority_value'
                 ])
                 .where(whereQuery, { ownerId: parentId ?? userId, start, end, fuel_type })
@@ -452,6 +453,204 @@ export class RequestService {
             throw error
         }
     }
+    async reports(searchDto: SearchByDate, from: fromEnum) {
+        try {
+            console.log(`access  -> ${this.req.url}`);
+            const { id, role } = this.req.user
+            let { end, start } = searchDto
+            end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
+            let where = {}
+            if (role == UserRole.OilDepotUser) { where = { depot: { owner: { id } } } }
+            const allRequests = await this.requestRepository.find({ where, relations: { depot: true, station: true } })
+            const data = []
+            const depotIds = []
+            allRequests.map(async request => {
+                if (from == fromEnum.depot) {
+                    depotIds.push(request.depotId)
+                }
+                if (from == fromEnum.station) {
+                    depotIds.push(request.stationId)
+                }
+            })
+            const promise = ([... new Set(depotIds)]).map(async id => {
+                let name = ''
+                let all: RequestEntity[]
+                let done: RequestEntity[]
+                let petrolRequests: RequestEntity[]
+                let dieselRequests: RequestEntity[]
+                let superRequests: RequestEntity[]
+                if (from == fromEnum.depot) {
+                    all = await this.requestRepository.find({ where: { depotId: id, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)), } })
+                    done = await this.requestRepository.find({ where: { depotId: id, statusId: StatusEnum.Received, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)), } })
+                    name = (await this.depotService.findOneById(id)).name
+                    petrolRequests = await this.requestRepository.find({
+                        where: {
+                            depotId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Petrol,
+                            created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
+                        }
+                    })
+                    dieselRequests = await this.requestRepository.find({
+                        where: {
+                            depotId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Diesel,
+                            created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
+                        }
+                    })
+                    superRequests = await this.requestRepository.find({
+                        where: {
+                            depotId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Super,
+                            created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
+                        }
+                    })
+                }
+                if (from == fromEnum.station) {
+                    all = await this.requestRepository.find({ where: { stationId: id, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)), } })
+                    done = await this.requestRepository.find({ where: { stationId: id, statusId: StatusEnum.Received, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)), } })
+                    name = (await this.stationService.findOneById(id)).name
+                    petrolRequests = await this.requestRepository.find({
+                        where: {
+                            stationId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Petrol,
+                            created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
+                        }
+                    })
+                    dieselRequests = await this.requestRepository.find({
+                        where: {
+                            stationId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Diesel,
+                            created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
+                        }
+                    })
+                    superRequests = await this.requestRepository.find({
+                        where: {
+                            stationId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Super,
+                            created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)),
+                        }
+                    })
+                }
+                //petrol some value
+                const Petrol = petrolRequests.reduce((sum, petrol) => sum + Number(petrol.value), 0)
+                // Diesel
+                const Diesel = dieselRequests.reduce((sum, petrol) => sum + Number(petrol.value), 0)
+                // Super
+                const Super = superRequests.reduce((sum, petrol) => sum + Number(petrol.value), 0)
+                data.push({
+                    name,
+                    all: all.length,
+                    done: done.length,
+                    Petrol,
+                    Diesel,
+                    Super,
+                    allFuels: Petrol + Diesel + Super
+                })
+            })
+            //const petrolValue = 
+            await Promise.all(promise)
+            return {
+                statusCode: HttpStatus.OK,
+                data: data
+            }
+        } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
+            throw error
+        }
+    }
+    async dailyReports(searchDto: SearchByDate, from: fromEnum, id: number) {
+        try {
+            console.log(`access  -> ${this.req.url}`);
+            const { role } = this.req.user
+            let { end, start } = searchDto
+            end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
+            let where = {}
+            if (from == fromEnum.station) { where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)), stationId: id, ...where } }
+            if (from == fromEnum.depot) { where = { ...where, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)), depotId: id } }
+            if (role == UserRole.OilDepotUser) { where = { depot: { owner: { id } }, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) } }
+            const allRequests = await this.requestRepository.find({ where, relations: { depot: true, station: true } })
+            if (allRequests.length == 0) throw new NotFoundException('cant find requests for this ' + from)
+            const data = []
+            const createdAtList = []
+            allRequests.map(request => {
+                createdAtList.push(request.created_at.toISOString().split('T')[0])
+            })
+            const promise = ([... new Set(createdAtList)]).map(async value => {
+                let name = ''
+                const startDay = new Date(value)
+                const endDay = new Date(startDay.getTime() + 1000 * 60 * 60 * 24)
+                let all: RequestEntity[]
+                let done: RequestEntity[]
+                let petrolRequests: RequestEntity[]
+                let dieselRequests: RequestEntity[]
+                let superRequests: RequestEntity[]
+                if (from == fromEnum.depot) {
+                    all = await this.requestRepository.find({ where: { depotId: id, created_at: And(MoreThanOrEqual(startDay), LessThanOrEqual(endDay)), } })
+                    done = await this.requestRepository.find({ where: { depotId: id, statusId: StatusEnum.Received, created_at: And(MoreThanOrEqual(startDay), LessThanOrEqual(endDay)), } })
+                    name = (await this.depotService.findOneById(id)).name
+                    petrolRequests = await this.requestRepository.find({
+                        where: {
+                            depotId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Petrol,
+                            created_at: And(MoreThanOrEqual(startDay), LessThanOrEqual(endDay)),
+                        }
+                    })
+                    dieselRequests = await this.requestRepository.find({
+                        where: {
+                            depotId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Diesel,
+                            created_at: And(MoreThanOrEqual(startDay), LessThanOrEqual(endDay)),
+                        }
+                    })
+                    superRequests = await this.requestRepository.find({
+                        where: {
+                            depotId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Super,
+                            created_at: And(MoreThanOrEqual(startDay), LessThanOrEqual(endDay)),
+                        }
+                    })
+                }
+                if (from == fromEnum.station) {
+                    all = await this.requestRepository.find({ where: { stationId: id, created_at: And(MoreThanOrEqual(startDay), LessThanOrEqual(endDay)), } })
+                    done = await this.requestRepository.find({ where: { stationId: id, statusId: StatusEnum.Received, created_at: And(MoreThanOrEqual(startDay), LessThanOrEqual(endDay)), } })
+                    name = (await this.stationService.findOneById(id)).name
+                    petrolRequests = await this.requestRepository.find({
+                        where: {
+                            stationId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Petrol,
+                            created_at: And(MoreThanOrEqual(startDay), LessThanOrEqual(endDay)),
+                        }
+                    })
+                    dieselRequests = await this.requestRepository.find({
+                        where: {
+                            stationId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Diesel,
+                            created_at: And(MoreThanOrEqual(startDay), LessThanOrEqual(endDay)),
+                        }
+                    })
+                    superRequests = await this.requestRepository.find({
+                        where: {
+                            stationId: id, statusId: StatusEnum.Received, fuel_type: FuelTypeEnum.Super,
+                            created_at: And(MoreThanOrEqual(startDay), LessThanOrEqual(endDay)),
+                        }
+                    })
+                }
+                //petrol some value
+                const Petrol = petrolRequests.reduce((sum, petrol) => sum + Number(petrol.value), 0)
+                // Diesel
+                const Diesel = dieselRequests.reduce((sum, petrol) => sum + Number(petrol.value), 0)
+                // Super
+                const Super = superRequests.reduce((sum, petrol) => sum + Number(petrol.value), 0)
+                data.push({
+                    date: value,
+                    all: all.length,
+                    done: done.length,
+                    Petrol,
+                    Diesel,
+                    Super,
+                    allFuels: Petrol + Diesel + Super
+                })
+            })
+            await Promise.all(promise)
+            return {
+                statusCode: HttpStatus.OK,
+                data
+            }
+        } catch (error) {
+            console.log(`error -> ${this.req.url} -> `, error.message);
+            throw error
+        }
+    }
+
 
     async approvedRequest(id: number) {
         const request = await this.getOneById(id)

@@ -11,6 +11,12 @@ export class SearchDto {
     @IsOptional()
     end?: Date
 }
+export class SearchByDate {
+    @IsDateString()
+    start: Date
+    @IsDateString()
+    end: Date
+}
 export class SearchDtoAndroid {
     @IsNumberString()
     @IsOptional()
