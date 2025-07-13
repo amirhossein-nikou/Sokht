@@ -120,6 +120,7 @@ export class InventoryService {
                     status: true,
                     name: true,
                     value: true,
+                    max: true,
                     station: { name: true },
                     updated_at: true,
                     fuels: {
@@ -164,6 +165,7 @@ export class InventoryService {
                     id: true,
                     status: true,
                     name: true,
+                    max: true,
                     value: true,
                     station: { name: true },
                     updated_at: true,
@@ -224,7 +226,7 @@ export class InventoryService {
     async update(id: number, updateInventoryDto: UpdateInventoryDto) {
         try {
             console.log(`access  -> ${this.req.url}`);
-            const { fuel_type, stationId, max } = updateInventoryDto;
+            const { fuel_type, stationId, max,name } = updateInventoryDto;
             const inventory = await this.findById(id);
             if (inventory.status == false) throw new BadRequestException('inventory is deActive')
             if (stationId) await this.stationService.findOneById(stationId)
@@ -232,7 +234,7 @@ export class InventoryService {
                 await this.fuelTypeService.getById(fuel_type)
             }
             if (fuel_type && stationId) await this.stationService.checkExistsFuelType(stationId, fuel_type)
-            const obj = RemoveNullProperty({ fuel_type, stationId, max })
+            const obj = RemoveNullProperty({ fuel_type, stationId, max,name })
             await this.inventoryRepository.update({ id: inventory.id }, obj)
             const result = await this.findById(id);
             return {

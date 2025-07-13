@@ -24,7 +24,7 @@ export class UserEntity {
     @Column({ enum: UserRole })
     role: UserRole
     @Column({ nullable: true, unique: true })
-    certificateId: number
+    certificateId: string
     @Column({ default: false })
     verify_mobile: boolean
     @Column({ nullable: true })

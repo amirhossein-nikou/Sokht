@@ -28,9 +28,9 @@ export class CreateUserDto {
     role: UserRole
     @ApiPropertyOptional()
     @IsNumberString()
-    @IsOptional()
-    @Length(1, 10)
-    certificateId: number
+    // @IsOptional()
+    // @Length(1, 10)
+    certificateId: string
 }
 export class AddSubUserDto {
     @ApiProperty()
@@ -55,9 +55,9 @@ export class AddSubUserDto {
     national_code: string
     @ApiPropertyOptional()
     @IsNumberString()
-    @IsOptional()
-    @Length(1, 10)
-    certificateId: number
+    // @IsOptional()
+    // @Length(1, 10)
+    certificateId: string
 }
 export class AddDriverDto {
     @ApiProperty()
@@ -83,7 +83,7 @@ export class AddDriverDto {
     national_code: string
     @ApiPropertyOptional()
     @IsNumberString()
-    @IsOptional()
-    @Length(1, 10)
-    certificateId: number
+    // @IsOptional()
+    // @Length(1, 10)
+    certificateId: string
 }
