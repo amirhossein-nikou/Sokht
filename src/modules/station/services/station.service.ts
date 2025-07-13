@@ -2,9 +2,11 @@ import { BadRequestException, ConflictException, HttpStatus, Inject, Injectable,
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
+import * as moment from 'moment';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { FuelTypeEnum } from 'src/common/enums/fuelType.enum';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
-import { And, Between, ILike, In, LessThan, LessThanOrEqual, Like, MoreThanOrEqual, Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { StringToBoolean } from '../../../common/utils/boolean.utils';
 import { getIdList } from '../../../common/utils/id.utils';
 import { requestOrder } from '../../../common/utils/order-by.utils';
@@ -13,12 +15,11 @@ import { RemoveNullProperty } from '../../../common/utils/update.utils';
 import { FuelTypeService } from '../../../modules/fuel-type/fuel-type.service';
 import { LocationService } from '../../location/location.service';
 import { UserService } from '../../user/user.service';
+import { LimitDto } from '../dto/limit.dto';
 import { CreateStationDto, UpdateStationDto } from '../dto/station.dto';
+import { LimitEntity } from '../entity/limit.entity';
 import { StationEntity } from '../entity/station.entity';
 import { StationMessages } from '../enum/message.enum';
-import { LimitService } from './limit.service';
-import { FuelTypeEnum } from 'src/common/enums/fuelType.enum';
-import { LimitEntity } from '../entity/limit.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class StationService {
@@ -49,11 +50,10 @@ export class StationService {
                 fuels
             })
             // add limit => 
-            if (fuelIdList.includes(FuelTypeEnum.Diesel)) {
-                const limit = this.limitRepository.create({ value: 13500, stationId: station.id, by_user: false, date: new Date() })
-                await this.limitRepository.save(limit)
-            }
             const result = await this.stationRepository.save(station)
+            if (fuelIdList.includes(FuelTypeEnum.Diesel)) {
+                const limit = await this.AddLimit({ value: 13500, stationId: result.id, by_user: false, date: new Date() })
+            }
             return {
                 statusCode: HttpStatus.OK,
                 message: StationMessages.Created,
@@ -88,13 +88,18 @@ export class StationService {
         try {
             console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
+            const AllStations = await this.stationRepository.find({ where: { fuels: { id: FuelTypeEnum.Diesel } } })
+            const promise = AllStations.map(async station => {
+                await this.checkUpdateLimit(station.id)
+            })
+            await Promise.all(promise)
             let start = new Date(new Date().toISOString().split('T')[0])
             if (date) {
                 start = new Date(new Date(date).toISOString().split('T')[0])
             }
             let end = new Date(start.getTime() + 1000 * 60 * 60 * 24)
             let where: any = { limit: { by_user, date: Between(start, end) } }
-            if (!by_user) where = { limit: { by_user, date: And(LessThanOrEqual(start)) } }
+            if (!by_user) where = { limit: { by_user, date: Between(start, end) } }
             if (!date) where = { limit: { by_user } }
             const [stations, count] = await this.stationRepository.findAndCount({
                 where,
@@ -295,5 +300,40 @@ export class StationService {
         })
         if (!station)
             throw new BadRequestException("you don't have this fuel in this station")
+    }
+    async checkUpdateLimit(stationId: number) {
+        const limit = await this.limitRepository.findOneBy({ stationId })
+        if (limit) {
+            const updated_at = new Date(moment(new Date(limit.updated_at)).format('YYYY-MM-DD'))
+            const now = new Date(moment(new Date()).format('YYYY-MM-DD'))
+            if (updated_at < now) {
+                return await this.AddLimit({ stationId, value: 13500, by_user: false })
+            }
+        }
+    }
+    async AddLimit(limitDto: LimitDto) {
+        let { date, stationId, value, by_user } = limitDto
+        const station = await this.findOneById(stationId)
+        let limit = await this.getLimitByStationId(station.id)
+        if (!date) {
+            date = new Date()
+        } else {
+            date = new Date(date)
+        }
+        if (limit) {
+            limit.date = date
+            limit.value = value
+            limit.by_user = by_user
+        } else {
+            limit = this.limitRepository.create({ date, stationId, value, by_user })
+        }
+        await this.limitRepository.save(limit)
+        return limit
+    }
+    //utils
+    async getLimitByStationId(stationId: number) {
+        const limit = await this.limitRepository.findOneBy({ stationId })
+        if (!limit) return null
+        return limit
     }
 }

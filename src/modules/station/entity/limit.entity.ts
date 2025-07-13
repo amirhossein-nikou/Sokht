@@ -11,7 +11,7 @@ export class LimitEntity {
     value: number;
     @Column()
     stationId: number
-    @Column({ type: 'timestamp' })
+    @Column({ type: 'timestamp' ,default: new Date()})
     date: Date;
     @Column({ type: 'boolean', default: false })
     by_user: boolean

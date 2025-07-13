@@ -1,11 +1,10 @@
-import { BadRequestException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import * as moment from 'moment-jalaali';
 import { Repository } from "typeorm";
 import { LimitDto } from "../dto/limit.dto";
 import { LimitEntity } from "../entity/limit.entity";
 import { StationService } from "./station.service";
-import * as moment from 'moment-jalaali';
-import { StringToBoolean } from "src/common/utils/boolean.utils";
 @Injectable()
 export class LimitService {
     constructor(
