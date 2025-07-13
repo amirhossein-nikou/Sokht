@@ -96,7 +96,6 @@ export class StationService {
             let where: any = { limit: { by_user, date: Between(start, end) } }
             if (!by_user) where = { limit: { by_user, date: And(LessThanOrEqual(start))} }
             if (!date) where = { limit: { by_user } }
-            console.log(where);
             const [stations, count] = await this.stationRepository.findAndCount({
                 where,
                 relations: { location: true, fuels: true },
