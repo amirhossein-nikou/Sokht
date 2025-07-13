@@ -14,6 +14,7 @@ import { UserEntity } from './entity/user.entity';
 import { UserRole } from './enum/role.enum';
 import { UserMessages } from './enum/user.message';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
+import { FuelTypeService } from '../fuel-type/fuel-type.service';
 
 
 @Injectable({ scope: Scope.REQUEST })
@@ -21,11 +22,13 @@ export class UserService {
 	constructor(
 		@InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
 		private authService: AuthService,
+		private fuelService: FuelTypeService,
 		@Inject(REQUEST) private req: Request
 	) { }
 	async create(createUserDto: CreateUserDto) {
 		try {
 			console.log(`access  -> ${this.req.url}`);
+			await this.fuelService.insertFuelType()
 			const { role: userRole } = this.req.user
 			const { first_name, last_name, mobile, national_code, certificateId, role, position } = createUserDto
 			if (userRole === UserRole.HeadUser) {
@@ -136,9 +139,9 @@ export class UserService {
 			console.log(`access  -> ${this.req.url}`);
 			const { limit, page, skip } = paginationSolver(paginationDto)
 			const [users, count] = await this.userRepository.findAndCount({
-				relations: {stations: true},
+				relations: { stations: true },
 				select: {
-					stations: {name: true,id: true}
+					stations: { name: true, id: true }
 				},
 				take: limit,
 				skip
@@ -162,7 +165,7 @@ export class UserService {
 					parent: true, child: true, otp: true, stations: true
 				},
 				select: {
-					stations: {name: true,id: true}
+					stations: { name: true, id: true }
 				}
 			})
 			if (!user) throw new NotFoundException(UserMessages.NotFound)
@@ -214,7 +217,7 @@ export class UserService {
 					parent: true, child: true
 				},
 				select: {
-					stations: {name: true,id: true}
+					stations: { name: true, id: true }
 				}
 			})
 			if (!user) throw new NotFoundException(UserMessages.NotFound)
