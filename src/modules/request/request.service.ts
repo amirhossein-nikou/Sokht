@@ -62,7 +62,7 @@ export class RequestService {
             if (fuel_type == FuelTypeEnum.Diesel) {
                 await this.limitService.checkUpdateLimit(station.id)
                 const limit = await this.limitService.getLimitByStationId(station.id)
-                this.limitFuelValue(limit, value)
+                await this.limitFuelValue(limit, value)
             }
             if (!fuel.available_value.includes(Number(value)))
                 throw new BadRequestException(`request value for this fuel can be following values -> [${fuel.available_value}]`)
@@ -555,14 +555,14 @@ export class RequestService {
     async dailyReports(searchDto: SearchByDate, from: fromEnum, id: number) {
         try {
             console.log(`access  -> ${this.req.url}`);
-            const { role } = this.req.user
+            const {id:ownerId,role } = this.req.user
             let { end, start } = searchDto
             end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
             let where = {}
             if (from == fromEnum.station) { where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)), stationId: id, ...where } }
             if (from == fromEnum.depot) { where = { ...where, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)), depotId: id } }
-            if (role == UserRole.OilDepotUser) { where = { depot: { owner: { id } }, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) } }
-            const allRequests = await this.requestRepository.find({ where, relations: { depot: true, station: true } })
+            if (role == UserRole.OilDepotUser) { where = { depot: { owner: { id:ownerId } }, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) } }
+            const allRequests = await this.requestRepository.find({ where, relations: { depot: {owner: true}, station: true } })
             if (allRequests.length == 0) throw new NotFoundException('cant find requests for this ' + from)
             const data = []
             const createdAtList = []
@@ -789,12 +789,20 @@ export class RequestService {
             if (request.cargo) {
                 await this.tankerService.updateStatusByTakerList(request.cargo.tankers, true)
             }
+            if (request.fuel_type == FuelTypeEnum.Diesel) {
+                const limit = request.station.limit
+                await this.limitService.updateLimitValue(limit.id, limit.value + request.value)
+            }
             return {
                 statusCode: HttpStatus.OK,
                 message: "request rejected successfully"
             }
         } catch (error) {
             console.log(`error -> ${this.req.url} -> `, error.message);
+            if (request.fuel_type == FuelTypeEnum.Diesel) {
+                const limit = request.station.limit
+                await this.limitService.updateLimitValue(limit.id, limit.value - request.value)
+            }
             throw error
         }
 
@@ -906,11 +914,13 @@ export class RequestService {
         })
         if (request) throw new BadRequestException('this received Time is already used for this fuel')
     }
-    limitFuelValue(limit: LimitEntity, value: number) {
+    async limitFuelValue(limit: LimitEntity, value: number) {
         const date = moment(limit.date).format('YYYY-MM-DD')
         const now = moment(new Date()).format('YYYY-MM-DD')
         if (value > limit.value && date == now) {
             throw new BadRequestException(`you cant request more than ${limit.value}`)
         }
+        const updatedValue = limit.value - value
+        await this.limitService.updateLimitValue(limit.id, updatedValue)
     }
 }

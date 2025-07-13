@@ -20,7 +20,7 @@ export class LimitService {
             let limit = await this.getLimitByStationId(station.id)
             if (!date) {
                 date = new Date()
-            }else{
+            } else {
                 date = new Date(date)
             }
             if (limit) {
@@ -46,9 +46,14 @@ export class LimitService {
         if (!limit) return null
         return limit
     }
+    async updateLimitValue(id: number, value: number) {
+        const limit = await this.limitRepository.findOneBy({ id })
+        await this.limitRepository.update({ id }, { value });
+        return 'updated'
+    }
     async checkUpdateLimit(stationId: number) {
         const limit = await this.limitRepository.findOneBy({ stationId })
-        if(limit){
+        if (limit) {
             const updated_at = new Date(moment(new Date(limit.updated_at)).format('YYYY-MM-DD'))
             const now = new Date(moment(new Date()).format('YYYY-MM-DD'))
             if (updated_at < now) {

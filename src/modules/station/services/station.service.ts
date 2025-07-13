@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
-import { Between, ILike, In, Like, Repository } from 'typeorm';
+import { And, Between, ILike, In, LessThan, LessThanOrEqual, Like, MoreThanOrEqual, Repository } from 'typeorm';
 import { StringToBoolean } from '../../../common/utils/boolean.utils';
 import { getIdList } from '../../../common/utils/id.utils';
 import { requestOrder } from '../../../common/utils/order-by.utils';
@@ -50,7 +50,7 @@ export class StationService {
             })
             // add limit => 
             if (fuelIdList.includes(FuelTypeEnum.Diesel)) {
-                const limit = this.limitRepository.create({value: 13500,stationId: station.id,by_user: false,date: new Date()})
+                const limit = this.limitRepository.create({ value: 13500, stationId: station.id, by_user: false, date: new Date() })
                 await this.limitRepository.save(limit)
             }
             const result = await this.stationRepository.save(station)
@@ -84,17 +84,21 @@ export class StationService {
             throw error
         }
     }
-    async findAllChangedLimit(paginationDto: PaginationDto, by_user: boolean,date: string) {
+    async findAllChangedLimit(paginationDto: PaginationDto, by_user: boolean, date: string) {
         try {
             console.log(`access  -> ${this.req.url}`);
             const { limit, page, skip } = paginationSolver(paginationDto)
             let start = new Date(new Date().toISOString().split('T')[0])
-            if(date){
+            if (date) {
                 start = new Date(new Date(date).toISOString().split('T')[0])
             }
             let end = new Date(start.getTime() + 1000 * 60 * 60 * 24)
+            let where: any = { limit: { by_user, date: Between(start, end) } }
+            if (!by_user) where = { limit: { by_user, date: And(LessThanOrEqual(start))} }
+            if (!date) where = { limit: { by_user } }
+            console.log(where);
             const [stations, count] = await this.stationRepository.findAndCount({
-                where: { limit: { by_user, date: Between(start,end)} },
+                where,
                 relations: { location: true, fuels: true },
                 take: limit,
                 skip
@@ -159,7 +163,8 @@ export class StationService {
                 await this.locationService.findOne(locationId)
                 await this.checkExistsLocation(locationId)
             }
-            await this.stationRepository.update(id, updateObj)
+            if (updateObj)
+                await this.stationRepository.update(id, updateObj)
             const result = await this.findOneById(id)
             return {
                 statusCode: HttpStatus.CREATED,
