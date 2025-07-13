@@ -1,4 +1,4 @@
-import { ConflictException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import { randomInt } from "crypto";
@@ -46,9 +46,9 @@ export class AuthService {
         const code: string = randomInt(10000, 99999).toString();
         let otp = await this.otpRepository.findOne({ where: { userId: user.id } });
         if (otp) {
-            // if (otp.expires_in > new Date()) {
-            //     throw new HttpException('code not expired', HttpStatus.OK);
-            // }
+            if (otp.expires_in > new Date()) {
+                throw new HttpException('code not expired', HttpStatus.OK);
+            }
             otp.code = code;
             otp.expires_in = expire_in;
         } else {

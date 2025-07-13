@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { CargoModule } from '../cargo/cargo.module';
-import { InventoryModule } from '../station/modules/inventory.module';
-import { HomeController } from './home.controller';
-import { HomeService } from './home.service';
+import { DepotModule } from '../depot/depot.module';
 import { NotificationGateway } from '../notification/notification.gateway';
 import { NotificationModule } from '../notification/notification.module';
 import { RequestModule } from '../request/request.module';
-import { DepotModule } from '../depot/depot.module';
+import { InventoryModule } from '../station/modules/inventory.module';
 import { StationModule } from '../station/modules/station.module';
+import { HomeController } from './home.controller';
+import { HomeService } from './home.service';
 
 
 @Module({
