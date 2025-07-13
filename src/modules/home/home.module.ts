@@ -6,11 +6,14 @@ import { HomeController } from './home.controller';
 import { HomeService } from './home.service';
 import { NotificationGateway } from '../notification/notification.gateway';
 import { NotificationModule } from '../notification/notification.module';
+import { RequestModule } from '../request/request.module';
+import { DepotModule } from '../depot/depot.module';
+import { StationModule } from '../station/modules/station.module';
 
 
 @Module({
   imports: [
-    AuthModule,InventoryModule,CargoModule,NotificationModule
+    AuthModule,InventoryModule,CargoModule,NotificationModule,RequestModule,DepotModule,StationModule
   ],
   controllers: [HomeController],
   providers: [HomeService,NotificationGateway],

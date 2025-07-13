@@ -173,4 +173,8 @@ export class DepotService {
 		})
 		return depots
 	}
+	async getAllDepots() {
+		const [depots, count] = await this.depotRepository.findAndCount()
+		return depots
+	}
 }

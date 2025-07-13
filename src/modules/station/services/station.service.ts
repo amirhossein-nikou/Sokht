@@ -94,7 +94,7 @@ export class StationService {
             }
             let end = new Date(start.getTime() + 1000 * 60 * 60 * 24)
             let where: any = { limit: { by_user, date: Between(start, end) } }
-            if (!by_user) where = { limit: { by_user, date: And(LessThanOrEqual(start))} }
+            if (!by_user) where = { limit: { by_user, date: And(LessThanOrEqual(start)) } }
             if (!date) where = { limit: { by_user } }
             const [stations, count] = await this.stationRepository.findAndCount({
                 where,
@@ -259,7 +259,7 @@ export class StationService {
         return station
     }
     async getAllStations() {
-        const stations = await this.stationRepository.find({ relations: { location: true, inventory: true } })
+        const stations = await this.stationRepository.find({ where: { isActive: true }, relations: { location: true, inventory: true } })
         if (stations.length == 0) throw new NotFoundException(StationMessages.NotFound)
         return stations
     }

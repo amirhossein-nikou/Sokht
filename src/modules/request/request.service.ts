@@ -11,7 +11,7 @@ import { CreateNumber } from 'src/common/utils/create-number.utils';
 import { FormatDateTime } from 'src/common/utils/formatDate.utils';
 import { paginationGenerator, paginationSolver } from 'src/common/utils/pagination.utils';
 import { RemoveNullProperty } from 'src/common/utils/update.utils';
-import { And, Between, In, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { And, Between, In, LessThanOrEqual, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { CargoEntity } from '../cargo/entities/cargo.entity';
 import { DepotService } from '../depot/depot.service';
 import { FuelTypeService } from '../fuel-type/fuel-type.service';
@@ -555,14 +555,14 @@ export class RequestService {
     async dailyReports(searchDto: SearchByDate, from: fromEnum, id: number) {
         try {
             console.log(`access  -> ${this.req.url}`);
-            const {id:ownerId,role } = this.req.user
+            const { id: ownerId, role } = this.req.user
             let { end, start } = searchDto
             end = new Date(end.getTime() + (1 * 1000 * 60 * 60 * 24));
             let where = {}
             if (from == fromEnum.station) { where = { created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)), stationId: id, ...where } }
             if (from == fromEnum.depot) { where = { ...where, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)), depotId: id } }
-            if (role == UserRole.OilDepotUser) { where = { depot: { owner: { id:ownerId } }, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) } }
-            const allRequests = await this.requestRepository.find({ where, relations: { depot: {owner: true}, station: true } })
+            if (role == UserRole.OilDepotUser) { where = { depot: { owner: { id: ownerId } }, created_at: And(MoreThanOrEqual(start), LessThanOrEqual(end)) } }
+            const allRequests = await this.requestRepository.find({ where, relations: { depot: { owner: true }, station: true } })
             if (allRequests.length == 0) throw new NotFoundException('cant find requests for this ' + from)
             const data = []
             const createdAtList = []
@@ -922,5 +922,25 @@ export class RequestService {
         }
         const updatedValue = limit.value - value
         await this.limitService.updateLimitValue(limit.id, updatedValue)
+    }
+    async getActiveRequests(userId?: number) {
+        let where = {}
+        if (userId) where = { depot: { owner: { id: userId } } }
+        const [request, count] = await this.requestRepository.findAndCount({
+            where: {
+                statusId: Not(In([StatusEnum.Reject, StatusEnum.Received]))
+            }
+        })
+        return count
+    }
+    async getReceivedFuelsValue(userId?: number) {
+        let where = {}
+        if (userId) where = { depot: { owner: { id: userId } } }
+        const [requests, count] = await this.requestRepository.findAndCount({
+            where: {
+                statusId: StatusEnum.Received
+            }
+        })
+        return requests.reduce((sum, request) => sum + Number(request.value), 0)
     }
 }
