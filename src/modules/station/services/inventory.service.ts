@@ -14,6 +14,11 @@ import { InventoryEntity } from "../entity/inventory.entity";
 import { StationEntity } from "../entity/station.entity";
 import { InventoryMessages } from "../enum/message.enum";
 import { StationService } from "./station.service";
+import { jalaliDate } from "src/common/utils/convert-time.utils";
+import { RequestService } from "src/modules/request/request.service";
+import { SaleService } from "./sale.service";
+import { PriorityEnum } from "src/modules/request/enums/priority.enum";
+import { PriorityType } from "src/modules/request/types/priority.type";
 @Injectable({ scope: Scope.REQUEST })
 export class InventoryService {
     constructor(
@@ -21,6 +26,7 @@ export class InventoryService {
         private stationService: StationService,
         private userService: UserService,
         private fuelTypeService: FuelTypeService,
+        private saleService: SaleService,
         @Inject(REQUEST) private req: Request
     ) { }
     async create(createInventoryDto: CreateInventoryDto) {
@@ -59,7 +65,7 @@ export class InventoryService {
                 }
             }
             if (role !== UserRole.StationUser) {
-                where = { stationId: stationId ?? null}
+                where = { stationId: stationId ?? null }
             }
             const [inventories, count] = await this.inventoryRepository.findAndCount({
                 where,
@@ -73,7 +79,7 @@ export class InventoryService {
                     value: true,
                     updated_at: true,
                     max: true,
-                    station:{name: true},
+                    station: { name: true },
                     fuels: {
                         name: true,
                         id: true
@@ -115,7 +121,7 @@ export class InventoryService {
                     status: true,
                     name: true,
                     value: true,
-                    station:{name: true},
+                    station: { name: true },
                     updated_at: true,
                     fuels: {
                         name: true,
@@ -160,7 +166,7 @@ export class InventoryService {
                     status: true,
                     name: true,
                     value: true,
-                    station:{name: true},
+                    station: { name: true },
                     updated_at: true,
                     fuels: {
                         name: true,
@@ -404,22 +410,24 @@ export class InventoryService {
         let detailsList: Array<object> = []
         const promise = station.map(async station => {
             const inventories = await this.findByStationIdAndFuel(station.id, fuel_type)
-            console.log(inventories.length);
             if (inventories.length == 0) return
             const capacity = inventories.reduce((sum, inventory) => sum + Number(inventory.max), 0);
             const value = inventories.reduce((sum, inventory) => sum + Number(inventory.value), 0);
             const latestDate = this.findLatestDate(inventories)
+            const priorityDetails = await this.priorityValue(station.id,fuel_type,value)
             detailsList.push({
                 inventory_count: inventories.length,
                 value,
                 capacity,
                 station_name: station.name,
                 location: station.location.address,
-                latestDate
+                latestDate,
+                jalali_latestDate: jalaliDate(latestDate),
+                priorityDetails
             })
         })
         await Promise.all(promise)
-        if(detailsList.length == 0) throw new BadRequestException('something went wrong')
+        if (detailsList.length == 0) throw new BadRequestException('something went wrong')
         return detailsList
     }
     async getAvailableInventory(stationId: number, fuel_type: number) {
@@ -438,5 +446,27 @@ export class InventoryService {
             }
         })
         return inventory
+    }
+
+    async priorityValue(stationId: number, fuel_type: number,inventories: number): Promise<PriorityType> {
+        const sales = await this.saleService.findByStationIdAndFuel(stationId, fuel_type)
+        const average_sale = sales.average_sale
+        if (inventories == undefined)
+            throw new BadRequestException('station inventory is invalid')
+        if (!average_sale)
+            throw new BadRequestException('station average_sale is invalid')
+        const priorityNumber: number = (inventories / average_sale) * 100
+        if (priorityNumber >= 100) {
+            return {
+                priority: PriorityEnum.Normal,
+                priority_value: priorityNumber
+            }
+        }
+        else if (priorityNumber < 100 && priorityNumber >= 30) {
+            return { priority: PriorityEnum.High, priority_value: priorityNumber }
+        }
+        else if (priorityNumber < 30) {
+            return { priority: PriorityEnum.Critical, priority_value: priorityNumber }
+        }
     }
 }
