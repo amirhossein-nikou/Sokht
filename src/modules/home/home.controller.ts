@@ -10,7 +10,7 @@ export class HomeController {
   constructor(private readonly homeService: HomeService) { }
 
   @Get('/android/dashboard')
-  @ApiTags('android')
+  @ApiTags('Android')
   @CanAccess()
   findAll() {
     return this.homeService.dashboard();
