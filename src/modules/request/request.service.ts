@@ -388,6 +388,10 @@ export class RequestService {
                 if (!fuel.available_value.includes(value))
                     throw new BadRequestException(`request value for this fuel cna be following values -> [${fuel.available_value}]`)
                 await this.filterRequestValue(station.id, request.fuel_type, value)
+                if (request.fuel_type == FuelTypeEnum.Diesel) {
+                    const limit = station.limit
+                    await this.limitService.updateLimitValue(limit.id, Number(request.value) - Number(limit.value))
+                }
             }
             const priority = await this.detectPriority(station.id, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
@@ -416,7 +420,16 @@ export class RequestService {
             const request = await this.getOneById(id)
             const updateObject = RemoveNullProperty({ receive_at, value, })
             const station = await this.stationService.findOneById(request.stationId)
-            if (value) await this.filterRequestValue(station.id, request.fuel_type, value)
+            if (value) {
+                const fuel = await this.fuelService.getById(request.fuel_type)
+                if (!fuel.available_value.includes(value))
+                    throw new BadRequestException(`request value for this fuel cna be following values -> [${fuel.available_value}]`)
+                await this.filterRequestValue(station.id, request.fuel_type, value)
+                if (request.fuel_type == FuelTypeEnum.Diesel) {
+                    const limit = station.limit
+                    await this.limitService.updateLimitValue(limit.id, Number(request.value) - Number(limit.value))
+                }
+            }
             const priority = await this.detectPriority(station.id, request.fuel_type)
             const updatedRequest = await this.requestRepository.update(id, {
                 //statusId: StatusEnum.Posted,
@@ -715,11 +728,10 @@ export class RequestService {
         try {
             console.log(`access  -> ${this.req.url}`);
             const request = await this.getOneById(id)
-            console.log(time);
             if (request.statusId == StatusEnum.Posted) throw new BadRequestException(RequestMessages.ApprovedFirst)
             if (request.statusId == StatusEnum.Approved) throw new BadRequestException(RequestMessages.LicenseFirst)
             if (request.statusId == StatusEnum.Received) throw new BadRequestException(RequestMessages.AlreadyReceived)
-            if (!request.cargo) throw new NotFoundException('cargo not found')
+            if (!request.cargo || request.cargo?.rejectDetails) throw new NotFoundException('cargo not found OR rejected')
             await this.cargoRepository.update(request.cargo.id, { inProgress: false })
             await this.requestRepository.update(id, { statusId: StatusEnum.Received, received_time: time })
             await this.tankerService.updateStatusByTakerList(request.cargo.tankers, true)
@@ -791,7 +803,7 @@ export class RequestService {
             }
             if (request.fuel_type == FuelTypeEnum.Diesel) {
                 const limit = request.station.limit
-                await this.limitService.updateLimitValue(limit.id, limit.value + request.value)
+                await this.limitService.updateLimitValue(limit.id, Number(limit.value) + Number(request.value))
             }
             return {
                 statusCode: HttpStatus.OK,

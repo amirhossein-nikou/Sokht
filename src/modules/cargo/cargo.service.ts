@@ -282,6 +282,7 @@ export class CargoService {
             const cargo = await this.getOneById(id)
             if (cargo.rejectDetails) throw new BadRequestException("this cargo already rejected")
             await this.cargoRepository.update(id, {
+                inProgress:false,
                 rejectDetails: { title, description }
             })
             await this.tankerService.updateStatusByTakerList(cargo.tankers, true)
